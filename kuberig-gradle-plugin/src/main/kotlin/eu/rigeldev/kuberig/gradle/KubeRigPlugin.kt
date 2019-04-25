@@ -24,7 +24,7 @@ open class KubeRigPlugin : Plugin<Project> {
         project.tasks.register("generateResources", ResourceGenerationTask::class.java
         ) {resourceGenerationTask ->
             resourceGenerationTask.group = "kuberig"
-            resourceGenerationTask.dependsOn("compileKotlin")
+            resourceGenerationTask.dependsOn("jar")
         }
 
         project.tasks.withType(KotlinCompile::class.java) {
