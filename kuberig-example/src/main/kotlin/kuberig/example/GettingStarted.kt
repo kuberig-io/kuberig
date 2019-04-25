@@ -16,7 +16,7 @@ class GettingStarted {
                 name("backend-config")
             }
 
-            data("application.properties", File("application.properties").absoluteFile.readText())
+            data("application.properties", File("application.properties").readText())
         }
 
     }
