@@ -10,10 +10,6 @@ import java.io.File
 
 open class ResourceGenerationTask : DefaultTask() {
 
-    init {
-        println("A new resource generation task was created.")
-    }
-
     @TaskAction
     fun generateResources() {
         val detector = ResourceGenerationDetector()
