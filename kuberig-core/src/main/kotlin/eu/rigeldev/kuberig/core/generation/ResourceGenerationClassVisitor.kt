@@ -46,7 +46,7 @@ class ResourceGenerationClassVisitor : ClassVisitor(Opcodes.ASM7) {
     ): MethodVisitor? {
         return object : MethodVisitor(Opcodes.ASM7) {
                 override fun visitAnnotation(desc: String?, visible: Boolean): AnnotationVisitor? {
-                    if ("Leu/rigeldev/kuberig/core/annotations/KubeRigResource;" == desc) {
+                    if ("Leu/rigeldev/kuberig/core/annotations/ResourceGenerator;" == desc) {
                         resourceMethods.add(name)
                     }
                     return null

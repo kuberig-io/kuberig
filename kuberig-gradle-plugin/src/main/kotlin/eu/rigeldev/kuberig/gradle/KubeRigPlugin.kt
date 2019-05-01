@@ -1,6 +1,5 @@
 package eu.rigeldev.kuberig.gradle
 
-import org.gradle.api.Action
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -14,17 +13,18 @@ open class KubeRigPlugin : Plugin<Project> {
         project.plugins.apply("org.jetbrains.kotlin.jvm")
 
         val props = this.loadProps()
-        val kubeRigVersion = props["kuberig.version"]
-        val kotlinVersion = props["kotlin.version"]
+        val kuberigVersion = props["kuberig.version"] as String
+        val kotlinVersion = props["kotlin.version"] as String
 
         project.dependencies.add("implementation", "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
-        project.dependencies.add("implementation", "eu.rigeldev.kuberig:kuberig-annotations:$kubeRigVersion")
-        project.dependencies.add("implementation", "eu.rigeldev.kuberig:kuberig-dsl-base:$kubeRigVersion")
+        project.dependencies.add("implementation", "eu.rigeldev.kuberig:kuberig-annotations:$kuberigVersion")
+        project.dependencies.add("implementation", "eu.rigeldev.kuberig:kuberig-dsl-base:$kuberigVersion")
 
         project.tasks.register("generateResources", ResourceGenerationTask::class.java
         ) {resourceGenerationTask ->
             resourceGenerationTask.group = "kuberig"
-            resourceGenerationTask.dependsOn("compileKotlin")
+            resourceGenerationTask.dependsOn("jar")
+            resourceGenerationTask.kuberigVersion = kuberigVersion
         }
 
         project.tasks.withType(KotlinCompile::class.java) {
