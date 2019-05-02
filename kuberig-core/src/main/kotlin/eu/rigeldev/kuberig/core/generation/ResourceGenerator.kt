@@ -1,8 +1,12 @@
 package eu.rigeldev.kuberig.core.generation
 
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.databind.ObjectMapper
 import eu.rigeldev.kuberig.core.generation.yaml.YamlGenerator
 import eu.rigeldev.kuberig.dsl.DslType
 import java.io.File
+import java.net.URLClassLoader
+import java.util.*
 
 class ResourceGenerator {
 
@@ -23,6 +27,17 @@ class ResourceGenerator {
 
         println("Found # " + resourceGeneratorTypes.size + " resource methods")
 
+        val actualClassPathEntries = resourceGenerationClasspath
+            .filter { !it.name.contains("kuberig-annotations") }
+
+        val dslClasspath = URLClassLoader(
+            actualClassPathEntries.map {it.toURI().toURL()}.toTypedArray(),
+            Thread.currentThread().contextClassLoader
+        )
+
+        val objectMapper = ObjectMapper()
+        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT)
+
         for (resourceGeneratorType in resourceGeneratorTypes) {
 
             val type = resourceGenerationRuntimeClasspathClassLoader.loadClass(resourceGeneratorType.name.replace('/','.'))
@@ -30,6 +45,9 @@ class ResourceGenerator {
             val typeInstance = type.getConstructor().newInstance()
 
             println("Found resource generator type: ${resourceGeneratorType.name}")
+
+            val typeClass = dslClasspath.loadClass(resourceGeneratorType.name.replace('/','.'))
+            val typeClassInstance = typeClass.getConstructor().newInstance()
 
             for (resourceGenerationMethod in resourceGeneratorType.resourceGenerationMethods) {
                 println(" - $resourceGenerationMethod")

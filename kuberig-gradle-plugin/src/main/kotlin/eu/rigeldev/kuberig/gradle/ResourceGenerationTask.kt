@@ -29,6 +29,13 @@ open class ResourceGenerationTask : DefaultTask() {
 
         val generator = ResourceGenerator()
 
+        val classpath = mutableListOf<File>()
+
+        val jar = project.tasks.getByName("jar") as Jar
+
+        classpath.add(jar.archiveFile.get().asFile)
+        classpath.addAll(project.configurations.getByName("runtimeClasspath").resolve())
+
         generator.generateResources(
             detector.resourceGeneratorTypes,
             project.file("build/generated-yaml"),
