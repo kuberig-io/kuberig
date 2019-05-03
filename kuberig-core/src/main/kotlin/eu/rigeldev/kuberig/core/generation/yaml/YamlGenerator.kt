@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
+import eu.rigeldev.kuberig.core.execution.ResourceGeneratorMethodResult
 import java.io.File
 
 /**
@@ -12,7 +13,7 @@ import java.io.File
  *
  * Note: These are `my` ideal settings, in the future this should be made configurable.
  */
-class YamlGenerator {
+class YamlGenerator(val outputDirectory : File) {
 
     private val objectMapper : ObjectMapper
 
@@ -27,6 +28,13 @@ class YamlGenerator {
         byteArrayModule.addDeserializer(ByteArray::class.java, ByteArrayDeserializer())
         objectMapper.registerModule(byteArrayModule)
         objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT)
+
+        if (outputDirectory.exists()) {
+            outputDirectory.deleteRecursively()
+        }
+        outputDirectory.mkdirs()
+
+        println("Generating YAML resources into output directory: $outputDirectory")
     }
 
     fun generateYaml(resource: Any) : String {
@@ -35,6 +43,16 @@ class YamlGenerator {
 
     fun generateYaml(resultFile: File, resource: Any) {
         this.objectMapper.writeValue(resultFile, resource)
+    }
+
+    fun generate(methodResult : ResourceGeneratorMethodResult) : File {
+        val yaml = this.generateYaml(methodResult.resource)
+
+        val outputFile = File(outputDirectory, "${methodResult.method.methodName}.yaml")
+
+        outputFile.writeText(yaml)
+
+        return outputFile
     }
 
 }

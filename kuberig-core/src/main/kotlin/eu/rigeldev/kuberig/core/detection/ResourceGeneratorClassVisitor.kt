@@ -1,11 +1,11 @@
-package eu.rigeldev.kuberig.core.generation
+package eu.rigeldev.kuberig.core.detection
 
 import org.objectweb.asm.AnnotationVisitor
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
 
-class ResourceGenerationClassVisitor : ClassVisitor(Opcodes.ASM7) {
+class ResourceGeneratorClassVisitor : ClassVisitor(Opcodes.ASM7) {
 
     var isAbstract = true
     var className = ""

@@ -1,5 +1,8 @@
 package eu.rigeldev.kuberig.gradle
 
+import eu.rigeldev.kuberig.gradle.config.KubeRigExtension
+import eu.rigeldev.kuberig.gradle.tasks.ResourceDeploymentTask
+import eu.rigeldev.kuberig.gradle.tasks.ResourceGenerationTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -17,37 +20,63 @@ open class KubeRigPlugin : Plugin<Project> {
         val kuberigVersion = props["kuberig.version"] as String
         val kotlinVersion = props["kotlin.version"] as String
 
-        project.extensions.create("kuberig", KubeRigExtension::class.java)
+        val extension = project.extensions.create("kuberig", KubeRigExtension::class.java, project)
 
         project.dependencies.add("implementation", "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
         project.dependencies.add("implementation", "eu.rigeldev.kuberig:kuberig-annotations:$kuberigVersion")
         project.dependencies.add("implementation", "eu.rigeldev.kuberig:kuberig-dsl-base:$kuberigVersion")
 
-        project.tasks.register("generateResources", ResourceGenerationTask::class.java
-        ) {resourceGenerationTask ->
-            resourceGenerationTask.group = "kuberig"
-            resourceGenerationTask.dependsOn("jar")
-            resourceGenerationTask.kuberigVersion = kuberigVersion
+        extension.environments.all { environment ->
+            val capitalizedEnvironmentName = environment.name.capitalize()
+
+            project.tasks.register(
+                "generateResources${capitalizedEnvironmentName}Environment",
+                ResourceGenerationTask::class.java
+            )
+            { resourceGenerationTask ->
+                resourceGenerationTask.group = "kuberig"
+                resourceGenerationTask.dependsOn("jar")
+                resourceGenerationTask.kuberigVersion = kuberigVersion
+                resourceGenerationTask.environment = environment
+            }
+
+            project.tasks.register(
+                "deployResources${capitalizedEnvironmentName}Environment",
+                ResourceDeploymentTask::class.java
+            )
+            { resourceDeployerTask ->
+                resourceDeployerTask.group = "kuberig"
+                resourceDeployerTask.dependsOn("jar")
+                resourceDeployerTask.kuberigVersion = kuberigVersion
+                resourceDeployerTask.environment = environment
+            }
         }
+
+
 
         project.tasks.withType(KotlinCompile::class.java) {
             it.kotlinOptions.jvmTarget = "1.8"
         }
 
         project.afterEvaluate {
-            val extension = it.extensions.getByType(KubeRigExtension::class.java)
+            val evaluatedExtension = it.extensions.getByType(KubeRigExtension::class.java)
 
-            val platformTypeName = extension.targetPlatform.platform.name.toLowerCase()
-            val platformVersion = extension.targetPlatform.plafformVersion.versionText()
+            val platformTypeName = evaluatedExtension.targetPlatform.platform.name.toLowerCase()
+            val platformVersion = evaluatedExtension.targetPlatform.platformVersion
 
             it.dependencies.add(
                 "implementation",
-                "eu.rigeldev.kuberig.dsl.$platformTypeName:kuberig-dsl-$platformTypeName-$platformVersion:$kubeRigVersion"
+                "eu.rigeldev.kuberig.dsl.$platformTypeName:kuberig-dsl-$platformTypeName-$platformVersion:$kuberigVersion"
+            )
+
+            it.dependencies.add(
+                "implementation",
+                "eu.rigeldev.kuberig:kuberig-core:$kuberigVersion"
             )
         }
     }
 
-    private fun loadProps() : Properties {
+    private fun loadProps(): Properties {
         val props = Properties()
         props.load(this.javaClass.getResourceAsStream("/kuberig.properties"))
         return props

@@ -1,51 +1,32 @@
-package eu.rigeldev.kuberig.gradle
+package eu.rigeldev.kuberig.gradle.tasks
 
-import eu.rigeldev.kuberig.core.generation.ResourceGenerationDetector
-import eu.rigeldev.kuberig.core.generation.ResourceGenerator
+import eu.rigeldev.kuberig.core.detection.ResourceGeneratorDetector
+import eu.rigeldev.kuberig.config.KubeRigEnvironment
+import eu.rigeldev.kuberig.core.detection.ResourceGeneratorMethod
 import org.gradle.api.DefaultTask
-import org.gradle.api.tasks.TaskAction
 import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.io.File
 import java.net.URLClassLoader
 
-open class ResourceGenerationTask : DefaultTask() {
+abstract class AbstractResourceTask : DefaultTask() {
 
     var kuberigVersion : String = ""
 
-    init {
-        println("A new resource generation task was created.")
-    }
+    lateinit var environment : KubeRigEnvironment
 
-    @TaskAction
-    fun generateResources() {
-        val detector = ResourceGenerationDetector()
-
+    protected fun detectResourceGeneratorMethods(): List<ResourceGeneratorMethod> {
         val compileKotlin = project.tasks.getByName("compileKotlin") as KotlinCompile
 
-        detector.detectResourceMethods(compileKotlin.getDestinationDir())
+        val detector = ResourceGeneratorDetector(compileKotlin.getDestinationDir())
 
-
-
-        val generator = ResourceGenerator()
-
-        val classpath = mutableListOf<File>()
-
-        val jar = project.tasks.getByName("jar") as Jar
-
-        classpath.add(jar.archiveFile.get().asFile)
-        classpath.addAll(project.configurations.getByName("runtimeClasspath").resolve())
-
-        generator.generateResources(
-            detector.resourceGeneratorTypes,
-            project.file("build/generated-yaml"),
-            this.buildResourceGenerationRuntimeClasspathClassLoader()
-        )
+        return detector.detectResourceGeneratorMethods()
     }
 
     /**
      * The resource generation code runtime classpath has a couple of dependencies like:
      * - kuberig-annotations
+     * - kuberig-core
      * - kuberig-dsl-base (a transitive dependency of a kuberig-dsl-* )
      *
      * That are also available in the gradle build classpath.
@@ -53,7 +34,7 @@ open class ResourceGenerationTask : DefaultTask() {
      * It is important that these shared dependencies are used from the gradle build classpath in order to
      * preserve class equality.
      */
-    private fun buildResourceGenerationRuntimeClasspathClassLoader() : ClassLoader {
+    protected fun buildResourceGenerationRuntimeClasspathClassLoader() : ClassLoader {
         val jar = project.tasks.getByName("jar") as Jar
 
         val runtimeClasspath = project.configurations.getByName("runtimeClasspath")
@@ -64,6 +45,7 @@ open class ResourceGenerationTask : DefaultTask() {
 
         val filteredRuntimeClasspath = completeRuntimeClasspath
             .filter { it.name != "kuberig-annotations-$kuberigVersion.jar" }
+            .filter { it.name != "kuberig-core-$kuberigVersion.jar" }
             .filter { it.name != "kuberig-dsl-base-$kuberigVersion.jar" }
             .filter{!it.name.startsWith("kotlin-")}
             .filter{!it.name.startsWith("jackson-")}

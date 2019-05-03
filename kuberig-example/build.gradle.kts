@@ -1,5 +1,3 @@
-import eu.rigeldev.kuberig.gradle.KubernetesVersion
-
 plugins {
     id("eu.rigeldev.kuberig")
 }
@@ -9,5 +7,15 @@ repositories {
 }
 
 kuberig {
-    kubernetes(KubernetesVersion.V1_12_8)
+    kubernetes("v1.12.8")
+
+    environments {
+        create("local") {
+            apiServer = "http://localhost:8080"
+        }
+        
+        create("dev") {
+            apiServer = "http://somewhere-else:8080"
+        }
+    }
 }
