@@ -10,4 +10,6 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
 
     implementation("org.ow2.asm:asm:7.1")
+
+    implementation("com.mashape.unirest:unirest-java:1.4.9")
 }
