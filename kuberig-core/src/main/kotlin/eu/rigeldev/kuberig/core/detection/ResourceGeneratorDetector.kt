@@ -3,9 +3,9 @@ package eu.rigeldev.kuberig.core.detection
 import org.objectweb.asm.ClassReader
 import java.io.File
 
-class ResourceGeneratorDetector(val compileOutputDirectory : File) {
+class ResourceGeneratorDetector(private val compileOutputDirectory : File) {
 
-    val resourceGeneratorMethods = mutableListOf<ResourceGeneratorMethod>()
+    private val resourceGeneratorMethods = mutableListOf<ResourceGeneratorMethod>()
 
     fun detectResourceGeneratorMethods() : List<ResourceGeneratorMethod> {
         this.detectResourceMethods(compileOutputDirectory)

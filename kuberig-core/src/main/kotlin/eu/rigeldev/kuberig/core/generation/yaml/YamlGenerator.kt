@@ -13,7 +13,7 @@ import java.io.File
  *
  * Note: These are `my` ideal settings, in the future this should be made configurable.
  */
-class YamlGenerator(val outputDirectory : File) {
+class YamlGenerator(private val outputDirectory : File) {
 
     private val objectMapper : ObjectMapper
 

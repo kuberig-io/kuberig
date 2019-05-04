@@ -5,20 +5,33 @@ import eu.rigeldev.kuberig.core.generation.yaml.YamlGenerator
 import eu.rigeldev.kuberig.core.detection.ResourceGeneratorMethod
 import eu.rigeldev.kuberig.dsl.DslType
 import java.io.File
+import java.util.*
 
-class ResourceGeneratorExecutor(val resourceGenerationRuntimeClasspathClassLoader: ClassLoader,
-                                val environment: KubeRigEnvironment) {
+class ResourceGeneratorExecutor(private val projectDirectory: File,
+                                private val resourceGenerationRuntimeClasspathClassLoader: ClassLoader,
+                                private val environment: KubeRigEnvironment) {
 
     fun execute(resourceGeneratorMethod: ResourceGeneratorMethod): ResourceGeneratorMethodResult {
-        ResourceGeneratorContext.fill(environment)
+        val environmentConfigs = Properties()
+        val environmentConfigsFile = File(this.projectDirectory, "environments/" +
+                "${environment.name}/" +
+                "${environment.name}-environment.properties"
+        )
+        if (environmentConfigsFile.exists()) {
+            environmentConfigsFile.inputStream().use {
+                environmentConfigs.load(it)
+            }
+        } else {
+            println("Environment configs properties file ${environmentConfigsFile.absolutePath} is not available.")
+        }
+
+        ResourceGeneratorContext.fill(environment, environmentConfigs)
         try {
             val type = resourceGenerationRuntimeClasspathClassLoader.loadClass(resourceGeneratorMethod.generatorType)
 
             val typeInstance = type.getConstructor().newInstance()
 
-            println(" - ${resourceGeneratorMethod.methodName}")
-
-            val dslType = type.getMethod(resourceGeneratorMethod.methodName).invoke(typeInstance) as DslType<Any>
+            @Suppress("UNCHECKED_CAST") val dslType = type.getMethod(resourceGeneratorMethod.methodName).invoke(typeInstance) as DslType<Any>
 
             val resource = dslType.toValue()
 

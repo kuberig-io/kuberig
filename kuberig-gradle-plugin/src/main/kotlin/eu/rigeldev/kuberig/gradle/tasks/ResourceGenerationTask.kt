@@ -1,6 +1,5 @@
 package eu.rigeldev.kuberig.gradle.tasks
 
-import eu.rigeldev.kuberig.core.execution.ResourceGeneratorExecutor
 import eu.rigeldev.kuberig.core.generation.yaml.YamlGenerator
 import org.gradle.api.tasks.OutputFiles
 import org.gradle.api.tasks.TaskAction
@@ -12,10 +11,7 @@ open class ResourceGenerationTask : AbstractResourceTask() {
 
     @TaskAction
     fun generateResources() {
-        val executor = ResourceGeneratorExecutor(
-            this.buildResourceGenerationRuntimeClasspathClassLoader(),
-            this.environment
-        )
+        val executor = this.resourceGeneratorMethodExecutor()
 
         val generator = YamlGenerator(
             project.file("build/generated-yaml/${environment.name}")

@@ -3,6 +3,7 @@ package eu.rigeldev.kuberig.gradle.tasks
 import eu.rigeldev.kuberig.core.detection.ResourceGeneratorDetector
 import eu.rigeldev.kuberig.config.KubeRigEnvironment
 import eu.rigeldev.kuberig.core.detection.ResourceGeneratorMethod
+import eu.rigeldev.kuberig.core.execution.ResourceGeneratorExecutor
 import org.gradle.api.DefaultTask
 import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -21,6 +22,14 @@ abstract class AbstractResourceTask : DefaultTask() {
         val detector = ResourceGeneratorDetector(compileKotlin.getDestinationDir())
 
         return detector.detectResourceGeneratorMethods()
+    }
+
+    protected fun resourceGeneratorMethodExecutor() : ResourceGeneratorExecutor {
+        return ResourceGeneratorExecutor(
+            this.project.projectDir,
+            this.buildResourceGenerationRuntimeClasspathClassLoader(),
+            this.environment
+        )
     }
 
     /**
