@@ -23,5 +23,7 @@ fun backendConfigInitial() : ConfigMapDsl {
 ```
 
 This example defines a simple ConfigMap resource by marking the method with @EnvResource.
+
 It also demonstrates the use of the @EnvFilter annotation in to mark this ConfigMap as only relevant for the 'dev' environment.
+
 It also demonstrates the use of the @Tick annotation. The @Tick annotation allows control over when resources are applied during deployment.
