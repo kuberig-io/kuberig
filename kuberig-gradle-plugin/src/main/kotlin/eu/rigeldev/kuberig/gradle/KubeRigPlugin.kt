@@ -30,7 +30,7 @@ open class KubeRigPlugin : Plugin<Project> {
             val capitalizedEnvironmentName = environment.name.capitalize()
 
             project.tasks.register(
-                "generateResources${capitalizedEnvironmentName}Environment",
+                "generateYaml${capitalizedEnvironmentName}Environment",
                 ResourceGenerationTask::class.java
             )
             { resourceGenerationTask ->
@@ -41,7 +41,7 @@ open class KubeRigPlugin : Plugin<Project> {
             }
 
             project.tasks.register(
-                "deployResources${capitalizedEnvironmentName}Environment",
+                "deploy${capitalizedEnvironmentName}Environment",
                 ResourceDeploymentTask::class.java
             )
             { resourceDeployerTask ->
