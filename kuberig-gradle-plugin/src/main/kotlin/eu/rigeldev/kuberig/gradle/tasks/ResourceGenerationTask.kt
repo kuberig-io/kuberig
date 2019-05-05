@@ -20,6 +20,8 @@ open class ResourceGenerationTask : AbstractResourceTask() {
         this.generatedFiles = super.detectResourceGeneratorMethods()
             .map(executor::execute)
             .map(generator::generate)
+            .filter { it.isPresent }
+            .map { it.get() }
     }
 
     @OutputFiles

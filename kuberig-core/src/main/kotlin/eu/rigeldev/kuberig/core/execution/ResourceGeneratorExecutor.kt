@@ -1,6 +1,7 @@
 package eu.rigeldev.kuberig.core.execution
 
 import eu.rigeldev.kuberig.config.KubeRigEnvironment
+import eu.rigeldev.kuberig.core.annotations.EnvFilter
 import eu.rigeldev.kuberig.core.detection.ResourceGeneratorMethod
 import eu.rigeldev.kuberig.dsl.DslType
 import java.io.File
@@ -32,11 +33,32 @@ class ResourceGeneratorExecutor(private val projectDirectory: File,
 
             val method = type.getMethod(resourceGeneratorMethod.methodName)
 
-            @Suppress("UNCHECKED_CAST") val dslType = method.invoke(typeInstance) as DslType<Any>
+            val envFilterAnnotation = method.getDeclaredAnnotation(EnvFilter::class.java)
+            val executionNeeded = if (envFilterAnnotation != null) {
+                  (envFilterAnnotation as EnvFilter).environments
+                     .map(String::toLowerCase)
+                    .contains(this.environment.name.toLowerCase())
+            } else {
+                true
+            }
 
-            val resource = dslType.toValue()
+            return if (executionNeeded) {
+                try {
+                    @Suppress("UNCHECKED_CAST") val dslType = method.invoke(typeInstance) as DslType<Any>
 
-            return ResourceGeneratorMethodResult(resourceGeneratorMethod, resource)
+                    val resource = dslType.toValue()
+
+                    SuccessResult(resourceGeneratorMethod, resource)
+                }
+                catch(t : Throwable) {
+                    ErrorResult(resourceGeneratorMethod, t)
+                }
+
+            } else {
+                SkippedResult(resourceGeneratorMethod)
+            }
+
+
         }
         finally {
             ResourceGeneratorContext.clear()
@@ -50,8 +72,6 @@ class ResourceGeneratorExecutor(private val projectDirectory: File,
             propertiesFile.inputStream().use {
                 properties.load(it)
             }
-        } else {
-            println("Properties file ${propertiesFile.absolutePath} is not available.")
         }
 
         return properties

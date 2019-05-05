@@ -6,7 +6,9 @@ import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
 import eu.rigeldev.kuberig.core.execution.ResourceGeneratorMethodResult
+import eu.rigeldev.kuberig.core.execution.SuccessResult
 import java.io.File
+import java.util.*
 
 /**
  * Contains the correct Jackson settings to produce clean yaml output.
@@ -30,7 +32,9 @@ class YamlGenerator(private val outputDirectory : File) {
         objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT)
 
         if (outputDirectory.exists()) {
-            outputDirectory.deleteRecursively()
+            if(!outputDirectory.deleteRecursively()) {
+                throw IllegalStateException("Failed to clear the output directory ${outputDirectory.absolutePath}")
+            }
         }
         outputDirectory.mkdirs()
 
@@ -45,14 +49,18 @@ class YamlGenerator(private val outputDirectory : File) {
         this.objectMapper.writeValue(resultFile, resource)
     }
 
-    fun generate(methodResult : ResourceGeneratorMethodResult) : File {
-        val yaml = this.generateYaml(methodResult.resource)
+    fun generate(methodResult : ResourceGeneratorMethodResult) : Optional<File> {
+        return if (methodResult is SuccessResult) {
+            val yaml = this.generateYaml(methodResult.resource)
 
-        val outputFile = File(outputDirectory, "${methodResult.method.methodName}.yaml")
+            val outputFile = File(outputDirectory, "${methodResult.method.methodName}.yaml")
 
-        outputFile.writeText(yaml)
+            outputFile.writeText(yaml)
 
-        return outputFile
+            Optional.of(outputFile)
+        } else {
+            Optional.empty()
+        }
     }
 
 }

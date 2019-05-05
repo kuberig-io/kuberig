@@ -5,4 +5,4 @@ package eu.rigeldev.kuberig.core.annotations
  */
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class ResourceGenerator
+annotation class EnvResource
