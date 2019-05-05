@@ -13,6 +13,7 @@ kuberig {
 
     environments {
         create("local") {
+            // tested with microk8s
             apiServer = "http://localhost:8080"
         }
         
