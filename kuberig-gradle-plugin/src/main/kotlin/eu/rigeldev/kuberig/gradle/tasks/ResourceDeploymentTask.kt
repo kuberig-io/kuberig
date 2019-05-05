@@ -13,8 +13,12 @@ open class ResourceDeploymentTask : AbstractResourceTask() {
             this.environment
         )
 
-        super.detectResourceGeneratorMethods()
+        val methodResults = super.detectResourceGeneratorMethods()
             .map(executor::execute)
+
+        super.reportAndFailOnErrors(methodResults)
+
+        methodResults
             .map(deployer::deploy)
     }
 }

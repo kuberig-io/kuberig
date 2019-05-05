@@ -1,9 +1,11 @@
 package eu.rigeldev.kuberig.gradle.tasks
 
-import eu.rigeldev.kuberig.core.detection.ResourceGeneratorDetector
 import eu.rigeldev.kuberig.config.KubeRigEnvironment
+import eu.rigeldev.kuberig.core.detection.ResourceGeneratorDetector
 import eu.rigeldev.kuberig.core.detection.ResourceGeneratorMethod
+import eu.rigeldev.kuberig.core.execution.ErrorResult
 import eu.rigeldev.kuberig.core.execution.ResourceGeneratorExecutor
+import eu.rigeldev.kuberig.core.execution.ResourceGeneratorMethodResult
 import org.gradle.api.DefaultTask
 import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -30,6 +32,20 @@ abstract class AbstractResourceTask : DefaultTask() {
             this.buildResourceGenerationRuntimeClasspathClassLoader(),
             this.environment
         )
+    }
+
+    protected fun reportAndFailOnErrors(methodResults : List<ResourceGeneratorMethodResult>) {
+        val errorResults : List<ErrorResult> = methodResults
+            .filter { it.javaClass == ErrorResult::class.java }
+            .map { it as ErrorResult }
+
+        if (errorResults.isNotEmpty()) {
+            errorResults.forEach {
+                println("[ERROR] ${it.method.generatorType}.${it.method.methodName}: ${it.errorMessage()}")
+            }
+
+            throw IllegalStateException("Not all @EnvResource method executions were successful")
+        }
     }
 
     /**

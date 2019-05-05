@@ -17,8 +17,12 @@ open class ResourceGenerationTask : AbstractResourceTask() {
             project.file("build/generated-yaml/${environment.name}")
         )
 
-        this.generatedFiles = super.detectResourceGeneratorMethods()
+        val methodResults = super.detectResourceGeneratorMethods()
             .map(executor::execute)
+
+        super.reportAndFailOnErrors(methodResults)
+
+        this.generatedFiles = methodResults
             .map(generator::generate)
             .filter { it.isPresent }
             .map { it.get() }

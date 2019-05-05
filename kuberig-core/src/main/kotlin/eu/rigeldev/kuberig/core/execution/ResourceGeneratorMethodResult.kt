@@ -11,4 +11,16 @@ class SuccessResult(
 class SkippedResult(method: ResourceGeneratorMethod) : ResourceGeneratorMethodResult(method)
 
 class ErrorResult(method: ResourceGeneratorMethod,
-                  exception : Throwable) : ResourceGeneratorMethodResult(method)
+                  val rootCause : Throwable) : ResourceGeneratorMethodResult(method) {
+
+    fun errorMessage(): String {
+
+        return if (rootCause.message != null) {
+            rootCause.message
+        } else {
+            rootCause.cause?.message
+        } ?: ""
+
+    }
+
+}
