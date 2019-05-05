@@ -38,7 +38,7 @@ The extension allows the definition of multiple environments, what the target pl
 import java.time.Duration
 
 plugins {
-    id("eu.rigeldev.kuberig")
+    id("eu.rigeldev.kuberig") version "0.0.10"
 }
 
 repositories {
