@@ -3,6 +3,7 @@ package eu.rigeldev.kuberig.gradle.tasks
 import eu.rigeldev.kuberig.config.KubeRigEnvironment
 import eu.rigeldev.kuberig.core.execution.ResourceGeneratorExecutor
 import org.gradle.api.DefaultTask
+import org.gradle.api.tasks.Input
 import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.io.File
@@ -10,8 +11,10 @@ import java.net.URLClassLoader
 
 abstract class AbstractResourceTask : DefaultTask() {
 
+    @Input
     var kuberigVersion : String = ""
 
+    @Input
     lateinit var environment : KubeRigEnvironment
 
     protected fun resourceGeneratorMethodExecutor() : ResourceGeneratorExecutor {

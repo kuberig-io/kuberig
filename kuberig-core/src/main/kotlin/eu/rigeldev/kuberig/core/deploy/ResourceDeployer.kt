@@ -44,7 +44,7 @@ class ResourceDeployer(private val environment: KubeRigEnvironment,
             var currentTick = 0
 
             @Suppress("UNCHECKED_CAST") val tickGateKeeperType : Class<out TickGateKeeper> = resourceGenerationRuntimeClasspathClassLoader.loadClass(this.deployControl.tickGateKeeper) as Class<out TickGateKeeper>
-            val tickGateKeeper = tickGateKeeperType.newInstance()
+            val tickGateKeeper = tickGateKeeperType.getConstructor().newInstance()
 
             var gateOpen = true
             println("[TICK-SYSTEM] starting...")
