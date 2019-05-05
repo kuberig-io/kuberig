@@ -8,7 +8,6 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
 import eu.rigeldev.kuberig.core.execution.ResourceGeneratorMethodResult
 import eu.rigeldev.kuberig.core.execution.SuccessResult
 import java.io.File
-import java.util.*
 
 /**
  * Contains the correct Jackson settings to produce clean yaml output.
@@ -49,18 +48,22 @@ class YamlGenerator(private val outputDirectory : File) {
         this.objectMapper.writeValue(resultFile, resource)
     }
 
-    fun generate(methodResult : ResourceGeneratorMethodResult) : Optional<File> {
-        return if (methodResult is SuccessResult) {
-            val yaml = this.generateYaml(methodResult.resource)
+    fun generate(methodResults: List<ResourceGeneratorMethodResult>) : List<File> {
+        val generatedFiles = mutableListOf<File>()
 
-            val outputFile = File(outputDirectory, "${methodResult.method.methodName}.yaml")
+        for (methodResult in methodResults) {
+            if (methodResult is SuccessResult) {
+                val yaml = this.generateYaml(methodResult.resource)
 
-            outputFile.writeText(yaml)
+                val outputFile = File(outputDirectory, "${methodResult.method.methodName}.yaml")
 
-            Optional.of(outputFile)
-        } else {
-            Optional.empty()
+                outputFile.writeText(yaml)
+
+                generatedFiles.add(outputFile)
+            }
         }
+
+        return generatedFiles
     }
 
 }

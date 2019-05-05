@@ -1,18 +1,27 @@
 package eu.rigeldev.kuberig.core.deploy
 
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.mashape.unirest.http.Unirest
 import eu.rigeldev.kuberig.config.KubeRigEnvironment
+import eu.rigeldev.kuberig.core.deploy.control.DeployControl
+import eu.rigeldev.kuberig.core.deploy.control.TickGateKeeper
 import eu.rigeldev.kuberig.core.execution.ResourceGeneratorMethodResult
 import eu.rigeldev.kuberig.core.execution.SuccessResult
 
-class ResourceDeployer(private val environment: KubeRigEnvironment) {
+class ResourceDeployer(private val environment: KubeRigEnvironment,
+                       private val deployControl: DeployControl,
+                       private val resourceGenerationRuntimeClasspathClassLoader: ClassLoader) {
 
-    fun deploy(methodResult: ResourceGeneratorMethodResult): ResourceGeneratorMethodResult {
+    val objectMapper = ObjectMapper()
 
-        val objectMapper = ObjectMapper()
+    init {
         objectMapper.findAndRegisterModules()
+        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT)
+    }
+
+    fun deploy(methodResults : List<ResourceGeneratorMethodResult>) {
 
         Unirest.setObjectMapper(object: com.mashape.unirest.http.ObjectMapper {
             override fun writeValue(value: Any?): String {
@@ -23,6 +32,61 @@ class ResourceDeployer(private val environment: KubeRigEnvironment) {
                 return objectMapper.readValue(value, valueType)
             }
         })
+
+        if (this.deployControl.tickRange.isEmpty()) {
+            methodResults.forEach { this.deploy(it) }
+        } else {
+            val successResults = methodResults
+                .filter { it.javaClass == SuccessResult::class.java }
+                .map {it as SuccessResult}
+
+            val tickIterator = this.deployControl.tickRange.iterator()
+            var currentTick = 0
+
+            @Suppress("UNCHECKED_CAST") val tickGateKeeperType : Class<out TickGateKeeper> = resourceGenerationRuntimeClasspathClassLoader.loadClass(this.deployControl.tickGateKeeper) as Class<out TickGateKeeper>
+            val tickGateKeeper = tickGateKeeperType.newInstance()
+
+            var gateOpen = true
+            println("[TICK-SYSTEM] starting...")
+
+            while (gateOpen && tickIterator.hasNext()) {
+                val nextTick = tickIterator.nextInt()
+
+                gateOpen = tickGateKeeper.isGateOpen(currentTick, nextTick)
+
+                if (gateOpen) {
+
+                    val tickResources = successResults
+                        .filter { it.tick == nextTick }
+
+                    println("[TICK-SYSTEM][TICK#$nextTick] deploying ${tickResources.size} resource(s).")
+
+                    tickResources.forEach { this.deploy(it) }
+
+                }
+
+                if (gateOpen && tickIterator.hasNext()) {
+                    println("[TICK-SYSTEM] next tick in ${this.deployControl.tickDuration}.")
+
+                    Thread.sleep(this.deployControl.tickDuration.toMillis())
+
+                    currentTick = nextTick
+                }
+
+            }
+
+            if (gateOpen) {
+                println("[TICK-SYSTEM] success.")
+            } else {
+                println("[TICK-SYSTEM] error - gate keeper closed gate at tick $currentTick!")
+                throw IllegalStateException("Tick gate keeper closed gate at tick $currentTick!")
+            }
+        }
+    }
+
+    private fun deploy(methodResult: ResourceGeneratorMethodResult): ResourceGeneratorMethodResult {
+
+
 
         if (methodResult is SuccessResult) {
             val json = objectMapper.valueToTree<JsonNode>(methodResult.resource)

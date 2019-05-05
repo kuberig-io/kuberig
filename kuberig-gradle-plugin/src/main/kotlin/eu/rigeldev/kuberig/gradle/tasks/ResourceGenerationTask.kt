@@ -11,21 +11,14 @@ open class ResourceGenerationTask : AbstractResourceTask() {
 
     @TaskAction
     fun generateResources() {
-        val executor = this.resourceGeneratorMethodExecutor()
-
         val generator = YamlGenerator(
             project.file("build/generated-yaml/${environment.name}")
         )
 
-        val methodResults = super.detectResourceGeneratorMethods()
-            .map(executor::execute)
+        val methodResults = this.resourceGeneratorMethodExecutor()
+            .execute()
 
-        super.reportAndFailOnErrors(methodResults)
-
-        this.generatedFiles = methodResults
-            .map(generator::generate)
-            .filter { it.isPresent }
-            .map { it.get() }
+        this.generatedFiles = generator.generate(methodResults)
     }
 
     @OutputFiles

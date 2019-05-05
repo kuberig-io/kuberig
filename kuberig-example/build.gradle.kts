@@ -1,3 +1,5 @@
+import java.time.Duration
+
 plugins {
     id("eu.rigeldev.kuberig")
 }
@@ -17,5 +19,11 @@ kuberig {
         create("dev") {
             apiServer = "http://somewhere-else:8080"
         }
+    }
+
+    deployControl {
+        tickRange = IntRange(1, 2)
+        tickDuration = Duration.ofSeconds(10)
+        tickGateKeeper = "eu.rigeldev.kuberig.core.deploy.control.DefaultTickGateKeeper"
     }
 }

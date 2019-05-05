@@ -13,7 +13,7 @@ class ResourceGeneratorDetector(private val compileOutputDirectory : File) {
         return resourceGeneratorMethods
     }
 
-    fun detectResourceMethods(fileOrDirectory : File) {
+    private fun detectResourceMethods(fileOrDirectory : File) {
         if (fileOrDirectory.isDirectory) {
 
             val childFiles = fileOrDirectory.listFiles()
