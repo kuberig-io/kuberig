@@ -67,7 +67,7 @@ kuberig {
 }
 ```
 
-Give it a try, checkout the kuberig-example directory.
+Give it a try, checkout the [kuberig-example](https://github.com/teyckmans/kuberig/tree/master/kuberig-example) directory.
 
 ## Limitations
 Currently only supports api-servers that don't require authentication, like microk8s.
