@@ -1,8 +1,8 @@
-# kuberig
+# KubeRig
 
 Helps you maintain Kubernetes/Openshift resources in a sane way. You define your resources with Kotlin code.
 
-An example:
+## Resource example:
 
 ```kotlin
 @EnvResource
@@ -28,7 +28,7 @@ It also demonstrates the use of the @EnvFilter annotation to mark this ConfigMap
 
 It also demonstrates the use of the @Tick annotation. The @Tick annotation allows control over when resources are applied during deployment.
 
-# A Gradle build
+## Gradle build example
 
 The following Gradle build shows the use of the kuberig extension.
 
@@ -66,3 +66,13 @@ kuberig {
     }
 }
 ```
+
+Give it a try, checkout the kuberig-example directory.
+
+## Limitations
+Currently only supports api-servers that don't require authentication, like microk8s.
+
+## Roadmap
+- Support for storing sensitive information in version control in encrypted form.
+- Transparent decryption during resource generation
+- Support for api-servers with authentication (depends on secure storage of sensitive information).
