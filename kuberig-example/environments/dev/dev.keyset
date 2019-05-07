@@ -1,0 +1,13 @@
+{
+    "primaryKeyId": 541434497,
+    "key": [{
+        "keyData": {
+            "typeUrl": "type.googleapis.com/google.crypto.tink.AesCtrHmacAeadKey",
+            "keyMaterialType": "SYMMETRIC",
+            "value": "EiYSAggQGiBJDtm/ywoloLOTHRImNg83TnEx2LOuCLhP0xbKbK1VnhooEgQIAxAgGiD+zkgnFXfw9HR/wwUQs1TTWxwsfE/jcDhsiAEGXqujCw=="
+        },
+        "outputPrefixType": "TINK",
+        "keyId": 541434497,
+        "status": "ENABLED"
+    }]
+}

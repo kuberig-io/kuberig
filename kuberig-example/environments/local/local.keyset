@@ -1,0 +1,13 @@
+{
+    "primaryKeyId": 1095246760,
+    "key": [{
+        "keyData": {
+            "typeUrl": "type.googleapis.com/google.crypto.tink.AesCtrHmacAeadKey",
+            "keyMaterialType": "SYMMETRIC",
+            "value": "EiYSAggQGiBmrLwKubj45q4Ccvl44HCLENCYfT8vqFoPLmxXHU9jCBooEgQIAxAgGiAtLFFp3S0ZeYaLP7eGzXdMRRO4iwSJ+XOzrRG2eWs8pA=="
+        },
+        "outputPrefixType": "TINK",
+        "keyId": 1095246760,
+        "status": "ENABLED"
+    }]
+}

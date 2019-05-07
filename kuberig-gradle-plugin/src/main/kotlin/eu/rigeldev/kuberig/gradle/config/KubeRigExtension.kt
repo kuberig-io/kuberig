@@ -2,6 +2,9 @@ package eu.rigeldev.kuberig.gradle.config
 
 import eu.rigeldev.kuberig.config.KubeRigEnvironment
 import eu.rigeldev.kuberig.core.deploy.control.DeployControl
+import eu.rigeldev.kuberig.encryption.EncryptionSupportFactory
+import eu.rigeldev.kuberig.encryption.tink.TinkEncryptionSupport
+import eu.rigeldev.kuberig.encryption.tink.TinkEncryptionSupportFactory
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
 
@@ -12,6 +15,8 @@ open class KubeRigExtension(private val project : Project) {
         KubeRigEnvironment::class.java)
 
     private var deployControl = DeployControl()
+
+    val encryptionSupportFactory: EncryptionSupportFactory = TinkEncryptionSupportFactory()
 
     /**
      * Switch to Kubernetes as target platform.

@@ -1,8 +1,9 @@
 package eu.rigeldev.kuberig.gradle
 
+import eu.rigeldev.kuberig.config.KubeRigEnvironment
 import eu.rigeldev.kuberig.gradle.config.KubeRigExtension
-import eu.rigeldev.kuberig.gradle.tasks.ResourceDeploymentTask
-import eu.rigeldev.kuberig.gradle.tasks.ResourceGenerationTask
+import eu.rigeldev.kuberig.gradle.tasks.*
+import eu.rigeldev.kuberig.gradle.tasks.encryption.*
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -27,10 +28,10 @@ open class KubeRigPlugin : Plugin<Project> {
         project.dependencies.add("implementation", "eu.rigeldev.kuberig:kuberig-dsl-base:$kuberigVersion")
 
         extension.environments.all { environment ->
-            val capitalizedEnvironmentName = environment.name.capitalize()
+
 
             project.tasks.register(
-                "generateYaml${capitalizedEnvironmentName}Environment",
+                this.taskName("generateYaml", environment),
                 ResourceGenerationTask::class.java
             )
             { resourceGenerationTask ->
@@ -41,7 +42,7 @@ open class KubeRigPlugin : Plugin<Project> {
             }
 
             project.tasks.register(
-                "deploy${capitalizedEnvironmentName}Environment",
+                this.taskName("deploy", environment),
                 ResourceDeploymentTask::class.java
             )
             { resourceDeployerTask ->
@@ -49,6 +50,47 @@ open class KubeRigPlugin : Plugin<Project> {
                 resourceDeployerTask.dependsOn("jar")
                 resourceDeployerTask.kuberigVersion = kuberigVersion
                 resourceDeployerTask.environment = environment
+            }
+
+            project.tasks.register(
+                this.taskName("createEncryptionKey", environment),
+                GenerateEncryptionKeyTask::class.java
+            ) { generateEncryptionKeyTask ->
+                generateEncryptionKeyTask.group = "kuberig"
+                generateEncryptionKeyTask.environment = environment
+
+            }
+
+            project.tasks.register(
+                this.taskName("encryptValue", environment),
+                EncryptEnvironmentValueTask::class.java
+            ) {
+                it.group = "kuberig"
+                it.environment = environment
+            }
+
+            project.tasks.register(
+                this.taskName("decryptValue", environment),
+                DecryptEnvironmentValueTask::class.java
+            ) {
+                it.group = "kuberig"
+                it.environment = environment
+            }
+
+            project.tasks.register(
+                this.taskName("encryptFile", environment),
+                EncryptEnvironmentFileTask::class.java
+            ) {
+                it.group = "kuberig"
+                it.environment = environment
+            }
+
+            project.tasks.register(
+                this.taskName("decryptFile", environment),
+                DecryptEnvironmentFileTask::class.java
+            ) {
+                it.group = "kuberig"
+                it.environment = environment
             }
         }
 
@@ -80,5 +122,11 @@ open class KubeRigPlugin : Plugin<Project> {
         val props = Properties()
         props.load(this.javaClass.getResourceAsStream("/kuberig.properties"))
         return props
+    }
+
+    private fun taskName(action: String, environment: KubeRigEnvironment): String {
+        val capitalizedEnvironmentName = environment.name.capitalize()
+
+        return "$action${capitalizedEnvironmentName}Environment"
     }
 }
