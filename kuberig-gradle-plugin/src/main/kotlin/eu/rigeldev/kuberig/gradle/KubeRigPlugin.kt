@@ -2,7 +2,9 @@ package eu.rigeldev.kuberig.gradle
 
 import eu.rigeldev.kuberig.config.KubeRigEnvironment
 import eu.rigeldev.kuberig.gradle.config.KubeRigExtension
-import eu.rigeldev.kuberig.gradle.tasks.*
+import eu.rigeldev.kuberig.gradle.tasks.InitGitIgnoreTask
+import eu.rigeldev.kuberig.gradle.tasks.ResourceDeploymentTask
+import eu.rigeldev.kuberig.gradle.tasks.ResourceGenerationTask
 import eu.rigeldev.kuberig.gradle.tasks.encryption.*
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -94,7 +96,9 @@ open class KubeRigPlugin : Plugin<Project> {
             }
         }
 
-
+        project.tasks.register("initGitIgnore", InitGitIgnoreTask::class.java) {
+            it.group = "kuberig"
+        }
 
         project.tasks.withType(KotlinCompile::class.java) {
             it.kotlinOptions.jvmTarget = "1.8"
