@@ -1,25 +1,25 @@
 package eu.rigeldev.kuberig.core.execution
 
 import eu.rigeldev.kuberig.config.KubeRigEnvironment
+import eu.rigeldev.kuberig.encryption.EncryptionSupport
 import java.io.File
 import java.nio.charset.Charset
 import java.util.*
 
 /**
- * Helper to provide access to global and environment specific configuration parameters and files.
+ * Helper to provide access to environment specific configuration parameters and files.
  */
 object ResourceGeneratorContext {
-    private val environment = ThreadLocal<KubeRigEnvironment>()
-    private val projectDirectory = ThreadLocal<File>()
-    private val environmentDirectory = ThreadLocal<File>()
-    private val environmentConfigs = ThreadLocal<Properties>()
-    private val globalConfigs = ThreadLocal<Properties>()
+    private val environmentThreadLocal = ThreadLocal<KubeRigEnvironment>()
+    private val environmentDirectoryThreadLocal = ThreadLocal<File>()
+    private val environmentConfigsThreadLocal = ThreadLocal<Properties>()
+    private val environmentEncryptionSupportThreadLocal = ThreadLocal<EncryptionSupport>()
 
     /**
      * The KubeRigEnvironment that is currently being processed.
      */
     fun environment() : KubeRigEnvironment {
-        return environment.get()
+        return environmentThreadLocal.get()
     }
 
     /**
@@ -28,7 +28,12 @@ object ResourceGeneratorContext {
      * @throws IllegalStateException in case the property is not available.
      */
     fun environmentConfig(configName: String) : String {
-        return this.environmentConfigs.get().getProperty(configName) ?: throw IllegalStateException("Config $configName is not available in the ${environment.get().name} environment configs.")
+        val environmentConfigs = this.environmentConfigsThreadLocal.get()
+
+        val environmentConfigValue = environmentConfigs.getProperty(configName)
+            ?: throw IllegalStateException("Config $configName is not available in the ${environment().name} environment configs.")
+
+        return this.decryptEnvironmentConfigValueIfNeeded(environmentConfigValue)
     }
 
     /**
@@ -37,7 +42,11 @@ object ResourceGeneratorContext {
      * Returns the default value in case the property is not available.
      */
     fun environmentConfig(configName: String, defaultValue: String): String {
-        return this.environmentConfigs.get().getProperty(configName, defaultValue)
+        val environmentConfigs = this.environmentConfigsThreadLocal.get()
+
+        val environmentConfigValue = environmentConfigs.getProperty(configName, defaultValue)
+
+        return this.decryptEnvironmentConfigValueIfNeeded(environmentConfigValue)
     }
 
     /**
@@ -46,64 +55,35 @@ object ResourceGeneratorContext {
      * By default this method uses UTF-8 as charset.
      */
     fun environmentFileText(filePath: String, charset: Charset = Charsets.UTF_8) : String {
-        return this.requiredEnvironmentFile(filePath).readText(charset)
+        val environmentFile = this.requiredEnvironmentFile(filePath)
+
+        return environmentFile.readText(charset)
     }
 
     /**
      * Retrieve the bytes of an environment file. The filePath parameter is used relative to the environment directory {project-root}/environments/{environment-name}.
      */
     fun environmentFileBytes(filePath: String) : ByteArray {
-        return this.requiredEnvironmentFile(filePath).readBytes()
-    }
+        val environmentFile = this.requiredEnvironmentFile(filePath)
 
-    /**
-     * Retrieve a property from the global configs file (project-root/global-configs.properties).
-     *
-     * @throws IllegalStateException in case the property is not available.
-     */
-    fun globalConfig(configName: String): String {
-        return this.globalConfigs.get().getProperty(configName) ?: throw IllegalStateException("Config $configName is not available in the global configs.")
-    }
-
-    /**
-     * Retrieves a property from the global configs file (project-root/global-configs.properties).
-     *
-     * Returns the default value in case the property is not available.
-     */
-    fun globalConfig(configName: String, defaultValue: String): String {
-        return this.environmentConfigs.get().getProperty(configName, defaultValue)
-    }
-
-    /**
-     * Retrieve the text contents of a global file. The filePath parameter is used relative to the project root directory.
-     *
-     * By default this method uses UTF-8 as charset.
-     */
-    fun globalFileText(filePath: String, charset: Charset = Charsets.UTF_8) : String {
-        return this.requiredGlobalFile(filePath).readText(charset)
-    }
-
-    /**
-     * Retrieve the bytes of a global file. The filePath parameter is used relative to the project root directory.
-     */
-    fun globalFileBytes(filePath: String) : ByteArray {
-        return this.requiredGlobalFile(filePath).readBytes()
+        return environmentFile.readBytes()
     }
 
     private fun requiredEnvironmentFile(filePath: String) : File {
-        return requiredFile(
-            this.environmentDirectory.get(),
+        val environmentFile = requiredFile(
+            this.environmentDirectoryThreadLocal.get(),
             filePath
         ) { candidateFile ->
-            "Environment file ${candidateFile.absolutePath} is not available for the ${environment.get().name} environment."
+            "Environment file ${candidateFile.absolutePath} is not available for the ${environment().name} environment."
         }
-    }
 
-    private fun requiredGlobalFile(filePath: String) : File {
-        return requiredFile(
-            this.projectDirectory.get(),
-            filePath
-        ) { candidateFile -> "Global file ${candidateFile.absolutePath} is not available." }
+        val environmentEncryptionSupport = this.environmentEncryptionSupportThreadLocal.get()
+
+        return if (environmentEncryptionSupport.isFileEncrypted(environmentFile)) {
+            environmentEncryptionSupport.decryptFile(environmentFile)
+        } else {
+            environmentFile
+        }
     }
 
     private fun requiredFile(parentDirectory: File, filePath: String, unavailableTextProvider: (File) -> String) : File {
@@ -118,23 +98,30 @@ object ResourceGeneratorContext {
         }
     }
 
+    private fun decryptEnvironmentConfigValueIfNeeded(configValue: String): String {
+        val environmentEncryptionSupport = this.environmentEncryptionSupportThreadLocal.get()
+
+        return if (environmentEncryptionSupport.isValueEncrypted(configValue)) {
+            environmentEncryptionSupport.decryptValue(configValue)
+        } else {
+            configValue
+        }
+    }
+
     fun fill(environment : KubeRigEnvironment,
-             projectDirectory: File,
              environmentDirectory: File,
              environmentConfigs : Properties,
-             globalConfigs: Properties) {
-        this.environment.set(environment)
-        this.projectDirectory.set(projectDirectory)
-        this.environmentDirectory.set(environmentDirectory)
-        this.environmentConfigs.set(environmentConfigs)
-        this.globalConfigs.set(globalConfigs)
+             environmentEncryptionSupport: EncryptionSupport) {
+        this.environmentThreadLocal.set(environment)
+        this.environmentDirectoryThreadLocal.set(environmentDirectory)
+        this.environmentConfigsThreadLocal.set(environmentConfigs)
+        this.environmentEncryptionSupportThreadLocal.set(environmentEncryptionSupport)
     }
 
     fun clear() {
-        environment.remove()
-        projectDirectory.remove()
-        environmentDirectory.remove()
-        environmentConfigs.remove()
-        globalConfigs.remove()
+        environmentThreadLocal.remove()
+        environmentDirectoryThreadLocal.remove()
+        environmentConfigsThreadLocal.remove()
+        environmentEncryptionSupportThreadLocal.remove()
     }
 }

@@ -35,7 +35,8 @@ tasks.withType<ProcessResources> {
     filesMatching("kuberig.properties") {
         expand(
             Pair("kuberigVersion", project.version.toString()),
-            Pair("kotlinVersion", project.properties["kotlinVersion"])
+            Pair("kotlinVersion", project.properties["kotlinVersion"]),
+            Pair("kuberigDslVersion", project.properties["kuberigDslVersion"])
         )
     }
 }

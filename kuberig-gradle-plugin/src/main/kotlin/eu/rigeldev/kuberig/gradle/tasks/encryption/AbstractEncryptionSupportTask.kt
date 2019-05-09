@@ -12,9 +12,11 @@ abstract class AbstractEncryptionSupportTask : DefaultTask() {
     lateinit var environment: KubeRigEnvironment
 
     protected fun environmentEncryptionSupport() : EncryptionSupport {
-        return this.project.extensions.getByType(KubeRigExtension::class.java)
-            .encryptionSupportFactory
+        return encryptionSupportFactory()
             .forEnvironment(this.project.rootDir, this.environment)
     }
+
+    protected fun encryptionSupportFactory() = this.project.extensions.getByType(KubeRigExtension::class.java)
+        .encryptionSupportFactory
 
 }

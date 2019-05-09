@@ -21,13 +21,14 @@ open class KubeRigPlugin : Plugin<Project> {
 
         val props = this.loadProps()
         val kuberigVersion = props["kuberig.version"] as String
+        val kuberigDslVersion = props["kuberig.dsl.version"] as String
         val kotlinVersion = props["kotlin.version"] as String
 
         val extension = project.extensions.create("kuberig", KubeRigExtension::class.java, project)
 
         project.dependencies.add("implementation", "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
         project.dependencies.add("implementation", "eu.rigeldev.kuberig:kuberig-annotations:$kuberigVersion")
-        project.dependencies.add("implementation", "eu.rigeldev.kuberig:kuberig-dsl-base:$kuberigVersion")
+        project.dependencies.add("implementation", "eu.rigeldev.kuberig:kuberig-dsl-base:$kuberigDslVersion")
 
         extension.environments.all { environment ->
 
@@ -94,6 +95,22 @@ open class KubeRigPlugin : Plugin<Project> {
                 it.group = "kuberig"
                 it.environment = environment
             }
+
+            project.tasks.register(
+                this.taskName("encrypt", environment),
+                EncryptEnvironmentTask::class.java
+            ) {
+                it.group = "kuberig"
+                it.environment = environment
+            }
+
+            project.tasks.register(
+                this.taskName("decrypt", environment),
+                DecryptEnvironmentTask::class.java
+            ) {
+                it.group = "kuberig"
+                it.environment = environment
+            }
         }
 
         project.tasks.register("initGitIgnore", InitGitIgnoreTask::class.java) {
@@ -112,7 +129,7 @@ open class KubeRigPlugin : Plugin<Project> {
 
             it.dependencies.add(
                 "implementation",
-                "eu.rigeldev.kuberig.dsl.$platformTypeName:kuberig-dsl-$platformTypeName-$platformVersion:$kuberigVersion"
+                "eu.rigeldev.kuberig.dsl.$platformTypeName:kuberig-dsl-$platformTypeName-$platformVersion:$kuberigDslVersion"
             )
 
             it.dependencies.add(

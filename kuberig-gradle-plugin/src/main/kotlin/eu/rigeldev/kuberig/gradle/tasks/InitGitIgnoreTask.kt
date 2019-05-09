@@ -3,7 +3,7 @@ package eu.rigeldev.kuberig.gradle.tasks
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 
-class InitGitIgnoreTask : DefaultTask() {
+open class InitGitIgnoreTask : DefaultTask() {
 
     @TaskAction
     fun init() {

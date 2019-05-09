@@ -6,13 +6,15 @@ import eu.rigeldev.kuberig.core.annotations.Tick
 import eu.rigeldev.kuberig.core.detection.ResourceGeneratorDetector
 import eu.rigeldev.kuberig.core.detection.ResourceGeneratorMethod
 import eu.rigeldev.kuberig.dsl.DslType
+import eu.rigeldev.kuberig.encryption.EncryptionSupportFactory
 import java.io.File
 import java.util.*
 
 class ResourceGeneratorExecutor(private val projectDirectory: File,
                                 private val compileOutputDirectory : File,
                                 private val resourceGenerationRuntimeClasspathClassLoader: ClassLoader,
-                                private val environment: KubeRigEnvironment) {
+                                private val environment: KubeRigEnvironment,
+                                private val encryptionSupportFactory: EncryptionSupportFactory) {
 
     fun execute(): List<ResourceGeneratorMethodResult> {
         val detector = ResourceGeneratorDetector(compileOutputDirectory)
@@ -41,19 +43,22 @@ class ResourceGeneratorExecutor(private val projectDirectory: File,
 
     fun execute(resourceGeneratorMethod: ResourceGeneratorMethod): ResourceGeneratorMethodResult {
         val environmentsDirectory = File(this.projectDirectory, "environments")
-        val globalConfigsFile = File(environmentsDirectory, "global-configs.properties")
         val environmentDirectory = File(environmentsDirectory, environment.name)
         val environmentConfigsFile = File(environmentDirectory, "${environment.name}-configs.properties")
 
         val environmentConfigs = loadProperties(environmentConfigsFile)
-        val globalConfigs = loadProperties(globalConfigsFile)
+        val environmentEncryptionSupport = this.encryptionSupportFactory.forEnvironment(
+            this.projectDirectory,
+            this.environment
+        )
+
         ResourceGeneratorContext.fill(
             environment,
-            projectDirectory,
             environmentDirectory,
             environmentConfigs,
-            globalConfigs
+            environmentEncryptionSupport
         )
+
         try {
             val type = resourceGenerationRuntimeClasspathClassLoader.loadClass(resourceGeneratorMethod.generatorType)
 
@@ -77,11 +82,7 @@ class ResourceGeneratorExecutor(private val projectDirectory: File,
                     val resource = dslType.toValue()
 
                     val tickAnnotation = method.getDeclaredAnnotation(Tick::class.java)
-                    val tick = if (tickAnnotation == null) {
-                        1
-                    } else {
-                        tickAnnotation.tick
-                    }
+                    val tick = tickAnnotation?.tick ?: 1
 
                     SuccessResult(resourceGeneratorMethod, resource, tick)
                 }
