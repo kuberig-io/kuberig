@@ -91,6 +91,6 @@ kubectl describe secret <name-of-token-secret>
 
 Copy the token in environments/{environment-name}/.plain.{environment-name}.access-token
 
-Run encrypt<Environment-name>Environment
+Run encrypt{Environment-name}Environment
 
-You are ready to run deploy<Environment-name>Environment
+You are ready to run deploy{Environment-name}Environment
