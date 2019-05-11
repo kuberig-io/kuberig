@@ -21,7 +21,7 @@ open class InitGitIgnoreTask : DefaultTask() {
             gitIgnoreFileLines.add(plainFileIgnore)
         }
 
-        gitIgnoreFile.writeText(gitIgnoreFileLines.joinToString { "\n" })
+        gitIgnoreFile.writeText(gitIgnoreFileLines.joinToString("\n"))
 
     }
 }

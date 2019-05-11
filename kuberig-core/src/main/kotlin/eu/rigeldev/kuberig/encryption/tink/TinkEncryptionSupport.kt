@@ -1,12 +1,12 @@
 package eu.rigeldev.kuberig.encryption.tink
 
-import com.google.crypto.tink.config.TinkConfig
-import java.io.File
-import com.google.crypto.tink.JsonKeysetReader
 import com.google.crypto.tink.CleartextKeysetHandle
+import com.google.crypto.tink.JsonKeysetReader
 import com.google.crypto.tink.KeysetHandle
 import com.google.crypto.tink.aead.AeadFactory
+import com.google.crypto.tink.config.TinkConfig
 import eu.rigeldev.kuberig.encryption.EncryptionSupport
+import java.io.File
 import java.util.*
 
 class TinkEncryptionSupport(keysetFile: File) : EncryptionSupport {
@@ -48,7 +48,7 @@ class TinkEncryptionSupport(keysetFile: File) : EncryptionSupport {
 
         val ciphertext = aead.encrypt(plainFile.readBytes(), "".toByteArray(Charsets.UTF_8))
 
-        val outputFile = File(plainFile.parentFile, ".encrypted.${plainFile.name.substring(6)}")
+        val outputFile = File(plainFile.parentFile, ".encrypted.${plainFile.name.substring(7)}")
 
         outputFile.writeBytes(ciphertext)
 
@@ -70,7 +70,7 @@ class TinkEncryptionSupport(keysetFile: File) : EncryptionSupport {
 
         val decryptedBytes = aead.decrypt(encryptedBytes, "".toByteArray(Charsets.UTF_8))
 
-        val outputFile = File(encryptedFile.parentFile, encryptedFile.name.substring(11))
+        val outputFile = File(encryptedFile.parentFile, ".plain." + encryptedFile.name.substring(11))
 
         outputFile.writeBytes(decryptedBytes)
 
