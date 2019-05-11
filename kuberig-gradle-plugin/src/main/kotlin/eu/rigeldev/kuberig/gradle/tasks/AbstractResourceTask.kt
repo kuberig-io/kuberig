@@ -1,21 +1,17 @@
 package eu.rigeldev.kuberig.gradle.tasks
 
-import eu.rigeldev.kuberig.config.KubeRigEnvironment
 import eu.rigeldev.kuberig.core.execution.ResourceGeneratorExecutor
-import org.gradle.api.DefaultTask
+import eu.rigeldev.kuberig.gradle.tasks.encryption.AbstractEncryptionSupportTask
 import org.gradle.api.tasks.Input
 import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.io.File
 import java.net.URLClassLoader
 
-abstract class AbstractResourceTask : DefaultTask() {
+abstract class AbstractResourceTask : AbstractEncryptionSupportTask() {
 
     @Input
     var kuberigVersion : String = ""
-
-    @Input
-    lateinit var environment : KubeRigEnvironment
 
     protected fun resourceGeneratorMethodExecutor() : ResourceGeneratorExecutor {
         val compileKotlin = project.tasks.getByName("compileKotlin") as KotlinCompile
@@ -24,7 +20,8 @@ abstract class AbstractResourceTask : DefaultTask() {
             this.project.projectDir,
             compileKotlin.getDestinationDir(),
             this.buildResourceGenerationRuntimeClasspathClassLoader(),
-            this.environment
+            this.environment,
+            super.encryptionSupportFactory()
         )
     }
 
@@ -52,8 +49,8 @@ abstract class AbstractResourceTask : DefaultTask() {
             .filter { it.name != "kuberig-annotations-$kuberigVersion.jar" }
             .filter { it.name != "kuberig-core-$kuberigVersion.jar" }
             .filter { it.name != "kuberig-dsl-base-$kuberigVersion.jar" }
-            .filter{!it.name.startsWith("kotlin-")}
-            .filter{!it.name.startsWith("jackson-")}
+            .filter {!it.name.startsWith("kotlin-")}
+            .filter {!it.name.startsWith("jackson-")}
 
         val urls = filteredRuntimeClasspath.map { it.toURI().toURL() }
 

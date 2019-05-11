@@ -4,15 +4,24 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.mashape.unirest.http.Unirest
+import com.mashape.unirest.request.HttpRequest
 import eu.rigeldev.kuberig.config.KubeRigEnvironment
 import eu.rigeldev.kuberig.core.deploy.control.DeployControl
 import eu.rigeldev.kuberig.core.deploy.control.TickGateKeeper
 import eu.rigeldev.kuberig.core.execution.ResourceGeneratorMethodResult
 import eu.rigeldev.kuberig.core.execution.SuccessResult
+import eu.rigeldev.kuberig.encryption.EncryptionSupportFactory
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory
+import org.apache.http.conn.ssl.TrustSelfSignedStrategy
+import org.apache.http.impl.client.HttpClients
+import org.apache.http.ssl.SSLContexts
+import java.io.File
 
-class ResourceDeployer(private val environment: KubeRigEnvironment,
+class ResourceDeployer(private val projectDirectory: File,
+                       private val environment: KubeRigEnvironment,
                        private val deployControl: DeployControl,
-                       private val resourceGenerationRuntimeClasspathClassLoader: ClassLoader) {
+                       private val resourceGenerationRuntimeClasspathClassLoader: ClassLoader,
+                       private val encryptionSupportFactory: EncryptionSupportFactory) {
 
     val objectMapper = ObjectMapper()
 
@@ -32,6 +41,16 @@ class ResourceDeployer(private val environment: KubeRigEnvironment,
                 return objectMapper.readValue(value, valueType)
             }
         })
+
+        val sslcontext = SSLContexts.custom()
+            .loadTrustMaterial(null, TrustSelfSignedStrategy())
+            .build()
+
+        val sslsf = SSLConnectionSocketFactory(sslcontext)
+        val httpclient = HttpClients.custom()
+            .setSSLSocketFactory(sslsf)
+            .build()
+        Unirest.setHttpClient(httpclient)
 
         if (this.deployControl.tickRange.isEmpty()) {
             methodResults.forEach { this.deploy(it) }
@@ -95,7 +114,9 @@ class ResourceDeployer(private val environment: KubeRigEnvironment,
             val kind = json.get("kind").textValue()
             val resourceName = json.get("metadata").get("name").textValue()
 
-            val apiResourceList = Unirest.get("${environment.apiServer}/api/$apiVersion")
+            val getResourceList = Unirest.get("${environment.apiServer}/api/$apiVersion")
+            this.addAuthentication(getResourceList)
+            val apiResourceList = getResourceList
                 .asObject(APIResourceList::class.java)
 
             val apiResource = apiResourceList.body.resources.first{ it.kind == kind }
@@ -108,12 +129,15 @@ class ResourceDeployer(private val environment: KubeRigEnvironment,
 
             val targetUrl = "${environment.apiServer}/api/$apiVersion/namespaces/$namespace/${apiResource.name}"
 
-            val getResult = Unirest.get("$targetUrl/$resourceName")
+            val get = Unirest.get("$targetUrl/$resourceName")
+            this.addAuthentication(get)
+            val getResult = get
                 .asJson()
 
             if (getResult.status == 404) {
-                val postResponse =
-                    Unirest.post(targetUrl)
+                val post = Unirest.post(targetUrl)
+                this.addAuthentication(post)
+                val postResponse = post
                         .header("Content-Type", "application/json")
                         .body(json)
                         .asString()
@@ -127,8 +151,9 @@ class ResourceDeployer(private val environment: KubeRigEnvironment,
                     println("created $kind - $resourceName in $namespace namespace")
                 }
             } else {
-                val putResponse =
-                    Unirest.put("$targetUrl/$resourceName")
+                val put = Unirest.put("$targetUrl/$resourceName")
+                this.addAuthentication(put)
+                val putResponse = put
                         .header("Content-Type", "application/json")
                         .body(json)
                         .asString()
@@ -145,5 +170,24 @@ class ResourceDeployer(private val environment: KubeRigEnvironment,
         }
 
         return methodResult
+    }
+
+    private fun addAuthentication(request: HttpRequest) {
+        val environmentDirectory = File(projectDirectory, "environments/${this.environment.name}")
+        val encryptedAccessTokenFile = File(environmentDirectory, ".encrypted.${this.environment.name}.access-token")
+
+        if (encryptedAccessTokenFile.exists()) {
+            val environmentEncryptionSupport = this.encryptionSupportFactory.forEnvironment(
+                this.projectDirectory,
+                this.environment)
+
+            val decryptedAccessTokenFile = environmentEncryptionSupport.decryptFile(encryptedAccessTokenFile)
+
+            request.header("Authorization", "Bearer ${decryptedAccessTokenFile.readText()}")
+
+            decryptedAccessTokenFile.delete()
+        } else {
+            println(encryptedAccessTokenFile.absolutePath + " not available")
+        }
     }
 }

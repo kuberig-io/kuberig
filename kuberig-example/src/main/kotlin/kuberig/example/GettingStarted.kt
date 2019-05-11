@@ -44,7 +44,7 @@ class GettingStarted {
             data("environment.name", environment().name)
             data("app-config.properties", environmentFileText("files/custom-app-config.properties"))
             data("from.env.config", environmentConfig("something.environment.specific"))
-            data("deploy.progress", "0%")
+            data("deploy.progress", "100%")
         }
 
     }

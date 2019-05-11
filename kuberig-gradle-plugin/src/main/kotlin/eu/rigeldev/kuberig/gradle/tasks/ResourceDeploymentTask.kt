@@ -12,9 +12,11 @@ open class ResourceDeploymentTask : AbstractResourceTask() {
             .execute()
 
         val resourceDeployer = ResourceDeployer(
+            this.project.rootDir,
             this.environment,
             this.project.extensions.getByType(KubeRigExtension::class.java).getDeployControl(),
-            this.buildResourceGenerationRuntimeClasspathClassLoader())
+            this.buildResourceGenerationRuntimeClasspathClassLoader(),
+            this.encryptionSupportFactory())
 
         resourceDeployer.deploy(methodResults)
     }

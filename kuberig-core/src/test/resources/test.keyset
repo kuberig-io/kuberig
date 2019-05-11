@@ -1,0 +1,13 @@
+{
+    "primaryKeyId": 987137946,
+    "key": [{
+        "keyData": {
+            "typeUrl": "type.googleapis.com/google.crypto.tink.AesCtrHmacAeadKey",
+            "keyMaterialType": "SYMMETRIC",
+            "value": "EiYSAggQGiCA+ysxjv602rmSB5Ky0ArI451PIezwBAznfgzVw41V4RooEgQIAxAgGiClVb4UdN4fNPoOAUCH7mehWGyzAwZbSYxSvwwUXrsgqg=="
+        },
+        "outputPrefixType": "TINK",
+        "keyId": 987137946,
+        "status": "ENABLED"
+    }]
+}
