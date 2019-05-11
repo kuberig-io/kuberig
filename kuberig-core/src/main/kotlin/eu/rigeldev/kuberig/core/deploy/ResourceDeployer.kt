@@ -11,6 +11,10 @@ import eu.rigeldev.kuberig.core.deploy.control.TickGateKeeper
 import eu.rigeldev.kuberig.core.execution.ResourceGeneratorMethodResult
 import eu.rigeldev.kuberig.core.execution.SuccessResult
 import eu.rigeldev.kuberig.encryption.EncryptionSupportFactory
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory
+import org.apache.http.conn.ssl.TrustSelfSignedStrategy
+import org.apache.http.impl.client.HttpClients
+import org.apache.http.ssl.SSLContexts
 import java.io.File
 
 class ResourceDeployer(private val projectDirectory: File,
@@ -37,6 +41,16 @@ class ResourceDeployer(private val projectDirectory: File,
                 return objectMapper.readValue(value, valueType)
             }
         })
+
+        val sslcontext = SSLContexts.custom()
+            .loadTrustMaterial(null, TrustSelfSignedStrategy())
+            .build()
+
+        val sslsf = SSLConnectionSocketFactory(sslcontext)
+        val httpclient = HttpClients.custom()
+            .setSSLSocketFactory(sslsf)
+            .build()
+        Unirest.setHttpClient(httpclient)
 
         if (this.deployControl.tickRange.isEmpty()) {
             methodResults.forEach { this.deploy(it) }
@@ -100,7 +114,9 @@ class ResourceDeployer(private val projectDirectory: File,
             val kind = json.get("kind").textValue()
             val resourceName = json.get("metadata").get("name").textValue()
 
-            val apiResourceList = Unirest.get("${environment.apiServer}/api/$apiVersion")
+            val getResourceList = Unirest.get("${environment.apiServer}/api/$apiVersion")
+            this.addAuthentication(getResourceList)
+            val apiResourceList = getResourceList
                 .asObject(APIResourceList::class.java)
 
             val apiResource = apiResourceList.body.resources.first{ it.kind == kind }
@@ -167,7 +183,7 @@ class ResourceDeployer(private val projectDirectory: File,
 
             val decryptedAccessTokenFile = environmentEncryptionSupport.decryptFile(encryptedAccessTokenFile)
 
-            request.header("Authentication", "Bearer ${decryptedAccessTokenFile.readText()}")
+            request.header("Authorization", "Bearer ${decryptedAccessTokenFile.readText()}")
         } else {
             println(encryptedAccessTokenFile.absolutePath + " not available")
         }
