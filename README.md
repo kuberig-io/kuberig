@@ -69,10 +69,28 @@ kuberig {
 
 Give it a try, checkout the [kuberig-example](https://github.com/teyckmans/kuberig/tree/master/kuberig-example) directory.
 
-## Limitations
-Currently only supports api-servers that don't require authentication, like microk8s.
+## Authentication
 
-## Roadmap
-- Support for storing sensitive information in version control in encrypted form.
-- Transparent decryption during resource generation
-- Support for api-servers with authentication (depends on secure storage of sensitive information).
+Access tokens are stored encrypted in the environments/<environment-name>/.encrypted.<environment-name>.access-token file.
+and decrypted for as short as possible when needed.
+
+### Service Account setup
+
+Create a service account and grant the edit role: 
+
+```bash
+kubectl create sa kuberig-deployer --namespace=default
+kubectl create rolebinding kuberig-deployer-edit --clusterrole=edit --serviceaccount=default:kuberig-deployer --namespace=default
+```
+
+Retrieve the acces token:
+```bash
+kubectl describe sa kuberig-deployer --namespace=default
+kubectl describe secret <name-of-token-secret>
+```
+
+Copy the token in environments/<environment-name>/.plain.<environment-name.access-token
+
+Run encrypt<Environment-name>Environment
+
+You are ready to run deploy<Environment-name>Environment
