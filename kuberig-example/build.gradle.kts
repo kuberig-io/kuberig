@@ -18,7 +18,7 @@ kuberig {
         }
         
         create("dev") {
-            apiServer = "http://somewhere-else:8080"
+            apiServer = "https://58788ad0-0a17-4f15-a76f-c0406bcd7e40.k8s.ondigitalocean.com"
         }
     }
 
