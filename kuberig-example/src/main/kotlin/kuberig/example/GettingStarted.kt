@@ -51,6 +51,20 @@ class GettingStarted {
 
     @EnvResource
     @EnvFilter(environments = ["dev"])
+    fun devConfig() : ConfigMapDsl {
+
+        return configMap {
+
+            metadata {
+                name("dev-config")
+            }
+
+            data("some.dev.flags", "swagger")
+
+        }
+    }
+
+    @EnvResource
     fun backendSecret(): SecretDsl {
 
         return secret {
@@ -59,7 +73,10 @@ class GettingStarted {
                 name("backend-secret")
             }
 
-            data("app-secrets.properties", environmentFileBytes("files/custom-app-secrets.properties"))
+            // use an encrypted file
+            data("app-secrets.properties", environmentFileBytes("files/.encrypted.custom-app-secrets.properties"))
+            // use an encrypted config value
+            data("some.password", environmentConfig("some.password").toByteArray())
         }
 
     }
