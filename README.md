@@ -72,7 +72,6 @@ Give it a try, checkout the [kuberig-example](https://github.com/teyckmans/kuber
 ## Authentication
 
 Access tokens are stored encrypted in the environments/{environment-name}/.encrypted.{environment-name}.access-token file.
-and decrypted for as short as possible when needed.
 
 ### Service Account setup
 
@@ -83,7 +82,7 @@ kubectl create sa kuberig-deployer --namespace=default
 kubectl create rolebinding kuberig-deployer-edit --clusterrole=edit --serviceaccount=default:kuberig-deployer --namespace=default
 ```
 
-Retrieve the acces token:
+Retrieve the access token:
 ```bash
 kubectl describe sa kuberig-deployer --namespace=default
 kubectl describe secret <name-of-token-secret>
@@ -91,6 +90,8 @@ kubectl describe secret <name-of-token-secret>
 
 Copy the token in environments/{environment-name}/.plain.{environment-name}.access-token
 
-Run encrypt{Environment-name}Environment
+Run createEncryptionKey{Environment-name}Environment if you have not done so already. 
+
+Run encrypt{Environment-name}Environment.
 
 You are ready to run deploy{Environment-name}Environment
