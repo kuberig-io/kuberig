@@ -74,7 +74,7 @@ Give it a try, checkout the [kuberig-example](https://github.com/teyckmans/kuber
 KubeRig uses the [Google Tink](https://github.com/google/tink) in order to encrypt sensitive information.
 
 If you prefix all sensitive filenames with `.plain.` and configure your .gitignore file properly by using the `initGitIgnore` task
-you can prevent yourself from committing sensitive information.
+you can prevent yourself from committing sensitive information. But even then it requires a lot of rigor to not accidentally commit sensitive information. You have been warned!
 
 So before proceeding please run the `initGitIgnore` task and remember to prefix files that contain sensitive information with the `.plain.` prefix! 
 
