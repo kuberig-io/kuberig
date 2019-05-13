@@ -7,7 +7,14 @@ open class InitGitIgnoreTask : DefaultTask() {
 
     @TaskAction
     fun init() {
-        val plainFileIgnore = ".plain.*"
+        val minimalIgnores = listOf(
+            ".plain.*",
+            "out/",
+            "build/",
+            ".gradle/",
+            ".idea/",
+            "*.keyset"
+        )
 
         val gitIgnoreFile = this.project.file(".gitignore")
 
@@ -17,8 +24,10 @@ open class InitGitIgnoreTask : DefaultTask() {
             mutableListOf()
         }
 
-        if (!gitIgnoreFileLines.contains(plainFileIgnore)){
-            gitIgnoreFileLines.add(plainFileIgnore)
+        minimalIgnores.forEach {
+            if (!gitIgnoreFileLines.contains(it)){
+                gitIgnoreFileLines.add(it)
+            }
         }
 
         gitIgnoreFile.writeText(gitIgnoreFileLines.joinToString("\n"))

@@ -1,3 +1,6 @@
-out
-build
 .plain.*
+out/
+build/
+.gradle/
+.idea/
+*.keyset
