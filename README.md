@@ -71,14 +71,14 @@ Give it a try, checkout the [kuberig-example](https://github.com/teyckmans/kuber
 
 ## Encryption support/setup
 
-KubeRig uses the [Google Tink](https://github.com/google/tink) in order to encrypt sensitive information.
+KubeRig uses the [Google Tink](https://github.com/google/tink) library in order to provide encryption support. 
 
 If you prefix all sensitive filenames with `.plain.` and configure your .gitignore file properly by using the `initGitIgnore` task
 you can prevent yourself from committing sensitive information. But even then it requires a lot of rigor to not accidentally commit sensitive information. You have been warned!
 
 So before proceeding please run the `initGitIgnore` task and remember to prefix files that contain sensitive information with the `.plain.` prefix! 
 
-You create an encryption key for every environment by using the `createEncryptionKey{Environment-name}Environment` task.
+You create an encryption key for every environment by using the `createEncryptionKey{Environment-name}Environment` task. We currently generate a AeadKeyTemplates.AES256_CTR_HMAC_SHA256 keyset.
 
 This will create a {environment-name}.keyset file in the `environment` directory. You should **NEVER EVER** commit the {environment-name}.keyset file. If you have used the `initGitIgnore` task this file will already get ignored.
 
@@ -102,9 +102,9 @@ The root directory is referred to as the project directory.
 The `environments` directory contains a sub directory for every environment defined in the build file.
 
 Each `environment` directory contains the following files:
-- {environment-name}.keyset the encryption key of the environment.
+- {environment-name}.keyset the encryption key of the environment. You should **NEVER EVER** commit the {environment-name}.keyset file. If you have used the `initGitIgnore` task this file will already get ignored.
 - .encrypted.{environment-name}.access-token the encrypted version of the JWT access token of service account that can be used to do deployments.
-- {environment-name}-config.properties a properties file with environment specific configuration parameters. Can contain encrypted values.
+- {environment-name}-config.properties a properties file with environment specific configuration parameters. Can contain encrypted values use the `encryptValue{Environment-name}Environment` task to encrypt values.
 - other files that are environment specific, remember to prefix files that contains sensitive information with `.plain.` . 
 
 The `src\main\kotlin` directory is where you place your [Kotlin](https://kotlinlang.org/) resource generation code.
