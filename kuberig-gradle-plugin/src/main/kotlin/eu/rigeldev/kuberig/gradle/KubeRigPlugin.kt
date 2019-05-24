@@ -65,16 +65,16 @@ open class KubeRigPlugin : Plugin<Project> {
             }
 
             project.tasks.register(
-                this.taskName("encryptValue", environment),
-                EncryptEnvironmentValueTask::class.java
+                this.taskName("encryptConfig", environment),
+                EncryptEnvironmentConfigTask::class.java
             ) {
                 it.group = "kuberig"
                 it.environment = environment
             }
 
             project.tasks.register(
-                this.taskName("decryptValue", environment),
-                DecryptEnvironmentValueTask::class.java
+                this.taskName("decryptConfig", environment),
+                DecryptEnvironmentConfigTask::class.java
             ) {
                 it.group = "kuberig"
                 it.environment = environment
@@ -114,6 +114,10 @@ open class KubeRigPlugin : Plugin<Project> {
         }
 
         project.tasks.register("initGitIgnore", InitGitIgnoreTask::class.java) {
+            it.group = "kuberig"
+        }
+
+        project.tasks.register("initEnvironment", eu.rigeldev.kuberig.gradle.tasks.InitEnvironmentTask::class.java) {
             it.group = "kuberig"
         }
 

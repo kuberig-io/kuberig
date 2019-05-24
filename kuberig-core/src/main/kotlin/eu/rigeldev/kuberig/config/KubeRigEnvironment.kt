@@ -1,5 +1,5 @@
 package eu.rigeldev.kuberig.config
 
-class KubeRigEnvironment(val name: String) {
-    var apiServer : String = ""
+open class KubeRigEnvironment(val name: String) {
+
 }

@@ -7,6 +7,7 @@ import eu.rigeldev.kuberig.core.detection.ResourceGeneratorDetector
 import eu.rigeldev.kuberig.core.detection.ResourceGeneratorMethod
 import eu.rigeldev.kuberig.dsl.DslType
 import eu.rigeldev.kuberig.encryption.EncryptionSupportFactory
+import eu.rigeldev.kuberig.support.PropertiesLoaderSupport
 import java.io.File
 import java.util.*
 
@@ -46,7 +47,7 @@ class ResourceGeneratorExecutor(private val projectDirectory: File,
         val environmentDirectory = File(environmentsDirectory, environment.name)
         val environmentConfigsFile = File(environmentDirectory, "${environment.name}-configs.properties")
 
-        val environmentConfigs = loadProperties(environmentConfigsFile)
+        val environmentConfigs = PropertiesLoaderSupport.loadProperties(environmentConfigsFile)
         val environmentEncryptionSupport = this.encryptionSupportFactory.forEnvironment(
             this.projectDirectory,
             this.environment
@@ -99,18 +100,6 @@ class ResourceGeneratorExecutor(private val projectDirectory: File,
         finally {
             ResourceGeneratorContext.clear()
         }
-    }
-
-    private fun loadProperties(propertiesFile: File) : Properties {
-        val properties = Properties()
-
-        if (propertiesFile.exists()) {
-            propertiesFile.inputStream().use {
-                properties.load(it)
-            }
-        }
-
-        return properties
     }
 
 }

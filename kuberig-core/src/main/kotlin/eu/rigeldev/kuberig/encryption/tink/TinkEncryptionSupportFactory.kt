@@ -9,7 +9,7 @@ class TinkEncryptionSupportFactory : EncryptionSupportFactory {
 
 
     override fun forEnvironment(projectDirectory: File, environment: KubeRigEnvironment): EncryptionSupport {
-        val keysetFile = File(projectDirectory, "environments/${environment.name}/${environment.name}.keyset")
+        val keysetFile = File(projectDirectory, "environments/${environment.name}/${environment.name}.keyset.json")
         return TinkEncryptionSupport(keysetFile)
     }
 }

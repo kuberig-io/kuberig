@@ -10,7 +10,9 @@ import eu.rigeldev.kuberig.core.deploy.control.DeployControl
 import eu.rigeldev.kuberig.core.deploy.control.TickGateKeeper
 import eu.rigeldev.kuberig.core.execution.ResourceGeneratorMethodResult
 import eu.rigeldev.kuberig.core.execution.SuccessResult
+import eu.rigeldev.kuberig.encryption.EncryptionSupport
 import eu.rigeldev.kuberig.encryption.EncryptionSupportFactory
+import eu.rigeldev.kuberig.support.PropertiesLoaderSupport
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy
 import org.apache.http.impl.client.HttpClients
@@ -24,10 +26,26 @@ class ResourceDeployer(private val projectDirectory: File,
                        private val encryptionSupportFactory: EncryptionSupportFactory) {
 
     val objectMapper = ObjectMapper()
+    val environmentEncryptionSupport: EncryptionSupport
+    val apiServerUrl : String
 
     init {
         objectMapper.findAndRegisterModules()
         objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT)
+
+        this.environmentEncryptionSupport = this.encryptionSupportFactory.forEnvironment(
+            this.projectDirectory,
+            this.environment)
+
+        val environmentsDirectory = File(this.projectDirectory, "environments")
+        val environmentDirectory = File(environmentsDirectory, environment.name)
+        val environmentConfigsFile = File(environmentDirectory, "${environment.name}-configs.properties")
+
+        val environmentConfigs = PropertiesLoaderSupport.loadProperties(environmentConfigsFile)
+
+        val possiblyEncryptedApiServerUrl = environmentConfigs.getProperty("api.server.url")
+
+        this.apiServerUrl = this.environmentEncryptionSupport.decryptValue(possiblyEncryptedApiServerUrl)
     }
 
     fun deploy(methodResults : List<ResourceGeneratorMethodResult>) {
@@ -114,7 +132,7 @@ class ResourceDeployer(private val projectDirectory: File,
             val kind = json.get("kind").textValue()
             val resourceName = json.get("metadata").get("name").textValue()
 
-            val getResourceList = Unirest.get("${environment.apiServer}/api/$apiVersion")
+            val getResourceList = Unirest.get("$apiServerUrl/api/$apiVersion")
             this.addAuthentication(getResourceList)
             val apiResourceList = getResourceList
                 .asObject(APIResourceList::class.java)
@@ -127,7 +145,7 @@ class ResourceDeployer(private val projectDirectory: File,
                 "default"
             }
 
-            val targetUrl = "${environment.apiServer}/api/$apiVersion/namespaces/$namespace/${apiResource.name}"
+            val targetUrl = "$apiServerUrl/api/$apiVersion/namespaces/$namespace/${apiResource.name}"
 
             val get = Unirest.get("$targetUrl/$resourceName")
             this.addAuthentication(get)

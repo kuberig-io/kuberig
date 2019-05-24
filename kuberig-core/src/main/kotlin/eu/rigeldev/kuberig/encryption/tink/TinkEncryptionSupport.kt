@@ -30,13 +30,17 @@ class TinkEncryptionSupport(keysetFile: File) : EncryptionSupport {
     }
 
     override fun decryptValue(encryptedValue: String): String {
-        val encryptedBytes = Base64.getDecoder().decode(encryptedValue.substring(4, encryptedValue.length - 1))
+        return if (this.isValueEncrypted(encryptedValue)) {
+            val encryptedBytes = Base64.getDecoder().decode(encryptedValue.substring(4, encryptedValue.length - 1))
 
-        val aead = AeadFactory.getPrimitive(keysetHandle)
+            val aead = AeadFactory.getPrimitive(keysetHandle)
 
-        val decryptedBytes = aead.decrypt(encryptedBytes, "".toByteArray(Charsets.UTF_8))
+            val decryptedBytes = aead.decrypt(encryptedBytes, "".toByteArray(Charsets.UTF_8))
 
-        return decryptedBytes.toString(Charsets.UTF_8)
+            decryptedBytes.toString(Charsets.UTF_8)
+        } else {
+            encryptedValue
+        }
     }
 
     override fun isValueEncrypted(value: String): Boolean {
