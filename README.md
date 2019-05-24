@@ -5,6 +5,7 @@ KubeRig helps you maintain Kubernetes/Openshift resources in a sane way. You def
 The Kotlin DSL is generated based on the api specification of a cluster. For vanilla Kubernetes and Openshift you can find the supported versions here:
 - [Kubernetes](https://github.com/teyckmans/kuberig-dsl-kubernetes)
 - [Openshift](https://github.com/teyckmans/kuberig-dsl-openshift)
+
 In case you have CRDs you can use the KubeRig DSL generator [here](https://github.com/teyckmans/kuberig-dsl). 
 
 ## Resource example:
