@@ -9,11 +9,11 @@ open class InitGitIgnoreTask : DefaultTask() {
     fun init() {
         val minimalIgnores = listOf(
             ".plain.*",
-            "out/",
-            "build/",
-            ".gradle/",
-            ".idea/",
-            "*.keyset"
+            "out",
+            "build",
+            ".gradle",
+            ".idea",
+            "*.keyset.json"
         )
 
         val gitIgnoreFile = this.project.file(".gitignore")
