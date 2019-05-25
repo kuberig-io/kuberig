@@ -204,8 +204,6 @@ class ResourceDeployer(private val projectDirectory: File,
             request.header("Authorization", "Bearer ${decryptedAccessTokenFile.readText()}")
 
             decryptedAccessTokenFile.delete()
-        } else {
-            println(encryptedAccessTokenFile.absolutePath + " not available")
         }
     }
 }
