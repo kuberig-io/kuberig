@@ -89,6 +89,16 @@ abstract class InitEnvironmentTask: DefaultTask() {
         }
 
         environmentConfigFile.writeText(newLines.joinToString("\\n"))
+
+        val srcDirectory = this.project.file("src")
+        this.createDirectoryIfNeeded(srcDirectory)
+
+        val mainSrcDirectory = File(srcDirectory, "main")
+        this.createDirectoryIfNeeded(mainSrcDirectory)
+
+        val mainKotlinSrcDirectory = File(mainSrcDirectory, "kotlin")
+        this.createDirectoryIfNeeded(mainKotlinSrcDirectory)
+
     }
 
     private fun createDirectoryIfNeeded(directory: File) {

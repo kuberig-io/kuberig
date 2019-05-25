@@ -140,6 +140,8 @@ open class KubeRigPlugin : Plugin<Project> {
                 "implementation",
                 "eu.rigeldev.kuberig:kuberig-core:$kuberigVersion"
             )
+
+            this.createEnvironmentsFromDirectories(project)
         }
     }
 
@@ -153,5 +155,29 @@ open class KubeRigPlugin : Plugin<Project> {
         val capitalizedEnvironmentName = environment.name.capitalize()
 
         return "$action${capitalizedEnvironmentName}Environment"
+    }
+
+    private fun createEnvironmentsFromDirectories(project: Project) {
+        val evaluatedExtension = project.extensions.getByType(KubeRigExtension::class.java)
+        val environmentsContainer = evaluatedExtension.environments.asMap
+
+        val environmentsDirectory = project.file("environments")
+        if (environmentsDirectory.exists()) {
+
+            val fileOrDirectoryList = environmentsDirectory.listFiles()
+            for (fileOrDirectory in fileOrDirectoryList) {
+                if (fileOrDirectory.isDirectory) {
+
+                    val environmentName = fileOrDirectory.name
+
+                    if (!environmentsContainer.containsKey(environmentName)) {
+
+                        evaluatedExtension.environments.create(environmentName)
+                    }
+
+                }
+            }
+
+        }
     }
 }
