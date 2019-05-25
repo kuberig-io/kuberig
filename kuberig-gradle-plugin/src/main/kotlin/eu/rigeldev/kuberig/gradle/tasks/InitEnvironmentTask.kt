@@ -64,7 +64,7 @@ abstract class InitEnvironmentTask: DefaultTask() {
 
         val encryptedApiServerUrl = environmentEncryptionSupport.encryptValue(this.apiServerUrl)
 
-        val environmentConfigFile = File(environmentDirectory, "${environmentName}-config.properties")
+        val environmentConfigFile = File(environmentDirectory, "${environmentName}-configs.properties")
         val currentLines = if (environmentConfigFile.exists()) {
             environmentConfigFile.readLines()
         } else {
