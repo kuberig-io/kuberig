@@ -36,28 +36,15 @@ The extension allows the definition of multiple environments, what the target pl
 
 ```kotlin
 plugins {
-    id("eu.rigeldev.kuberig") version "0.0.11"
+    id("eu.rigeldev.kuberig") version "0.0.12"
 }
 
 repositories {
     jcenter()
 }
-
-kuberig {
-    kubernetes("v1.12.8")
-
-    environments {
-        create("local") {
-            // tested with microk8s
-            apiServer = "http://localhost:8080"
-        }
-
-        create("dev") {
-            apiServer = "http://somewhere-else:8080"
-        }
-    }
-}
 ```
+
+
 
 For each environment the following actions are available. Task names are {action}{Environment-name}Environment.
 
@@ -66,10 +53,10 @@ For each environment the following actions are available. Task names are {action
 |createEncryptionKey|Generates an encryption key for the environment|
 |encrypt|Will encrypt all files that have a filename prefixed with .plain. and create/overwrite the .encrypted. file for all files in the environments/{environment-name} directory.|
 |encryptFile|Will encrypt the file specified via the --file option|
-|encryptValue|Will encrypt the value specified via the --value option, output can be used in the environments/{environment-name}/{environment-name}-configs.properties file|
+|encryptConfig|Will encrypt the value of the property in the environment config properties file specified via the --key option|
 |decrypt|Will decrypt all files that have a filename prefixed with .encrypted. and create the .plain. decrypted file for all files in the environments/{environment-name} directory.|
 |decryptFile|Will decrypt the file specified via the --file option|
-|decryptValue|Will decrypt the value specified via the --value**** option, value should be the complete output of encryptValue|
+|decryptConfig|Will decrypt the value of the property in the environment config properties file specified via the --key option|
 |deploy|Will create/update all resources applicable for the environment|
 |generateYaml|Will generate yaml files for all resources applicable for the environment in the build/generated-yaml/{environment-name} directory|
 

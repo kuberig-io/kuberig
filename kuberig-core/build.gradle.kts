@@ -1,7 +1,9 @@
 dependencies {
     implementation(project(":kuberig-annotations"))
-
-    implementation("eu.rigeldev.kuberig:kuberig-dsl-base:${project.version}")
+    
+    val kuberigDslVersion : String by project
+    
+    implementation("eu.rigeldev.kuberig:kuberig-dsl-base:${kuberigDslVersion}")
 
     val jacksonVersion = "2.9.8"
     implementation("com.fasterxml.jackson.core:jackson-core:$jacksonVersion")
