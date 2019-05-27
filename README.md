@@ -130,3 +130,6 @@ Run createEncryptionKey{Environment-name}Environment if you have not done so alr
 Run encrypt{Environment-name}Environment.
 
 You are ready to run deploy{Environment-name}Environment
+
+## More information
+You can find more information on various aspects and use cases about KubeRig [here](https://rigel.dev/tag/kuberig/). 
