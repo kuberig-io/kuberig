@@ -95,7 +95,7 @@ The root directory is referred to as the project directory.
 The `environments` directory contains a sub directory for every environment defined in the build file.
 
 Each `environment` directory contains the following files:
-- {environment-name}.keyset the encryption key of the environment. You should **NEVER EVER** commit the {environment-name}.keyset file. If you have used the `initGitIgnore` task this file will already get ignored.
+- {environment-name}.keyset.json the encryption key of the environment. You should **NEVER EVER** commit the {environment-name}.keyset.json file. If you have used the `initGitIgnore` task this file will already get ignored.
 - .encrypted.{environment-name}.access-token the encrypted version of the JWT access token of service account that can be used to do deployments.
 - {environment-name}-config.properties a properties file with environment specific configuration parameters. Can contain encrypted values use the `encryptValue{Environment-name}Environment` task to encrypt values.
 - other files that are environment specific, remember to prefix files that contains sensitive information with `.plain.` . 
