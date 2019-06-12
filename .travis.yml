@@ -25,8 +25,8 @@ jobs:
       script: ./gradlew build check
     - stage: publish
       name: "Bintray Upload"
-      script: ./gradlew bintrayUpload
+      script: ./gradlew -Pversion=$TRAVIS_TAG bintrayUpload
     - stage: publish
       name: "Gradle plugin publish"
-      script: ./gradlew publishPlugins -Pgradle.publish.key=$GRADLE_PUBLISH_KEY -Pgradle.publish.secret=$GRADLE_PUBLISH_SECRET
+      script: ./gradlew publishPlugins -Pversion=$TRAVIS_TAG -Pgradle.publish.key=$GRADLE_PUBLISH_KEY -Pgradle.publish.secret=$GRADLE_PUBLISH_SECRET
 
