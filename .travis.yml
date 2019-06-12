@@ -17,7 +17,7 @@ env:
 stages:
   - build
   - name: publish
-    if: branch = master AND tag IS present
+    if: tag IS present
 jobs:
   include:
     - stage: build
