@@ -70,14 +70,14 @@ subprojects {
 
     }
 
-    if (subProject.hasProperty("bintrayUser")) {
+    if (System.getenv("BINTRAY_API_KEY") != null){
         apply {
             plugin("com.jfrog.bintray")
         }
 
         configure<BintrayExtension> {
-            val bintrayApiKey: String by subProject
-            val bintrayUser: String by subProject
+            val bintrayApiKey = System.getenv("BINTRAY_API_KEY")
+            val bintrayUser = System.getenv("BINTRAY_USER")
 
             user = bintrayUser
             key = bintrayApiKey
@@ -87,7 +87,7 @@ subprojects {
                 repo = "rigeldev-oss-maven"
                 name = subProject.name
                 setLicenses("Apache-2.0")
-                vcsUrl = "https://github.com/teyckmans/kuberig-dsl"
+                vcsUrl = "https://github.com/teyckmans/kuberig"
             })
 
             setPublications(subProject.name)

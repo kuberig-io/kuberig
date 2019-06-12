@@ -1,9 +1,32 @@
 language: java
 jdk: openjdk11
+install: ./gradlew --version
 before_cache:
-  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
-  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+- rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+- rm -fr $HOME/.gradle/caches/*/plugin-resolution/
 cache:
   directories:
-    - $HOME/.gradle/caches/
-    - $HOME/.gradle/wrapper/
+  - "$HOME/.gradle/caches/"
+  - "$HOME/.gradle/wrapper/"
+env:
+  global:
+  - secure: sqMfdcfD0JxG/UsIY5xZrNYEo2y461bq8PJhcQmsnooUEvyvgoyhAavp+z6QkyqWRbqvDE9pAwF3XrReFi9eMXDFWPDeAza1+Sl9Qors/RKhC4JyKZpW0Q6EkaW76BWgrGoFjP0du/EIWQ0g7yeuNxpFx/MamWVsz94e5S8XBhdR03ic19Yk51P8Wuqb+w4R3NBD0wfeHGMcKdnnxeXFBv5MgbzeF5/0Bjueo3+dDLj8cvW2KP44x+lL8nsBbQAZDk6twv9+a2DUnqik/Jvh8eBH02CIaFgx9lO5AcsgzBLKttwwttekn0ipSKrJJwI1+g8nz7Xe8Jhu0cTlv8nhOudYZV50LDhwFNmuD7t0MhbagmILvd7Q0SgaO6E2xRbi/5hfHhiyuJjiddYc6H45thyLyouy4aXk90hIiFOmI8ccj0LcE8UZEzS77D57Zx8+PgvXA6B/tIwKrLUZWYgji1KbzM6KKThsmS+Xe0Jf5Krqhs/HoQn2nsGUjOo2fR2IMYmhQAyBVlED68ZiyQYArMiauqL2+Gc/reBezSUBeZ7uDEfgQZ+VlOGk6smON26lh78egwn5phrxZWMbHBe4zcdohZprMu3WRDyWxmAgkuoS+91P+HyrZjt/soPklzWK5hgKe7pml7Z5ZDHM90ZxXtIQfu/+9ARlRqsAWAkiePA=
+  - secure: fER5arK74UhrVEDY7EEWrsj6dXZFg0rODVP2omb87f61aW7foh1Y3FJDlVileaaTu8NK723RBwqCegb5RPu+TzXoI4vWb77+bAM/ip5/2KchzfRC9zvKtpW1UQOU8QGwfDY9F0UDFwkR09glTLfJnDpw22F6IrRaImDad2GQYN4g6LfQ2scO1CHMSppMPdfVmv5Uq1YxqFmHr3kicMN1vXMGyr41luZhmPEMfxSpzKS+rFGxM+81ctB+qUDlI4s4qDjevYElOzgMcR7evkQzEPDvk0caBuKTRRoRKCZN4j5o7g7jmI1cV+PPjp5GSlPMf9soQOQygzxBK0zUVVGxJ1SUOqE1V0J4BiboQVnP5EFRCJrwCe/Ikn7O/5cCGiypoNfTOSrhgTZ7fZcN272BoKVdInbx3Fx1iEib+0vhwY7rG0i1ajCuwU2o1QWbyOp3gXGzCuHwp0MZ262LOP5LuO5ArFZ4bB+Pnn+WOXFXcTGNjFSFkiZOBqs+v3M5XCaVGHi5gNDR0GClVTVXn/cLik956r5syqkigEmvBBRAybnMyxNXvZ6ti5j9ChWnP5ltlTJwndV3oBy7TGrhbvK6opewoEZEHtfHyHrPsZ4FY53UvNa2FRW8fnvQfh/UxM7aTkasKw8JoOpRiZtzq3r8c5zqGFIMjP0TVILZq1PgsGA=
+  - secure: lixO9e3zb9UGQWufAoYPve8oASbgjwUQxzBRlQxvaku0UjAJrig1S2IleJltF/BuNwOJEX/kUTzHm5Sr1PxhIWfHlaEpBBHP00LyiQGoJzvM7kDiEho6qxUwQZQKuP4IjJpDR3bYbg3YB2RA4v1IgeXseUblEQiqC32VBLj3ZB14F5we8gynxYhl3a581GcsiiZoPzdkFpf09Kl5ZolUfhVXu6+/eQiyTQ8/UKYbCeJ2/wKjkLOm1eDOpSzHPUUHQVafHe5KYftERSq8P1Drk7sT3yND2LVQeGQbjf7Xf6fn0yHEGoxXTcqNedO1O5D/rXGtlsLwm+++Iebc1HyhF6B6o4tIUchm3+wiuGffOnG0P6oMH3lLDY7sVf1yEiEgjjUPuZAo2qsL3elyVRpi7CWrNYWNiVo5doH+8hPdDWErLEzJP2A6wzGjbmdZUK2JP0EzX6t8YBe2lWXFlA8aaIbD/txII9aj2o/ibw8LFnLq8MvpWRWDqFGwQRmJTs2STjwJeIMK5r703Vnm/PRQmy82K6jqaYAC1x3IvCTRoOEQbSDJMjwV79svrx7iauuotrlE4xJPVcmXQC+48A5xf4LfJTuagsnSErGIij7wcv/aZoV0KYdenAADYrrIP2dROZlr5dlzgbrBNmia50RJNlzoYq8QojzzrV3XnnPkTME=
+  - secure: Hgg4gY5UiSLbYbU2mymsDC8lTt1MURTt5dQHOS5y1Da2+NXeqlIAzzEnJR9xvabjZraAz9qyfNW715rLmrtPlM72/s30jjwqDzqQ6il2tgMjzUtSJRErStwD0rRss0F+MGZI+g//huE9usFvaL2M95cQWrZxP0J14iJjk4/5O+51APEK+g4ULLnCrTZkGkfiAHpz3Pq5Gp6lJxmEHBORs4CaZ6coydveL+gKtinXI5nhXNsBATpqigRsC32o5atuFU93Gn8t8j1cKfaWn+eh2NN35MtF8pwjLe4wm3ziqLvF1+5WFjhIwsm6jZ8V+R0aMR6KFORmU/LzKqUzhUKbKCA9Xkavte8dmES72L8oTezmq1vM+/rPxpmwr1hyWLaUtPSYT4nDgGdulpTNkKbbxNOwnLm4pV8g9Ly6YxZsy9eTGsPyciT2T8BDUXx6M0ALQLbAK6jFOjR4nGQmK9It1a+pTq8TZbvk/9DrgImucHl+AFjmVgKtrhenZcXraOihjg8n5gMnphwCd2XcQtWZfuXGLadS6686YP7bZNb67TFDlQtd6OUXuvspOrq9yJIJJ+i/HHkxx9xAscADyhvQPP2Eq5qlnAbKRAIJhC4L080XOWC7ifsjqc0j4uhbdw7UP92pGF2TO7Hg+rlN+caoSWTY9oGddx2b6K8pwaPzJgA=
+stages:
+  - build
+  - publish
+jobs:
+  include:
+    - stage: build
+      script: ./gradlew build check
+    - stage: publish
+      name: "Bintray Upload"
+      script: ./gradlew bintrayUpload
+      if: branch = master AND tag is present
+    - stage: publish
+      name: "Gradle plugin publish"
+      script: ./gradlew publishPlugins -Pgradle.publish.key=$GRADLE_PUBLISH_KEY -Pgradle.publish.secret=$GRADLE_PUBLISH_SECRET
+      if: branch = master AND tag is present
+
