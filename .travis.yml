@@ -16,17 +16,17 @@ env:
   - secure: Hgg4gY5UiSLbYbU2mymsDC8lTt1MURTt5dQHOS5y1Da2+NXeqlIAzzEnJR9xvabjZraAz9qyfNW715rLmrtPlM72/s30jjwqDzqQ6il2tgMjzUtSJRErStwD0rRss0F+MGZI+g//huE9usFvaL2M95cQWrZxP0J14iJjk4/5O+51APEK+g4ULLnCrTZkGkfiAHpz3Pq5Gp6lJxmEHBORs4CaZ6coydveL+gKtinXI5nhXNsBATpqigRsC32o5atuFU93Gn8t8j1cKfaWn+eh2NN35MtF8pwjLe4wm3ziqLvF1+5WFjhIwsm6jZ8V+R0aMR6KFORmU/LzKqUzhUKbKCA9Xkavte8dmES72L8oTezmq1vM+/rPxpmwr1hyWLaUtPSYT4nDgGdulpTNkKbbxNOwnLm4pV8g9Ly6YxZsy9eTGsPyciT2T8BDUXx6M0ALQLbAK6jFOjR4nGQmK9It1a+pTq8TZbvk/9DrgImucHl+AFjmVgKtrhenZcXraOihjg8n5gMnphwCd2XcQtWZfuXGLadS6686YP7bZNb67TFDlQtd6OUXuvspOrq9yJIJJ+i/HHkxx9xAscADyhvQPP2Eq5qlnAbKRAIJhC4L080XOWC7ifsjqc0j4uhbdw7UP92pGF2TO7Hg+rlN+caoSWTY9oGddx2b6K8pwaPzJgA=
 stages:
   - build
-  - publish
+  - name: publish
+    if: branch = master AND tag IS present
 jobs:
   include:
     - stage: build
+      name: "Build and Check"
       script: ./gradlew build check
     - stage: publish
       name: "Bintray Upload"
       script: ./gradlew bintrayUpload
-      if: branch = master AND tag IS present
     - stage: publish
       name: "Gradle plugin publish"
       script: ./gradlew publishPlugins -Pgradle.publish.key=$GRADLE_PUBLISH_KEY -Pgradle.publish.secret=$GRADLE_PUBLISH_SECRET
-      if: branch = master AND tag IS present
 
