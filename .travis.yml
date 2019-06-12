@@ -24,9 +24,9 @@ jobs:
     - stage: publish
       name: "Bintray Upload"
       script: ./gradlew bintrayUpload
-      if: branch = master AND tag is present
+      if: branch = master AND tag IS present
     - stage: publish
       name: "Gradle plugin publish"
       script: ./gradlew publishPlugins -Pgradle.publish.key=$GRADLE_PUBLISH_KEY -Pgradle.publish.secret=$GRADLE_PUBLISH_SECRET
-      if: branch = master AND tag is present
+      if: branch = master AND tag IS present
 
