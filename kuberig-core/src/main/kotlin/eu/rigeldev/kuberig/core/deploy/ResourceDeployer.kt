@@ -132,7 +132,13 @@ class ResourceDeployer(private val projectDirectory: File,
             val kind = json.get("kind").textValue()
             val resourceName = json.get("metadata").get("name").textValue()
 
-            val getResourceList = Unirest.get("$apiServerUrl/api/$apiVersion")
+            val apiOrApisPart = if (apiVersion == "v1") {
+                "api"
+            } else {
+                "apis"
+            }
+
+            val getResourceList = Unirest.get("$apiServerUrl/$apiOrApisPart/$apiVersion")
             this.addAuthentication(getResourceList)
             val apiResourceList = getResourceList
                 .asObject(APIResourceList::class.java)
@@ -145,7 +151,7 @@ class ResourceDeployer(private val projectDirectory: File,
                 "default"
             }
 
-            val targetUrl = "$apiServerUrl/api/$apiVersion/namespaces/$namespace/${apiResource.name}"
+            val targetUrl = "$apiServerUrl/$apiOrApisPart/$apiVersion/namespaces/$namespace/${apiResource.name}"
 
             val get = Unirest.get("$targetUrl/$resourceName")
             this.addAuthentication(get)
