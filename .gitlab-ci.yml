@@ -4,6 +4,9 @@ stages:
   - build
   - publish
 
+variables:
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+
 before_script:
   - echo `pwd`
   - export GRADLE_USER_HOME=`pwd`/.gradle
