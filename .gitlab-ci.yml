@@ -2,7 +2,7 @@ image: adoptopenjdk/openjdk12:alpine
 
 stages:
   - build
-  - deploy
+  - publish
 
 before_script:
   - echo `pwd`
