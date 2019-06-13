@@ -2,6 +2,7 @@ image: adoptopenjdk/openjdk12:alpine
 
 stages:
   - build
+  - check
   - publish
 
 variables:
@@ -17,18 +18,34 @@ cache:
   paths:
     - .gradle/wrapper
     - .gradle/caches
-    - "*/build"
 
-build and check:
+build:
   stage: build
   script:
-    - ./gradlew build check
+    - ./gradlew build -x check
   artifacts:
     paths:
       - "*/build/libs/*.jar"
     reports:
       junit: "*/build/test-results/test/TEST-*.xml"
     expire_in: 1 week
+  cache:
+    untracked: true
+    paths:
+      - "*/build"
+
+check:
+  stage: check
+  script:
+    - ./gradlew check
+  artifacts:
+    reports:
+      junit: "*/build/test-results/test/TEST-*.xml"
+    expire_in: 1 week
+  cache:
+    untracked: true
+    paths:
+      - "*/build"
 
 bintray upload:
   stage: publish
