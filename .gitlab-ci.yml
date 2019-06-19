@@ -21,6 +21,8 @@ cache:
     - .gradle/caches
     - "*/build"
 
+# ! tags
+
 build:
   stage: build
   script:
@@ -29,6 +31,8 @@ build:
     paths:
       - "*/build/libs/*.jar"
     expire_in: 1 week
+  only:
+    - branches
 
 check:
   stage: check
@@ -38,6 +42,32 @@ check:
     reports:
       junit: "*/build/test-results/test/TEST-*.xml"
     expire_in: 1 week
+  only:
+    - branches
+
+# tags
+
+build(tag):
+  stage: build
+  script:
+    - ./gradlew build -x check -Pversion=$CI_COMMIT_TAG
+  artifacts:
+    paths:
+      - "*/build/libs/*.jar"
+    expire_in: 1 week
+  only:
+    - tags
+
+check(tag):
+  stage: check
+  script:
+    - ./gradlew check -Pversion=$CI_COMMIT_TAG
+  artifacts:
+    reports:
+      junit: "*/build/test-results/test/TEST-*.xml"
+    expire_in: 1 week
+  only:
+    - tags
 
 bintray upload:
   stage: publish
