@@ -16,6 +16,10 @@ dependencies {
     implementation("com.mashape.unirest:unirest-java:1.4.9")
     implementation("com.google.crypto.tink:tink:1.2.2")
 
+    implementation("org.bouncycastle:bcprov-jdk15on:1.62")
+    implementation("org.bouncycastle:bcpkix-jdk15on:1.62")
+
+
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.3.2")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.3.2")
 }

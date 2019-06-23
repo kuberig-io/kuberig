@@ -7,6 +7,10 @@ import com.google.crypto.tink.aead.AeadKeyTemplates
 import com.google.crypto.tink.config.TinkConfig
 import eu.rigeldev.kuberig.config.KubeRigEnvironment
 import eu.rigeldev.kuberig.gradle.config.KubeRigExtension
+import eu.rigeldev.kuberig.init.ServiceAccountCreator
+import eu.rigeldev.kuberig.kubectl.ErrorContextResult
+import eu.rigeldev.kuberig.kubectl.KubectlConfigReader
+import eu.rigeldev.kuberig.kubectl.OkContextResult
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
@@ -17,6 +21,7 @@ abstract class InitEnvironmentTask: DefaultTask() {
 
     private var environmentName = ""
     private var apiServerUrl = ""
+    private var currentKubectlContext = false
 
     @Input
     fun getEnvironmentName(): String {
@@ -28,7 +33,7 @@ abstract class InitEnvironmentTask: DefaultTask() {
         return this.apiServerUrl
     }
 
-    @Option(option = "environmentName", description = "The name of the environment that you want to create")
+    @Option(option = "name", description = "The name of the environment that you want to create")
     fun setEnvironmentName(environmentName: String) {
         this.environmentName= environmentName
     }
@@ -38,8 +43,18 @@ abstract class InitEnvironmentTask: DefaultTask() {
         this.apiServerUrl = apiServerUrl
     }
 
+    @Option(option = "currentKubectlContext", description = "From the current kubectl context")
+    fun setCurrentKubectlContext(currentKubectlContext: Boolean) {
+        this.currentKubectlContext = currentKubectlContext
+    }
+
     @TaskAction
     fun createEnvironment() {
+
+        if (this.environmentName == "") {
+            println("--name is required")
+            return
+        }
 
         val environmentsDirectory = this.project.file("environments")
         this.createDirectoryIfNeeded(environmentsDirectory)
@@ -60,7 +75,28 @@ abstract class InitEnvironmentTask: DefaultTask() {
 
         val kubeRigExtension = this.project.extensions.getByType(KubeRigExtension::class.java)
         val environmentEncryptionSupport = kubeRigExtension
-            .encryptionSupportFactory.forEnvironment(this.project.rootDir, KubeRigEnvironment(environmentName))
+                .encryptionSupportFactory.forEnvironment(this.project.rootDir, KubeRigEnvironment(environmentName))
+
+        if (currentKubectlContext) {
+
+            val kubectlConfigReader = KubectlConfigReader()
+            val contextResult = kubectlConfigReader.readKubectlConfig()
+
+
+            when (contextResult) {
+                is OkContextResult -> {
+                    val serviceAccountCreator = ServiceAccountCreator()
+
+                    serviceAccountCreator.createDefaultServiceAccount(this.environmentName, contextResult, environmentEncryptionSupport, environmentDirectory)
+
+                    this.apiServerUrl = contextResult.clusterDetail.server
+                }
+                is ErrorContextResult -> {
+                    println("Failed to read current kubectl context:[error]${contextResult.error}")
+                }
+            }
+
+        }
 
         val encryptedApiServerUrl = environmentEncryptionSupport.encryptValue(this.apiServerUrl)
 
@@ -107,6 +143,12 @@ abstract class InitEnvironmentTask: DefaultTask() {
                 throw IllegalStateException("Failed to create ${directory.absolutePath}")
             }
         }
+    }
+
+    private fun readKubectlConfig() {
+
+
+
     }
 
 }

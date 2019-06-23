@@ -170,7 +170,7 @@ class ResourceDeployer(private val projectDirectory: File,
                     println(postResponse.status)
                     println(postResponse.statusText)
                     println(postResponse.body)
-                    System.out.println("Failed to create $kind from resource generator method ${methodResult.method.generatorType} - ${methodResult.method.methodName}")
+                    println("Failed to create $kind from resource generator method ${methodResult.method.generatorType} - ${methodResult.method.methodName}")
                 } else {
                     println("created $kind - $resourceName in $namespace namespace")
                 }
@@ -206,8 +206,9 @@ class ResourceDeployer(private val projectDirectory: File,
                 this.environment)
 
             val decryptedAccessTokenFile = environmentEncryptionSupport.decryptFile(encryptedAccessTokenFile)
+            val token = decryptedAccessTokenFile.readText()
 
-            request.header("Authorization", "Bearer ${decryptedAccessTokenFile.readText()}")
+            request.header("Authorization", "Bearer $token")
 
             decryptedAccessTokenFile.delete()
         }
