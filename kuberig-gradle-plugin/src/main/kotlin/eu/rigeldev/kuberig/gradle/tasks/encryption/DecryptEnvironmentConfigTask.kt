@@ -1,5 +1,6 @@
 package eu.rigeldev.kuberig.gradle.tasks.encryption
 
+import eu.rigeldev.kuberig.gradle.tasks.AbstractEncryptionSupportTask
 import eu.rigeldev.kuberig.support.PropertiesSupport
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction

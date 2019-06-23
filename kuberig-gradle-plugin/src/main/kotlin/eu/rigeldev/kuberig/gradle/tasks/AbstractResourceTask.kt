@@ -1,7 +1,6 @@
 package eu.rigeldev.kuberig.gradle.tasks
 
 import eu.rigeldev.kuberig.core.execution.ResourceGeneratorExecutor
-import eu.rigeldev.kuberig.gradle.tasks.encryption.AbstractEncryptionSupportTask
 import org.gradle.api.tasks.Input
 import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile

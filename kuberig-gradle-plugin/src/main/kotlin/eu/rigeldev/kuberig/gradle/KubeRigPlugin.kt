@@ -1,10 +1,7 @@
 package eu.rigeldev.kuberig.gradle
 
-import eu.rigeldev.kuberig.config.KubeRigEnvironment
 import eu.rigeldev.kuberig.gradle.config.KubeRigExtension
-import eu.rigeldev.kuberig.gradle.tasks.InitGitIgnoreTask
-import eu.rigeldev.kuberig.gradle.tasks.ResourceDeploymentTask
-import eu.rigeldev.kuberig.gradle.tasks.ResourceGenerationTask
+import eu.rigeldev.kuberig.gradle.tasks.*
 import eu.rigeldev.kuberig.gradle.tasks.encryption.*
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -33,84 +30,66 @@ open class KubeRigPlugin : Plugin<Project> {
         extension.environments.all { environment ->
 
 
-            project.tasks.register(
-                this.taskName("generateYaml", environment),
-                ResourceGenerationTask::class.java
+            project.tasks.registerEnvironmentTask(
+                "generateYaml",
+                environment,
+                ResourceGenerationTask::class.java,
+                ResourceTaskConfigurationAction(environment, kuberigVersion)
             )
-            { resourceGenerationTask ->
-                resourceGenerationTask.group = "kuberig"
-                resourceGenerationTask.dependsOn("jar")
-                resourceGenerationTask.kuberigVersion = kuberigVersion
-                resourceGenerationTask.environment = environment
-            }
-
-            project.tasks.register(
-                this.taskName("deploy", environment),
-                ResourceDeploymentTask::class.java
+            project.tasks.registerEnvironmentTask(
+                "deploy",
+                environment,
+                ResourceDeploymentTask::class.java,
+                ResourceTaskConfigurationAction(environment, kuberigVersion)
             )
-            { resourceDeployerTask ->
-                resourceDeployerTask.group = "kuberig"
-                resourceDeployerTask.dependsOn("jar")
-                resourceDeployerTask.kuberigVersion = kuberigVersion
-                resourceDeployerTask.environment = environment
-            }
-
-            project.tasks.register(
-                this.taskName("createEncryptionKey", environment),
-                GenerateEncryptionKeyTask::class.java
-            ) { generateEncryptionKeyTask ->
-                generateEncryptionKeyTask.group = "kuberig"
-                generateEncryptionKeyTask.environment = environment
-
-            }
-
-            project.tasks.register(
-                this.taskName("encryptConfig", environment),
-                EncryptEnvironmentConfigTask::class.java
-            ) {
-                it.group = "kuberig"
-                it.environment = environment
-            }
-
-            project.tasks.register(
-                this.taskName("decryptConfig", environment),
-                DecryptEnvironmentConfigTask::class.java
-            ) {
-                it.group = "kuberig"
-                it.environment = environment
-            }
-
-            project.tasks.register(
-                this.taskName("encryptFile", environment),
-                EncryptEnvironmentFileTask::class.java
-            ) {
-                it.group = "kuberig"
-                it.environment = environment
-            }
-
-            project.tasks.register(
-                this.taskName("decryptFile", environment),
-                DecryptEnvironmentFileTask::class.java
-            ) {
-                it.group = "kuberig"
-                it.environment = environment
-            }
-
-            project.tasks.register(
-                this.taskName("encrypt", environment),
-                EncryptEnvironmentTask::class.java
-            ) {
-                it.group = "kuberig"
-                it.environment = environment
-            }
-
-            project.tasks.register(
-                this.taskName("decrypt", environment),
-                DecryptEnvironmentTask::class.java
-            ) {
-                it.group = "kuberig"
-                it.environment = environment
-            }
+            project.tasks.registerEnvironmentTask(
+                "createEncryptionKey",
+                environment,
+                GenerateEncryptionKeyTask::class.java,
+                EnvironmentTaskConfigurationAction(environment)
+            )
+            project.tasks.registerEnvironmentTask(
+                "encryptConfig",
+                environment,
+                EncryptEnvironmentConfigTask::class.java,
+                EnvironmentTaskConfigurationAction(environment)
+            )
+            project.tasks.registerEnvironmentTask(
+                "decryptConfig",
+                environment,
+                DecryptEnvironmentConfigTask::class.java,
+                EnvironmentTaskConfigurationAction(environment)
+            )
+            project.tasks.registerEnvironmentTask(
+                "encryptFile",
+                environment,
+                EncryptEnvironmentFileTask::class.java,
+                EnvironmentTaskConfigurationAction(environment)
+            )
+            project.tasks.registerEnvironmentTask(
+                "decryptFile",
+                environment,
+                DecryptEnvironmentFileTask::class.java,
+                EnvironmentTaskConfigurationAction(environment)
+            )
+            project.tasks.registerEnvironmentTask(
+                "encrypt",
+                environment,
+                EncryptEnvironmentTask::class.java,
+                EnvironmentTaskConfigurationAction(environment)
+            )
+            project.tasks.registerEnvironmentTask(
+                "decrypt",
+                environment,
+                DecryptEnvironmentTask::class.java,
+                EnvironmentTaskConfigurationAction(environment)
+            )
+            project.tasks.registerEnvironmentTask(
+                "showConfig",
+                environment,
+                ShowEnvironmentConfigTask::class.java,
+                EnvironmentTaskConfigurationAction(environment)
+            )
         }
 
         project.tasks.register("initGitIgnore", InitGitIgnoreTask::class.java) {
@@ -149,12 +128,6 @@ open class KubeRigPlugin : Plugin<Project> {
         val props = Properties()
         props.load(this.javaClass.getResourceAsStream("/kuberig.properties"))
         return props
-    }
-
-    private fun taskName(action: String, environment: KubeRigEnvironment): String {
-        val capitalizedEnvironmentName = environment.name.capitalize()
-
-        return "$action${capitalizedEnvironmentName}Environment"
     }
 
     private fun createEnvironmentsFromDirectories(project: Project) {

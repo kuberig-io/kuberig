@@ -5,17 +5,12 @@ import com.google.crypto.tink.JsonKeysetWriter
 import com.google.crypto.tink.KeysetHandle
 import com.google.crypto.tink.aead.AeadKeyTemplates
 import com.google.crypto.tink.config.TinkConfig
-import eu.rigeldev.kuberig.config.KubeRigEnvironment
-import org.gradle.api.DefaultTask
-import org.gradle.api.tasks.Input
+import eu.rigeldev.kuberig.gradle.tasks.AbstractEnvironmentTask
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 
 
-open class GenerateEncryptionKeyTask : DefaultTask() {
-
-    @Input
-    lateinit var environment : KubeRigEnvironment
+open class GenerateEncryptionKeyTask : AbstractEnvironmentTask() {
 
     @TaskAction
     fun generateEncryptionKey() {
