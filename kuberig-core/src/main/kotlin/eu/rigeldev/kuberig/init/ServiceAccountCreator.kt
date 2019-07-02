@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.mashape.unirest.http.Unirest
 import eu.rigeldev.kuberig.encryption.EncryptionSupport
+import eu.rigeldev.kuberig.kubectl.AccessTokenAuthDetail
 import eu.rigeldev.kuberig.kubectl.ClientCertAuthDetails
 import eu.rigeldev.kuberig.kubectl.OkContextResult
 import org.apache.http.config.RegistryBuilder
@@ -35,6 +36,9 @@ class ServiceAccountCreator {
 
         if (contextResult.authDetails is ClientCertAuthDetails) {
             keyStore = contextResult.authDetails.keyStore
+        } else if (contextResult.authDetails is AccessTokenAuthDetail) {
+            Unirest.clearDefaultHeaders()
+            Unirest.setDefaultHeader("Authorization", "Bearer ${contextResult.authDetails.accessToken}")
         } else {
             println("Auth details not supported")
         }

@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
+import com.jayway.jsonpath.JsonPath
 import eu.rigeldev.kuberig.core.generation.yaml.ByteArrayDeserializer
 import eu.rigeldev.kuberig.core.generation.yaml.ByteArraySerializer
 import org.bouncycastle.jce.provider.BouncyCastleProvider
@@ -19,6 +20,7 @@ import java.security.KeyStore
 import java.security.Security
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
+import java.time.Instant
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -83,6 +85,8 @@ class KubectlConfigReader {
                     println("Using client-certificate: \n ${userDetail.clientCertificateData}")
                     println("Using client-key: \n ${userDetail.clientKeyData}")
 
+                } else if (userDetail is AccessTokenUserDetail) {
+                    println("Using access-token: \n ${userDetail.accessToken}")
                 } else {
                     return ErrorContextResult("User detail type not supported")
                 }
@@ -127,6 +131,8 @@ class KubectlConfigReader {
             keyStore.setKeyEntry("user", kp.private, "changeit".toCharArray(), arrayOf(cert, caCert))
 
             return ClientCertAuthDetails(keyStore)
+        } else if (userDetail is AccessTokenUserDetail){
+            return AccessTokenAuthDetail(userDetail.accessToken)
         } else {
             return null
         }
@@ -248,11 +254,28 @@ class KubectlConfigReader {
         else if (userNode.has("auth-provider")) {
             val authProviderNode = userNode.get("auth-provider")
 
-            val authProviderName = authProviderNode.get("name").textValue()
+            val configNode = authProviderNode.get("config")
 
-            println("User configuration via auth-provider with name $authProviderName is not yet support")
+            val expiry = Instant.parse(configNode.get("expiry").textValue())
 
-            return null
+            val now = Instant.now()
+
+            val accessToken = if (now.isBefore(expiry)) {
+                configNode.get("access-token").textValue()
+            } else {
+                val cmdArgs = configNode.get("cmd-args").textValue()
+                val cmdPath = configNode.get("cmd-path").textValue()
+                val tokenKey = configNode.get("token-key").textValue()
+
+                val fullCommand = "$cmdPath $cmdArgs"
+
+                val output = fullCommand.runCommand()
+
+                val tokenJsonPath = tokenKey.replace("{", "$").replace("}", "")
+                JsonPath.parse(output).read(tokenJsonPath)
+            }
+
+            return AccessTokenUserDetail(accessToken)
         }
         else {
             println("User configuration is not supported yet \n $userNode")
@@ -266,9 +289,11 @@ data class ContextDetail(val clusterName: String, val userName: String, val name
 data class ClusterDetail(val certificateAuthorityData: String, val server: String)
 sealed class UserDetail
 data class ClientCertificateUserDetail(val clientCertificateData: String, val clientKeyData: String) : UserDetail()
+data class AccessTokenUserDetail(val accessToken: String) : UserDetail()
 
 sealed class AuthDetails
 data class ClientCertAuthDetails(val keyStore: KeyStore) : AuthDetails()
+data class AccessTokenAuthDetail(val accessToken: String) : AuthDetails()
 
 sealed class ContextResult
 
