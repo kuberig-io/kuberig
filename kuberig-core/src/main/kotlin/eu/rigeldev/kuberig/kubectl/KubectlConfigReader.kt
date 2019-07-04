@@ -256,11 +256,16 @@ class KubectlConfigReader {
 
             val configNode = authProviderNode.get("config")
 
-            val expiry = Instant.parse(configNode.get("expiry").textValue())
+            val validAccessTokenAvailable = if (configNode.has("expiry") && configNode.has("access-token")) {
+                val expiry = Instant.parse(configNode.get("expiry").textValue())
+                val now = Instant.now()
 
-            val now = Instant.now()
+                now.isBefore(expiry)
+            } else {
+                false
+            }
 
-            val accessToken = if (now.isBefore(expiry)) {
+            val accessToken = if (validAccessTokenAvailable) {
                 configNode.get("access-token").textValue()
             } else {
                 val cmdArgs = configNode.get("cmd-args").textValue()

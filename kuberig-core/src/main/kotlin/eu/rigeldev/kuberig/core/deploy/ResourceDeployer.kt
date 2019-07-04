@@ -126,7 +126,7 @@ class ResourceDeployer(private val projectDirectory: File,
     }
 
     private fun deploy(methodResult: ResourceGeneratorMethodResult): ResourceGeneratorMethodResult {
-        println("------")
+
 
         if (methodResult is SuccessResult) {
             val newJson = JSONObject(JSONTokener(objectMapper.writeValueAsString(methodResult.resource)))
@@ -134,6 +134,15 @@ class ResourceDeployer(private val projectDirectory: File,
             val apiVersion = newJson.getString("apiVersion").toLowerCase()
             val kind = newJson.getString("kind")
             val resourceName = newJson.getJSONObject("metadata").getString("name")
+
+            val namespace = if (newJson.getJSONObject("metadata").has("namespace")) {
+                newJson.getJSONObject("metadata").getString("namespace")
+            } else {
+                "default"
+            }
+
+            println("------")
+            println("deploying $kind - $resourceName in $namespace namespace...")
 
             val apiOrApisPart = if (apiVersion == "v1") {
                 "api"
@@ -148,11 +157,7 @@ class ResourceDeployer(private val projectDirectory: File,
 
             val apiResource = apiResourceList.body.resources.first{ it.kind == kind }
 
-            val namespace = if (newJson.getJSONObject("metadata").has("namespace")) {
-                newJson.getJSONObject("metadata").getString("namespace")
-            } else {
-                "default"
-            }
+
 
             val targetUrl = "$apiServerUrl/$apiOrApisPart/$apiVersion/namespaces/$namespace/${apiResource.name}"
 
