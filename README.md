@@ -1,3 +1,5 @@
+![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/teyckmans/kuberig.svg?label=latest%20release)
+
 # KubeRig
 
 KubeRig helps you maintain Kubernetes/Openshift resources in a sane way. You define your resources with Kotlin code.
@@ -36,7 +38,7 @@ The extension allows the definition of multiple environments, what the target pl
 
 ```kotlin
 plugins {
-    id("eu.rigeldev.kuberig") version "0.0.16"
+    id("eu.rigeldev.kuberig") version "0.0.28"
 }
 
 repositories {
