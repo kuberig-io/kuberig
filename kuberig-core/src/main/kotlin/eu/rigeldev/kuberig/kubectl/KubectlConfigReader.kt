@@ -14,6 +14,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.bouncycastle.openssl.PEMKeyPair
 import org.bouncycastle.openssl.PEMParser
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter
+import org.json.JSONObject
 import java.io.File
 import java.io.IOException
 import java.security.KeyStore
@@ -232,18 +233,21 @@ class KubectlConfigReader {
             }
 
             // todo deal with 'env' node
+            val execCredentialsObject = JSONObject(fullCommand.runCommand())
 
-            val json = ObjectMapper()
-            json.findAndRegisterModules()
+            val statusObject = execCredentialsObject.getJSONObject("status")
 
-            val execCredentialsKind = json.readTree(fullCommand.runCommand())
-
-            val statusNode = execCredentialsKind.get("status")
-
-            return ClientCertificateUserDetail(
-                    statusNode.get("clientCertificateData").textValue(),
-                    statusNode.get("clientKeyData").textValue()
-            )
+            if (statusObject.has("clientCertificateData") && statusObject.has("clientKeyData")) {
+                return ClientCertificateUserDetail(
+                    statusObject.getString("clientCertificateData"),
+                    statusObject.getString("clientKeyData")
+                )
+            } else if (statusObject.has("token")) {
+                return AccessTokenUserDetail(statusObject.getString("token"))
+            } else {
+                println("Unsupported exec credentials json encountered")
+                return null
+            }
         }
         else if (userNode.has("client-certificate") && userNode.has("client-key")) {
             return ClientCertificateUserDetail(
