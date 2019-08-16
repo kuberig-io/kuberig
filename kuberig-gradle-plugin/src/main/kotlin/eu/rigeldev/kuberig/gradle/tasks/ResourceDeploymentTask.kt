@@ -11,7 +11,10 @@ open class ResourceDeploymentTask : AbstractResourceTask() {
         val methodResults = this.resourceGeneratorMethodExecutor()
             .execute()
 
+        val kubeRigExtension = this.project.extensions.getByType(KubeRigExtension::class.java)
+
         val resourceDeployer = ResourceDeployer(
+            kubeRigExtension.flags,
             this.project.rootDir,
             this.environment,
             this.project.extensions.getByType(KubeRigExtension::class.java).getDeployControl(),

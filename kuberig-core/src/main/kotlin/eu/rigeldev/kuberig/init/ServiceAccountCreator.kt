@@ -2,86 +2,25 @@ package eu.rigeldev.kuberig.init
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.ObjectMapper
+import eu.rigeldev.kuberig.cluster.client.ClusterClientBuilder
+import eu.rigeldev.kuberig.config.KubeRigFlags
 import eu.rigeldev.kuberig.encryption.EncryptionSupport
-import eu.rigeldev.kuberig.kubectl.AccessTokenAuthDetail
-import eu.rigeldev.kuberig.kubectl.ClientCertAuthDetails
 import eu.rigeldev.kuberig.kubectl.OkContextResult
 import kong.unirest.Unirest
-import kong.unirest.apache.ApacheClient
-import org.apache.http.config.RegistryBuilder
-import org.apache.http.conn.socket.ConnectionSocketFactory
-import org.apache.http.conn.socket.PlainConnectionSocketFactory
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory
-import org.apache.http.impl.client.HttpClientBuilder
-import org.apache.http.impl.conn.BasicHttpClientConnectionManager
-import org.apache.http.ssl.SSLContexts
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
-import java.security.KeyStore
-import java.security.cert.CertificateFactory
-import java.security.cert.X509Certificate
 import java.util.*
 
-class ServiceAccountCreator {
+class ServiceAccountCreator(private val flags: KubeRigFlags) {
 
     fun createDefaultServiceAccount(environmentName: String, contextResult: OkContextResult, environmentEncryptionSupport: EncryptionSupport, environmentDirectory: File) {
-        val certificateFactory = CertificateFactory.getInstance("X.509")
-        val caCert = certificateFactory.generateCertificate(contextResult.clusterDetail.certificateAuthorityData.byteInputStream()) as X509Certificate
-
-        val trustStore = KeyStore.getInstance("JKS")
-        trustStore.load(null)
-        trustStore.setCertificateEntry("server", caCert)
-
-        var keyStore: KeyStore? = null
-
-        if (contextResult.authDetails is ClientCertAuthDetails) {
-            keyStore = contextResult.authDetails.keyStore
-        } else if (contextResult.authDetails is AccessTokenAuthDetail) {
-            Unirest.config().clearDefaultHeaders()
-            Unirest.config().setDefaultHeader("Authorization", "Bearer ${contextResult.authDetails.accessToken}")
-        } else {
-            println("Auth details not supported")
-        }
-
         val objectMapper = ObjectMapper()
         objectMapper.findAndRegisterModules()
         objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT)
 
-        Unirest.config().objectMapper = object : kong.unirest.ObjectMapper {
-            override fun writeValue(value: Any?): String {
-                return objectMapper.writeValueAsString(value)
-            }
-
-            override fun <T : Any?> readValue(value: String?, valueType: Class<T>?): T {
-                return objectMapper.readValue(value, valueType)
-            }
-        }
-
-        val sslContextBuilder = SSLContexts.custom()
-                .loadTrustMaterial(trustStore, null)
-
-        if (keyStore != null) {
-            sslContextBuilder.loadKeyMaterial(keyStore, "changeit".toCharArray())
-        }
-
-        val sslcontext = sslContextBuilder
-                .build()
-
-        val sslsf = SSLConnectionSocketFactory(sslcontext)
-
-        val clientBuilder = HttpClientBuilder.create()
-
-        clientBuilder.setSSLSocketFactory(sslsf)
-        val registry = RegistryBuilder.create<ConnectionSocketFactory>()
-                .register("https", sslsf)
-                .register("http", PlainConnectionSocketFactory())
-                .build()
-        val ccm = BasicHttpClientConnectionManager(registry)
-        clientBuilder.setConnectionManager(ccm)
-
-        val httpclient = clientBuilder.build()
-        Unirest.config().httpClient(ApacheClient.builder(httpclient))
+        ClusterClientBuilder(flags, objectMapper, Unirest.primaryInstance())
+            .initializeClient(contextResult.clusterDetail.certificateAuthorityData, contextResult.authDetails)
 
         val apiServer = contextResult.clusterDetail.server
 

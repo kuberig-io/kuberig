@@ -85,7 +85,7 @@ abstract class InitEnvironmentTask: DefaultTask() {
 
             when (contextResult) {
                 is OkContextResult -> {
-                    val serviceAccountCreator = ServiceAccountCreator()
+                    val serviceAccountCreator = ServiceAccountCreator(kubeRigExtension.flags)
 
                     serviceAccountCreator.createDefaultServiceAccount(this.environmentName, contextResult, environmentEncryptionSupport, environmentDirectory)
 
