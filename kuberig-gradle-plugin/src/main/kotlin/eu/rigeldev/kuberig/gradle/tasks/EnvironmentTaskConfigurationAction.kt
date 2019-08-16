@@ -5,8 +5,8 @@ import org.gradle.api.Action
 
 open class EnvironmentTaskConfigurationAction<A:AbstractEnvironmentTask>(val environment: KubeRigEnvironment) : Action<A> {
 
-    override fun execute(environmentTask: A) {
-        environmentTask.environment = this.environment
-        environmentTask.group = "kuberig"
+    override fun execute(task: A) {
+        task.environment = this.environment
+        task.group = "kuberig"
     }
 }

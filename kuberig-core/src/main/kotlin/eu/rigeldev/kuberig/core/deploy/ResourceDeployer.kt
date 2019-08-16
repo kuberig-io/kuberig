@@ -4,9 +4,6 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.jayway.jsonpath.JsonPath
 import com.jayway.jsonpath.PathNotFoundException
-import com.mashape.unirest.http.HttpResponse
-import com.mashape.unirest.http.Unirest
-import com.mashape.unirest.request.HttpRequest
 import eu.rigeldev.kuberig.config.KubeRigEnvironment
 import eu.rigeldev.kuberig.core.deploy.control.DeployControl
 import eu.rigeldev.kuberig.core.deploy.control.TickGateKeeper
@@ -15,6 +12,10 @@ import eu.rigeldev.kuberig.core.execution.SuccessResult
 import eu.rigeldev.kuberig.encryption.EncryptionSupport
 import eu.rigeldev.kuberig.encryption.EncryptionSupportFactory
 import eu.rigeldev.kuberig.support.PropertiesLoaderSupport
+import kong.unirest.HttpRequest
+import kong.unirest.HttpResponse
+import kong.unirest.Unirest
+import kong.unirest.apache.ApacheClient
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy
 import org.apache.http.impl.client.HttpClients
@@ -54,7 +55,7 @@ class ResourceDeployer(private val projectDirectory: File,
 
     fun deploy(methodResults : List<ResourceGeneratorMethodResult>) {
 
-        Unirest.setObjectMapper(object: com.mashape.unirest.http.ObjectMapper {
+        Unirest.config().objectMapper = object: kong.unirest.ObjectMapper {
             override fun writeValue(value: Any?): String {
                 return objectMapper.writeValueAsString(value)
             }
@@ -62,7 +63,7 @@ class ResourceDeployer(private val projectDirectory: File,
             override fun <T : Any?> readValue(value: String?, valueType: Class<T>?): T {
                 return objectMapper.readValue(value, valueType)
             }
-        })
+        }
 
         val sslcontext = SSLContexts.custom()
             .loadTrustMaterial(null, TrustSelfSignedStrategy())
@@ -72,7 +73,7 @@ class ResourceDeployer(private val projectDirectory: File,
         val httpclient = HttpClients.custom()
             .setSSLSocketFactory(sslsf)
             .build()
-        Unirest.setHttpClient(httpclient)
+        Unirest.config().httpClient(ApacheClient.builder(httpclient))
 
         if (this.deployControl.tickRange.isEmpty()) {
             methodResults.forEach { this.deploy(it) }
@@ -317,7 +318,7 @@ class ResourceDeployer(private val projectDirectory: File,
     }
 
 
-    private fun addAuthentication(request: HttpRequest) {
+    private fun <R:HttpRequest<R>> addAuthentication(request: R) {
         val environmentDirectory = File(projectDirectory, "environments/${this.environment.name}")
         val encryptedAccessTokenFile = File(environmentDirectory, ".encrypted.${this.environment.name}.access-token")
 

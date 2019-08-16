@@ -4,10 +4,10 @@ import eu.rigeldev.kuberig.config.KubeRigEnvironment
 
 class ResourceTaskConfigurationAction<A:AbstractResourceTask>(environment: KubeRigEnvironment, val kuberigVersion: String) : EnvironmentTaskConfigurationAction<A>(environment) {
 
-    override fun execute(resourceTask: A) {
-        super.execute(resourceTask)
+    override fun execute(task: A) {
+        super.execute(task)
 
-        resourceTask.dependsOn("jar")
-        resourceTask.kuberigVersion = this.kuberigVersion
+        task.dependsOn("jar")
+        task.kuberigVersion = this.kuberigVersion
     }
 }

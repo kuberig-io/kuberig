@@ -2,11 +2,12 @@ package eu.rigeldev.kuberig.init
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.mashape.unirest.http.Unirest
 import eu.rigeldev.kuberig.encryption.EncryptionSupport
 import eu.rigeldev.kuberig.kubectl.AccessTokenAuthDetail
 import eu.rigeldev.kuberig.kubectl.ClientCertAuthDetails
 import eu.rigeldev.kuberig.kubectl.OkContextResult
+import kong.unirest.Unirest
+import kong.unirest.apache.ApacheClient
 import org.apache.http.config.RegistryBuilder
 import org.apache.http.conn.socket.ConnectionSocketFactory
 import org.apache.http.conn.socket.PlainConnectionSocketFactory
@@ -37,8 +38,8 @@ class ServiceAccountCreator {
         if (contextResult.authDetails is ClientCertAuthDetails) {
             keyStore = contextResult.authDetails.keyStore
         } else if (contextResult.authDetails is AccessTokenAuthDetail) {
-            Unirest.clearDefaultHeaders()
-            Unirest.setDefaultHeader("Authorization", "Bearer ${contextResult.authDetails.accessToken}")
+            Unirest.config().clearDefaultHeaders()
+            Unirest.config().setDefaultHeader("Authorization", "Bearer ${contextResult.authDetails.accessToken}")
         } else {
             println("Auth details not supported")
         }
@@ -47,7 +48,7 @@ class ServiceAccountCreator {
         objectMapper.findAndRegisterModules()
         objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT)
 
-        Unirest.setObjectMapper(object : com.mashape.unirest.http.ObjectMapper {
+        Unirest.config().objectMapper = object : kong.unirest.ObjectMapper {
             override fun writeValue(value: Any?): String {
                 return objectMapper.writeValueAsString(value)
             }
@@ -55,7 +56,7 @@ class ServiceAccountCreator {
             override fun <T : Any?> readValue(value: String?, valueType: Class<T>?): T {
                 return objectMapper.readValue(value, valueType)
             }
-        })
+        }
 
         val sslContextBuilder = SSLContexts.custom()
                 .loadTrustMaterial(trustStore, null)
@@ -80,7 +81,7 @@ class ServiceAccountCreator {
         clientBuilder.setConnectionManager(ccm)
 
         val httpclient = clientBuilder.build()
-        Unirest.setHttpClient(httpclient)
+        Unirest.config().httpClient(ApacheClient.builder(httpclient))
 
         val apiServer = contextResult.clusterDetail.server
 
