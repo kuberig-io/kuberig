@@ -20,6 +20,7 @@ import org.apache.http.ssl.SSLContexts
 import java.security.KeyStore
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
+import javax.net.ssl.SSLContext
 
 class ClusterClientBuilder(private val flags: KubeRigFlags,
                            private val objectMapper: ObjectMapper,
@@ -57,13 +58,19 @@ class ClusterClientBuilder(private val flags: KubeRigFlags,
 
         val sslContextBuilder = SSLContexts.custom()
 
-        if (certificateAuthorityData == null) {
-            if (flags.trustAllSSL) {
-                sslContextBuilder
+        if (keyStore != null && keyStorePass != null) {
+            sslContextBuilder.loadKeyMaterial(keyStore, keyStorePass.toCharArray())
+        }
+
+        val sslcontext : SSLContext = if (certificateAuthorityData == null) {
+            when {
+                flags.trustAllSSL -> sslContextBuilder
                     .loadTrustMaterial(null, TrustAllStrategy())
-            } else if (flags.trustSelfSignedSSL) {
-                sslContextBuilder
+                    .build()
+                flags.trustSelfSignedSSL -> sslContextBuilder
                     .loadTrustMaterial(null, TrustSelfSignedStrategy())
+                    .build()
+                else -> SSLContext.getDefault()
             }
         } else {
             val certificateFactory = CertificateFactory.getInstance("X.509")
@@ -75,25 +82,20 @@ class ClusterClientBuilder(private val flags: KubeRigFlags,
 
             sslContextBuilder
                 .loadTrustMaterial(trustStore, null)
+                .build()
         }
-
-        if (keyStore != null && keyStorePass != null) {
-            sslContextBuilder.loadKeyMaterial(keyStore, keyStorePass.toCharArray())
-        }
-
-        val sslcontext = sslContextBuilder
-            .build()
 
         val sslsf = SSLConnectionSocketFactory(sslcontext)
 
-        val clientBuilder = HttpClientBuilder.create()
-
-        clientBuilder.setSSLSocketFactory(sslsf)
         val registry = RegistryBuilder.create<ConnectionSocketFactory>()
             .register("https", sslsf)
             .register("http", PlainConnectionSocketFactory())
             .build()
         val ccm = BasicHttpClientConnectionManager(registry)
+
+        val clientBuilder = HttpClientBuilder.create()
+
+        clientBuilder.setSSLSocketFactory(sslsf)
         clientBuilder.setConnectionManager(ccm)
 
         val httpClient = clientBuilder.build()

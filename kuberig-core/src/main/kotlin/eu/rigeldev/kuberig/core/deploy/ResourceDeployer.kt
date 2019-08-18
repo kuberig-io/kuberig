@@ -19,6 +19,7 @@ import eu.rigeldev.kuberig.kubectl.NoAuthDetails
 import eu.rigeldev.kuberig.support.PropertiesLoaderSupport
 import kong.unirest.HttpResponse
 import kong.unirest.Unirest
+import kong.unirest.UnirestInstance
 import org.json.JSONObject
 import org.json.JSONTokener
 import java.io.File
@@ -33,6 +34,8 @@ class ResourceDeployer(private val flags: KubeRigFlags,
     val objectMapper = ObjectMapper()
     val environmentEncryptionSupport: EncryptionSupport
     val apiServerUrl : String
+    val environmentsDirectory: File
+    val environmentDirectory: File
 
     init {
         objectMapper.findAndRegisterModules()
@@ -42,9 +45,9 @@ class ResourceDeployer(private val flags: KubeRigFlags,
             this.projectDirectory,
             this.environment)
 
-        val environmentsDirectory = File(this.projectDirectory, "environments")
-        val environmentDirectory = File(environmentsDirectory, environment.name)
-        val environmentConfigsFile = File(environmentDirectory, "${environment.name}-configs.properties")
+        this.environmentsDirectory = File(this.projectDirectory, "environments")
+        this.environmentDirectory = File(this.environmentsDirectory, environment.name)
+        val environmentConfigsFile = File(this.environmentDirectory, "${environment.name}-configs.properties")
 
         val environmentConfigs = PropertiesLoaderSupport.loadProperties(environmentConfigsFile)
 
@@ -54,63 +57,77 @@ class ResourceDeployer(private val flags: KubeRigFlags,
     }
 
     fun deploy(methodResults : List<ResourceGeneratorMethodResult>) {
+        val clusterCaCertPemFile = File(this.environmentDirectory, "${environment.name}-cluster-ca-cert.pem")
+        val certificateAuthorityData: String? = if (clusterCaCertPemFile.exists()) {
+            clusterCaCertPemFile.readText()
+        } else {
+            null
+        }
+
         val authDetail = this.readAuthDetails()
 
-        ClusterClientBuilder(flags, objectMapper, Unirest.primaryInstance())
-            .initializeClient(null, authDetail)
+        val unirestInstance = Unirest.primaryInstance()
+        try {
+            ClusterClientBuilder(flags, objectMapper, unirestInstance)
+                .initializeClient(certificateAuthorityData, authDetail)
 
-        if (this.deployControl.tickRange.isEmpty()) {
-            methodResults.forEach { this.deploy(it) }
-        } else {
-            val successResults = methodResults
-                .filter { it.javaClass == SuccessResult::class.java }
-                .map {it as SuccessResult}
+            if (this.deployControl.tickRange.isEmpty()) {
+                methodResults.forEach { this.deploy(unirestInstance, it) }
+            } else {
+                val successResults = methodResults
+                    .filter { it.javaClass == SuccessResult::class.java }
+                    .map { it as SuccessResult }
 
-            val tickIterator = this.deployControl.tickRange.iterator()
-            var currentTick = 0
+                val tickIterator = this.deployControl.tickRange.iterator()
+                var currentTick = 0
 
-            @Suppress("UNCHECKED_CAST") val tickGateKeeperType : Class<out TickGateKeeper> = resourceGenerationRuntimeClasspathClassLoader.loadClass(this.deployControl.tickGateKeeper) as Class<out TickGateKeeper>
-            val tickGateKeeper = tickGateKeeperType.getConstructor().newInstance()
+                @Suppress("UNCHECKED_CAST") val tickGateKeeperType: Class<out TickGateKeeper> =
+                    resourceGenerationRuntimeClasspathClassLoader.loadClass(this.deployControl.tickGateKeeper) as Class<out TickGateKeeper>
+                val tickGateKeeper = tickGateKeeperType.getConstructor().newInstance()
 
-            var gateOpen = true
-            println("[TICK-SYSTEM] starting...")
+                var gateOpen = true
+                println("[TICK-SYSTEM] starting...")
 
-            while (gateOpen && tickIterator.hasNext()) {
-                val nextTick = tickIterator.nextInt()
+                while (gateOpen && tickIterator.hasNext()) {
+                    val nextTick = tickIterator.nextInt()
 
-                gateOpen = tickGateKeeper.isGateOpen(currentTick, nextTick)
+                    gateOpen = tickGateKeeper.isGateOpen(currentTick, nextTick)
+
+                    if (gateOpen) {
+
+                        val tickResources = successResults
+                            .filter { it.tick == nextTick }
+
+                        println("[TICK-SYSTEM][TICK#$nextTick] deploying ${tickResources.size} resource(s).")
+
+                        tickResources.forEach { this.deploy(unirestInstance, it) }
+
+                    }
+
+                    if (gateOpen && tickIterator.hasNext()) {
+                        println("[TICK-SYSTEM] next tick in ${this.deployControl.tickDuration}.")
+
+                        Thread.sleep(this.deployControl.tickDuration.toMillis())
+
+                        currentTick = nextTick
+                    }
+
+                }
 
                 if (gateOpen) {
-
-                    val tickResources = successResults
-                        .filter { it.tick == nextTick }
-
-                    println("[TICK-SYSTEM][TICK#$nextTick] deploying ${tickResources.size} resource(s).")
-
-                    tickResources.forEach { this.deploy(it) }
-
+                    println("[TICK-SYSTEM] success.")
+                } else {
+                    println("[TICK-SYSTEM] error - gate keeper closed gate at tick $currentTick!")
+                    throw IllegalStateException("Tick gate keeper closed gate at tick $currentTick!")
                 }
-
-                if (gateOpen && tickIterator.hasNext()) {
-                    println("[TICK-SYSTEM] next tick in ${this.deployControl.tickDuration}.")
-
-                    Thread.sleep(this.deployControl.tickDuration.toMillis())
-
-                    currentTick = nextTick
-                }
-
             }
-
-            if (gateOpen) {
-                println("[TICK-SYSTEM] success.")
-            } else {
-                println("[TICK-SYSTEM] error - gate keeper closed gate at tick $currentTick!")
-                throw IllegalStateException("Tick gate keeper closed gate at tick $currentTick!")
-            }
+        }
+        finally {
+            unirestInstance.shutDown()
         }
     }
 
-    private fun deploy(methodResult: ResourceGeneratorMethodResult): ResourceGeneratorMethodResult {
+    private fun deploy(unirestInstance: UnirestInstance, methodResult: ResourceGeneratorMethodResult): ResourceGeneratorMethodResult {
 
 
         if (methodResult is SuccessResult) {
@@ -135,7 +152,7 @@ class ResourceDeployer(private val flags: KubeRigFlags,
                 "apis"
             }
 
-            val getResourceList = Unirest.get("$apiServerUrl/$apiOrApisPart/$apiVersion")
+            val getResourceList = unirestInstance.get("$apiServerUrl/$apiOrApisPart/$apiVersion")
             val apiResourceList = getResourceList
                 .asObject(APIResourceList::class.java)
 
@@ -145,12 +162,12 @@ class ResourceDeployer(private val flags: KubeRigFlags,
 
             val targetUrl = "$apiServerUrl/$apiOrApisPart/$apiVersion/namespaces/$namespace/${apiResource.name}"
 
-            val get = Unirest.get("$targetUrl/$resourceName")
+            val get = unirestInstance.get("$targetUrl/$resourceName")
             val getResult = get
                 .asJson()
 
             if (getResult.status == 404) {
-                val post = Unirest.post(targetUrl)
+                val post = unirestInstance.post(targetUrl)
                 val postResponse = post
                         .header("Content-Type", "application/json")
                         .body(newJson)
@@ -165,7 +182,7 @@ class ResourceDeployer(private val flags: KubeRigFlags,
                     println("created $kind - $resourceName in $namespace namespace")
                 }
             } else {
-                val put = Unirest.put("$targetUrl/$resourceName")
+                val put = unirestInstance.put("$targetUrl/$resourceName")
 
                 val currentObject = getResult.body.`object`
 
@@ -233,7 +250,7 @@ class ResourceDeployer(private val flags: KubeRigFlags,
 
                     if (newJsonUpdated){
 
-                        val retryPut = Unirest.put("$targetUrl/$resourceName")
+                        val retryPut = unirestInstance.put("$targetUrl/$resourceName")
                         val retryJson = newJsonPathContext.jsonString()
 
                         val putRetryResponse = retryPut
@@ -249,12 +266,12 @@ class ResourceDeployer(private val flags: KubeRigFlags,
 
                     } else if (recreateNeeded) {
 
-                        val delete = Unirest.delete("$targetUrl/$resourceName")
+                        val delete = unirestInstance.delete("$targetUrl/$resourceName")
                         val deleteResponse = delete.header("Content-Type", "application/json")
                                 .asString()
 
                         if (deleteResponse.status == 200) {
-                            val recreatePost = Unirest.post(targetUrl)
+                            val recreatePost = unirestInstance.post(targetUrl)
                             val recreatePostResponse = recreatePost
                                     .header("Content-Type", "application/json")
                                     .body(newJson)

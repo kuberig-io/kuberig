@@ -62,7 +62,7 @@ abstract class InitEnvironmentTask: DefaultTask() {
         val environmentDirectory = File(environmentsDirectory, this.environmentName)
         this.createDirectoryIfNeeded(environmentDirectory)
 
-        val keysetFile = File(environmentDirectory, "${environmentName}.keyset.json")
+        val keysetFile = File(environmentDirectory, "$environmentName.keyset.json")
         if (!keysetFile.exists()) {
             TinkConfig.register()
 
@@ -90,6 +90,9 @@ abstract class InitEnvironmentTask: DefaultTask() {
                     serviceAccountCreator.createDefaultServiceAccount(this.environmentName, contextResult, environmentEncryptionSupport, environmentDirectory)
 
                     this.apiServerUrl = contextResult.clusterDetail.server
+
+                    val clusterCaCertPemFile = File(environmentDirectory, "$environmentName-cluster-ca-cert.pem")
+                    clusterCaCertPemFile.writeText(contextResult.clusterDetail.certificateAuthorityData)
                 }
                 is ErrorContextResult -> {
                     println("Failed to read current kubectl context:[error]${contextResult.error}")
@@ -100,7 +103,7 @@ abstract class InitEnvironmentTask: DefaultTask() {
 
         val encryptedApiServerUrl = environmentEncryptionSupport.encryptValue(this.apiServerUrl)
 
-        val environmentConfigFile = File(environmentDirectory, "${environmentName}-configs.properties")
+        val environmentConfigFile = File(environmentDirectory, "$environmentName-configs.properties")
         val currentLines = if (environmentConfigFile.exists()) {
             environmentConfigFile.readLines()
         } else {
@@ -144,11 +147,4 @@ abstract class InitEnvironmentTask: DefaultTask() {
             }
         }
     }
-
-    private fun readKubectlConfig() {
-
-
-
-    }
-
 }

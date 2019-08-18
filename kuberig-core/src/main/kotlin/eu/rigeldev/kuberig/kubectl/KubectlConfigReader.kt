@@ -256,6 +256,12 @@ class KubectlConfigReader {
                     File(userNode.get("client-key").textValue()).readText()
             )
         }
+        else if (userNode.has("client-certificate-data") && userNode.has("client-key-data")) {
+            return ClientCertificateUserDetail(
+                String(Base64.getDecoder().decode(userNode.get("client-certificate-data").textValue())),
+                String(Base64.getDecoder().decode(userNode.get("client-key-data").textValue()))
+            )
+        }
         else if (userNode.has("auth-provider")) {
             val authProviderNode = userNode.get("auth-provider")
 
