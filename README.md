@@ -38,7 +38,7 @@ The extension allows the definition of multiple environments, what the target pl
 
 ```kotlin
 plugins {
-    id("eu.rigeldev.kuberig") version "0.0.28"
+    id("eu.rigeldev.kuberig") version "0.0.31"
 }
 
 repositories {
