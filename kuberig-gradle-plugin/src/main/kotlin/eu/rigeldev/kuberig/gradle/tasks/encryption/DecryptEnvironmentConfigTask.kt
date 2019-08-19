@@ -19,7 +19,7 @@ open class DecryptEnvironmentConfigTask : AbstractEncryptionSupportTask() {
         } else {
             val environmentEncryptionSupport = this.environmentEncryptionSupport()
 
-            val environmentsConfigFile = this.project.file("environments/${environment.name}/${environment.name}-config.properties")
+            val environmentsConfigFile = this.project.file("environments/${environment.name}/${environment.name}-configs.properties")
 
             val updated = PropertiesSupport.changeConfig(
                 environmentsConfigFile,
