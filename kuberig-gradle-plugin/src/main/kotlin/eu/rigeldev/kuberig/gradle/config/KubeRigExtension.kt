@@ -1,6 +1,7 @@
 package eu.rigeldev.kuberig.gradle.config
 
 import eu.rigeldev.kuberig.config.KubeRigEnvironment
+import eu.rigeldev.kuberig.config.KubeRigFlags
 import eu.rigeldev.kuberig.core.deploy.control.DeployControl
 import eu.rigeldev.kuberig.encryption.EncryptionSupportFactory
 import eu.rigeldev.kuberig.encryption.tink.TinkEncryptionSupportFactory
@@ -8,6 +9,8 @@ import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
 
 open class KubeRigExtension(private val project : Project) {
+
+    var flags : KubeRigFlags = KubeRigFlags()
 
     var targetPlatform : TargetPlatform = TargetPlatform(PlatformType.KUBERNETES, "v1.14.2")
     val environments : NamedDomainObjectContainer<KubeRigEnvironment> = this.project.container(

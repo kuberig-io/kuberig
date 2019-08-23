@@ -128,10 +128,11 @@ class KubectlConfigReader {
             val caCert = certificateFactory.generateCertificate(clusterDetail.certificateAuthorityData.byteInputStream()) as X509Certificate
 
             val keyStore = KeyStore.getInstance("JKS")
+            val keyStorePass = "changeit"
             keyStore.load(null)
-            keyStore.setKeyEntry("user", kp.private, "changeit".toCharArray(), arrayOf(cert, caCert))
+            keyStore.setKeyEntry("user", kp.private, keyStorePass.toCharArray(), arrayOf(cert, caCert))
 
-            return ClientCertAuthDetails(keyStore)
+            return ClientCertAuthDetails(keyStore, keyStorePass)
         } else if (userDetail is AccessTokenUserDetail){
             return AccessTokenAuthDetail(userDetail.accessToken)
         } else {
@@ -255,6 +256,12 @@ class KubectlConfigReader {
                     File(userNode.get("client-key").textValue()).readText()
             )
         }
+        else if (userNode.has("client-certificate-data") && userNode.has("client-key-data")) {
+            return ClientCertificateUserDetail(
+                String(Base64.getDecoder().decode(userNode.get("client-certificate-data").textValue())),
+                String(Base64.getDecoder().decode(userNode.get("client-key-data").textValue()))
+            )
+        }
         else if (userNode.has("auth-provider")) {
             val authProviderNode = userNode.get("auth-provider")
 
@@ -301,8 +308,9 @@ data class ClientCertificateUserDetail(val clientCertificateData: String, val cl
 data class AccessTokenUserDetail(val accessToken: String) : UserDetail()
 
 sealed class AuthDetails
-data class ClientCertAuthDetails(val keyStore: KeyStore) : AuthDetails()
+data class ClientCertAuthDetails(val keyStore: KeyStore, val keyStorePass: String) : AuthDetails()
 data class AccessTokenAuthDetail(val accessToken: String) : AuthDetails()
+object NoAuthDetails : AuthDetails()
 
 sealed class ContextResult
 
