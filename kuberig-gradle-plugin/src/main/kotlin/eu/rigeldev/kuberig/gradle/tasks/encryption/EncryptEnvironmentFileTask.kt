@@ -16,9 +16,11 @@ open class EncryptEnvironmentFileTask: AbstractEncryptionSupportTask() {
         if (file == "") {
             println("--file is required, nothing to encrypt")
         } else {
+            val environmentFileSystem = this.environmentFileSystem()
+
             println()
             println("[encrypted] " +
-                    this.environmentEncryptionSupport()
+                    environmentFileSystem
                         .encryptFile(this.project.file(this.file))
             )
             println()

@@ -1,7 +1,6 @@
 package eu.rigeldev.kuberig.gradle.tasks
 
 import eu.rigeldev.kuberig.core.deploy.ResourceDeployer
-import eu.rigeldev.kuberig.gradle.config.KubeRigExtension
 import org.gradle.api.tasks.TaskAction
 
 open class ResourceDeploymentTask : AbstractResourceTask() {
@@ -11,15 +10,11 @@ open class ResourceDeploymentTask : AbstractResourceTask() {
         val methodResults = this.resourceGeneratorMethodExecutor()
             .execute()
 
-        val kubeRigExtension = this.project.extensions.getByType(KubeRigExtension::class.java)
-
         val resourceDeployer = ResourceDeployer(
-            kubeRigExtension.flags,
-            this.project.rootDir,
-            this.environment,
-            this.project.extensions.getByType(KubeRigExtension::class.java).getDeployControl(),
-            this.buildResourceGenerationRuntimeClasspathClassLoader(),
-            this.encryptionSupportFactory())
+            this.kubeRigExtension.flags,
+            this.environmentFileSystem(),
+            this.kubeRigExtension.getDeployControl(),
+            this.buildResourceGenerationRuntimeClasspathClassLoader())
 
         resourceDeployer.deploy(methodResults)
     }

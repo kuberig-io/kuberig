@@ -7,7 +7,7 @@ import org.gradle.api.tasks.options.Option
 
 open class DecryptEnvironmentFileTask: AbstractEncryptionSupportTask() {
 
-    @Option(option= "file", description = "File to encrypt")
+    @Option(option= "file", description = "File to decrypt")
     @Input
     var file : String = ""
 
@@ -16,10 +16,11 @@ open class DecryptEnvironmentFileTask: AbstractEncryptionSupportTask() {
         if (file == "") {
             println("--file is required, nothing to decrypt")
         } else {
+            val environmentFileSystem = this.environmentFileSystem()
+
             println()
             println("[decrypted] " +
-                    this.environmentEncryptionSupport()
-                        .decryptFile(this.project.file(this.file))
+                    environmentFileSystem.decryptFile(this.project.file(this.file))
             )
             println()
         }

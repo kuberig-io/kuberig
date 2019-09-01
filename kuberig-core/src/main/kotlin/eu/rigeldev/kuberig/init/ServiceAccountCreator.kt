@@ -4,17 +4,15 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.ObjectMapper
 import eu.rigeldev.kuberig.cluster.client.ClusterClientBuilder
 import eu.rigeldev.kuberig.config.KubeRigFlags
-import eu.rigeldev.kuberig.encryption.EncryptionSupport
+import eu.rigeldev.kuberig.fs.EnvironmentFileSystem
 import eu.rigeldev.kuberig.kubectl.OkContextResult
 import kong.unirest.Unirest
 import org.json.JSONArray
 import org.json.JSONObject
-import java.io.File
-import java.util.*
 
 class ServiceAccountCreator(private val flags: KubeRigFlags) {
 
-    fun createDefaultServiceAccount(environmentName: String, contextResult: OkContextResult, environmentEncryptionSupport: EncryptionSupport, environmentDirectory: File) {
+    fun createDefaultServiceAccount(contextResult: OkContextResult, environmentFileSystem: EnvironmentFileSystem) {
         val objectMapper = ObjectMapper()
         objectMapper.findAndRegisterModules()
         objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT)
@@ -107,15 +105,7 @@ class ServiceAccountCreator(private val flags: KubeRigFlags) {
 
                     val token = secretGet.body.getObject().getJSONObject("data").getString("token")
 
-                    val defaultAccessTokenFile = File(environmentDirectory, ".plain.$environmentName.access-token")
-
-                    defaultAccessTokenFile.writeText(
-                        String(Base64.getDecoder().decode(token))
-                    )
-
-                    environmentEncryptionSupport.encryptFile(defaultAccessTokenFile)
-
-                    defaultAccessTokenFile.delete()
+                    environmentFileSystem.storeAccessToken(token)
 
                 } else {
                     println("Failed to create edit role binding")

@@ -20,7 +20,7 @@ abstract class AbstractResourceTask : AbstractEncryptionSupportTask() {
             compileKotlin.getDestinationDir(),
             this.buildResourceGenerationRuntimeClasspathClassLoader(),
             this.environment,
-            super.encryptionSupportFactory()
+            this.environmentFileSystem()
         )
     }
 

@@ -5,66 +5,42 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.jayway.jsonpath.JsonPath
 import com.jayway.jsonpath.PathNotFoundException
 import eu.rigeldev.kuberig.cluster.client.ClusterClientBuilder
-import eu.rigeldev.kuberig.config.KubeRigEnvironment
 import eu.rigeldev.kuberig.config.KubeRigFlags
 import eu.rigeldev.kuberig.core.deploy.control.DeployControl
 import eu.rigeldev.kuberig.core.deploy.control.TickGateKeeper
 import eu.rigeldev.kuberig.core.execution.ResourceGeneratorMethodResult
 import eu.rigeldev.kuberig.core.execution.SuccessResult
-import eu.rigeldev.kuberig.encryption.EncryptionSupport
-import eu.rigeldev.kuberig.encryption.EncryptionSupportFactory
-import eu.rigeldev.kuberig.kubectl.AccessTokenAuthDetail
-import eu.rigeldev.kuberig.kubectl.AuthDetails
-import eu.rigeldev.kuberig.kubectl.NoAuthDetails
-import eu.rigeldev.kuberig.support.PropertiesLoaderSupport
+import eu.rigeldev.kuberig.fs.EnvironmentFileSystem
 import kong.unirest.HttpResponse
 import kong.unirest.Unirest
 import kong.unirest.UnirestInstance
 import org.json.JSONObject
 import org.json.JSONTokener
-import java.io.File
 
 class ResourceDeployer(private val flags: KubeRigFlags,
-                       private val projectDirectory: File,
-                       private val environment: KubeRigEnvironment,
+                       private val environmentFileSystem: EnvironmentFileSystem,
                        private val deployControl: DeployControl,
-                       private val resourceGenerationRuntimeClasspathClassLoader: ClassLoader,
-                       private val encryptionSupportFactory: EncryptionSupportFactory) {
+                       private val resourceGenerationRuntimeClasspathClassLoader: ClassLoader) {
 
     val objectMapper = ObjectMapper()
-    val environmentEncryptionSupport: EncryptionSupport
     val apiServerUrl : String
-    val environmentsDirectory: File
-    val environmentDirectory: File
 
     init {
         objectMapper.findAndRegisterModules()
         objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT)
 
-        this.environmentEncryptionSupport = this.encryptionSupportFactory.forEnvironment(
-            this.projectDirectory,
-            this.environment)
-
-        this.environmentsDirectory = File(this.projectDirectory, "environments")
-        this.environmentDirectory = File(this.environmentsDirectory, environment.name)
-        val environmentConfigsFile = File(this.environmentDirectory, "${environment.name}-configs.properties")
-
-        val environmentConfigs = PropertiesLoaderSupport.loadProperties(environmentConfigsFile)
-
-        val possiblyEncryptedApiServerUrl = environmentConfigs.getProperty("api.server.url")
-
-        this.apiServerUrl = this.environmentEncryptionSupport.decryptValue(possiblyEncryptedApiServerUrl)
+        this.apiServerUrl = this.environmentFileSystem.readConfig("api.server.url")!!
     }
 
     fun deploy(methodResults : List<ResourceGeneratorMethodResult>) {
-        val clusterCaCertPemFile = File(this.environmentDirectory, "${environment.name}-cluster-ca-cert.pem")
+        val clusterCaCertPemFile = environmentFileSystem.clusterCaCertPemFile
         val certificateAuthorityData: String? = if (clusterCaCertPemFile.exists()) {
             clusterCaCertPemFile.readText()
         } else {
             null
         }
 
-        val authDetail = this.readAuthDetails()
+        val authDetail = this.environmentFileSystem.readAuthDetails()
 
         val unirestInstance = Unirest.primaryInstance()
         try {
@@ -307,28 +283,5 @@ class ResourceDeployer(private val flags: KubeRigFlags,
         println(putResponse.statusText)
         println(putResponse.body)
         println("Failed to update $kind from resource generator method ${methodResult.method.generatorType} - ${methodResult.method.methodName}")
-    }
-
-    private fun readAuthDetails() : AuthDetails {
-
-        val environmentDirectory = File(projectDirectory, "environments/${this.environment.name}")
-        val encryptedAccessTokenFile = File(environmentDirectory, ".encrypted.${this.environment.name}.access-token")
-
-        if (encryptedAccessTokenFile.exists()) {
-            val environmentEncryptionSupport = this.encryptionSupportFactory.forEnvironment(
-                this.projectDirectory,
-                this.environment)
-
-            val decryptedAccessTokenFile = environmentEncryptionSupport.decryptFile(encryptedAccessTokenFile)
-            try {
-                val token = decryptedAccessTokenFile.readText()
-                return AccessTokenAuthDetail(token)
-            }
-            finally {
-                decryptedAccessTokenFile.delete()
-            }
-        } else {
-            return NoAuthDetails
-        }
     }
 }

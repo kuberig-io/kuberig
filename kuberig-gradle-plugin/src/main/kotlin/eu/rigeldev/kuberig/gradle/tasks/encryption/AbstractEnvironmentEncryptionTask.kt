@@ -9,16 +9,15 @@ abstract class AbstractEnvironmentEncryptionTask : AbstractEncryptionSupportTask
 
     @TaskAction
     fun processEnvironment() {
-
-        val environmentDirectory = this.project.file("environments/${super.environment.name}")
+        val environmentDirectory = this.environmentFileSystem().environmentDirectory
 
         this.processFileOrDirectory(environmentDirectory, this.environmentEncryptionSupport())
     }
 
-    fun processFileOrDirectory(fileOrDirectory: File, environmentEncryptionSupport: EncryptionSupport) {
+    private fun processFileOrDirectory(fileOrDirectory: File, environmentEncryptionSupport: EncryptionSupport) {
 
         if (fileOrDirectory.isDirectory) {
-            fileOrDirectory.listFiles().forEach { this.processFileOrDirectory(it, environmentEncryptionSupport) }
+            fileOrDirectory.listFiles()?.forEach { this.processFileOrDirectory(it, environmentEncryptionSupport) }
         } else {
             this.processFile(fileOrDirectory, environmentEncryptionSupport)
         }

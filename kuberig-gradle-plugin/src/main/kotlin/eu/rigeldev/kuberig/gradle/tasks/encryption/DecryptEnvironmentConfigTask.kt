@@ -1,7 +1,6 @@
 package eu.rigeldev.kuberig.gradle.tasks.encryption
 
 import eu.rigeldev.kuberig.gradle.tasks.AbstractEncryptionSupportTask
-import eu.rigeldev.kuberig.support.PropertiesSupport
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.options.Option
@@ -17,18 +16,11 @@ open class DecryptEnvironmentConfigTask : AbstractEncryptionSupportTask() {
         if (key == "") {
             println("--key is required, nothing to decrypt")
         } else {
-            val environmentEncryptionSupport = this.environmentEncryptionSupport()
-
-            val environmentsConfigFile = this.project.file("environments/${environment.name}/${environment.name}-configs.properties")
-
-            val updated = PropertiesSupport.changeConfig(
-                environmentsConfigFile,
-                this.key,
-                environmentEncryptionSupport::decryptValue
-            )
+            val environmentFileSystem = this.environmentFileSystem()
+            val updated = environmentFileSystem.decryptConfig(this.key)
 
             if (!updated) {
-                println("No config found for $key in ${environmentsConfigFile.absolutePath}")
+                println("No config found for $key in ${environmentFileSystem.environmentConfigsFile.absolutePath}")
             }
         }
     }

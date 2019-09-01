@@ -1,12 +1,16 @@
 package eu.rigeldev.kuberig.gradle.tasks
 
 import eu.rigeldev.kuberig.config.KubeRigEnvironment
-import org.gradle.api.DefaultTask
+import eu.rigeldev.kuberig.fs.EnvironmentFileSystem
 import org.gradle.api.tasks.Input
 
-abstract class AbstractEnvironmentTask: DefaultTask() {
+abstract class AbstractEnvironmentTask: AbstractKubeRigTask() {
 
     @Input
     lateinit var environment: KubeRigEnvironment
+
+    fun environmentFileSystem(): EnvironmentFileSystem {
+        return this.kubeRigExtension.rootFileSystem().environment(this.environment.name)
+    }
 
 }

@@ -5,6 +5,7 @@ import eu.rigeldev.kuberig.config.KubeRigFlags
 import eu.rigeldev.kuberig.core.deploy.control.DeployControl
 import eu.rigeldev.kuberig.encryption.EncryptionSupportFactory
 import eu.rigeldev.kuberig.encryption.tink.TinkEncryptionSupportFactory
+import eu.rigeldev.kuberig.fs.RootFileSystem
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
 
@@ -16,9 +17,9 @@ open class KubeRigExtension(private val project : Project) {
     val environments : NamedDomainObjectContainer<KubeRigEnvironment> = this.project.container(
         KubeRigEnvironment::class.java)
 
-    private var deployControl = DeployControl()
+    var encryptionSupportFactoryType: Class<out EncryptionSupportFactory>? = TinkEncryptionSupportFactory::class.java
 
-    val encryptionSupportFactory: EncryptionSupportFactory = TinkEncryptionSupportFactory()
+    private var deployControl = DeployControl()
 
     /**
      * Switch to Kubernetes as target platform.
@@ -45,5 +46,13 @@ open class KubeRigExtension(private val project : Project) {
 
     fun getDeployControl(): DeployControl {
         return this.deployControl
+    }
+
+    fun encryptionSupportFactory(): EncryptionSupportFactory {
+        return this.encryptionSupportFactoryType!!.getConstructor().newInstance()
+    }
+
+    fun rootFileSystem(): RootFileSystem {
+        return RootFileSystem(project.rootDir, this.encryptionSupportFactory())
     }
 }

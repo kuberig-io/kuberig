@@ -8,9 +8,7 @@ open class EncryptEnvironmentTask : AbstractEnvironmentEncryptionTask() {
         if (environmentEncryptionSupport.isFileDecrypted(file)) {
             environmentEncryptionSupport.encryptFile(file)
 
-            if (!file.delete()) {
-                throw IllegalStateException("Failed to cleanup " + file.absoluteFile + " after encrypting it.")
-            }
+            check(file.delete()) { "Failed to cleanup " + file.absoluteFile + " after encrypting it." }
         }
     }
 }

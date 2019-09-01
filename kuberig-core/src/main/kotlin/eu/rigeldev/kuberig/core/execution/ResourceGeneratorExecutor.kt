@@ -6,16 +6,14 @@ import eu.rigeldev.kuberig.core.annotations.Tick
 import eu.rigeldev.kuberig.core.detection.ResourceGeneratorDetector
 import eu.rigeldev.kuberig.core.detection.ResourceGeneratorMethod
 import eu.rigeldev.kuberig.dsl.DslType
-import eu.rigeldev.kuberig.encryption.EncryptionSupportFactory
-import eu.rigeldev.kuberig.support.PropertiesLoaderSupport
+import eu.rigeldev.kuberig.fs.EnvironmentFileSystem
 import java.io.File
-import java.util.*
 
 class ResourceGeneratorExecutor(private val projectDirectory: File,
                                 private val compileOutputDirectory : File,
                                 private val resourceGenerationRuntimeClasspathClassLoader: ClassLoader,
                                 private val environment: KubeRigEnvironment,
-                                private val encryptionSupportFactory: EncryptionSupportFactory) {
+                                private val environmentFileSystem: EnvironmentFileSystem) {
 
     fun execute(): List<ResourceGeneratorMethodResult> {
         val detector = ResourceGeneratorDetector(compileOutputDirectory)
@@ -43,15 +41,10 @@ class ResourceGeneratorExecutor(private val projectDirectory: File,
     }
 
     fun execute(resourceGeneratorMethod: ResourceGeneratorMethod): ResourceGeneratorMethodResult {
-        val environmentsDirectory = File(this.projectDirectory, "environments")
-        val environmentDirectory = File(environmentsDirectory, environment.name)
-        val environmentConfigsFile = File(environmentDirectory, "${environment.name}-configs.properties")
+        val environmentDirectory = this.environmentFileSystem.environmentDirectory
 
-        val environmentConfigs = PropertiesLoaderSupport.loadProperties(environmentConfigsFile)
-        val environmentEncryptionSupport = this.encryptionSupportFactory.forEnvironment(
-            this.projectDirectory,
-            this.environment
-        )
+        val environmentConfigs = this.environmentFileSystem.loadConfigs()
+        val environmentEncryptionSupport = this.environmentFileSystem.encryptionSupport()
 
         ResourceGeneratorContext.fill(
             environment,

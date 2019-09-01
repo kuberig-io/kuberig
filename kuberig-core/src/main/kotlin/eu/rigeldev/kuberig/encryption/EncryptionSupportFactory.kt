@@ -1,10 +1,13 @@
 package eu.rigeldev.kuberig.encryption
 
-import eu.rigeldev.kuberig.config.KubeRigEnvironment
-import java.io.File
+import eu.rigeldev.kuberig.fs.EnvironmentFileSystem
+import eu.rigeldev.kuberig.fs.RootFileSystem
+
 
 interface EncryptionSupportFactory {
 
-    fun forEnvironment(projectDirectory: File, environment: KubeRigEnvironment): EncryptionSupport
+    fun initForEnvironment(environmentFileSystem: EnvironmentFileSystem)
+
+    fun forEnvironment(rootFileSystem: RootFileSystem, environmentName: String): EncryptionSupport
 
 }
