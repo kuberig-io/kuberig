@@ -85,7 +85,7 @@ class EnvironmentFileSystem(
                 newLines.add("$apiServerUrlPropertyKey=$encryptedApiServerUrl")
                 updated = true
             } else {
-                newLines.add(currentLine)
+                newLines.add(currentLine.trim())
             }
         }
 
@@ -93,7 +93,7 @@ class EnvironmentFileSystem(
             newLines.add("$apiServerUrlPropertyKey=$encryptedApiServerUrl")
         }
 
-        environmentConfigsFile.writeText(newLines.joinToString("\\n"))
+        environmentConfigsFile.writeText(newLines.joinToString("\n"))
     }
 
     fun decryptConfig(key: String): Boolean {
