@@ -12,7 +12,8 @@ open class ResourceGenerationTask : AbstractResourceTask() {
     @TaskAction
     fun generateResources() {
         val generator = YamlGenerator(
-            project.file("build/generated-yaml/${environment.name}")
+            this.environmentFileSystem(),
+            this.kubeRigExtension.yamlOutputFileConvention
         )
 
         val methodResults = this.resourceGeneratorMethodExecutor()

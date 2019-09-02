@@ -6,7 +6,7 @@ object FileSystemOperations {
 
     fun createDirectoryIfNeeded(directory: File) {
         if (!directory.exists()) {
-            check(directory.mkdir()) { "Failed to create ${directory.absolutePath}" }
+            check(directory.mkdirs()) { "Failed to create ${directory.absolutePath}" }
         }
     }
 

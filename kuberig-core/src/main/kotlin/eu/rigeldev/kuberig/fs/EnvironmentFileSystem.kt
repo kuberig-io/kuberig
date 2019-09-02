@@ -144,4 +144,25 @@ class EnvironmentFileSystem(
     fun loadConfigs(): Properties {
         return PropertiesLoaderSupport.loadProperties(this.environmentConfigsFile)
     }
+
+    fun generatedYamlDirectory() : File {
+        val buildDirectory = File(this.rootFileSystem.repoRootDir, "build")
+        val generatedYamlDirectory = File(buildDirectory,"generated-yaml")
+
+        return File(generatedYamlDirectory, environmentName)
+    }
+
+    fun clearGeneratedYamlDirectory() {
+        val generatedYamlDirectory = this.generatedYamlDirectory()
+
+        if (generatedYamlDirectory.exists()) {
+            check(generatedYamlDirectory.deleteRecursively()) { "Failed to clear the output directory ${generatedYamlDirectory.absolutePath}" }
+        }
+    }
+
+    fun createGeneratedYamlDirectory() {
+        val generatedYamlDirectory = this.generatedYamlDirectory()
+
+        FileSystemOperations.createDirectoryIfNeeded(generatedYamlDirectory)
+    }
 }

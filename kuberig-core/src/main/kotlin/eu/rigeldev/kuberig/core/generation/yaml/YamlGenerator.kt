@@ -7,6 +7,8 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
 import eu.rigeldev.kuberig.core.execution.ResourceGeneratorMethodResult
 import eu.rigeldev.kuberig.core.execution.SuccessResult
+import eu.rigeldev.kuberig.fs.EnvironmentFileSystem
+import eu.rigeldev.kuberig.fs.OutputFileConvention
 import java.io.File
 
 /**
@@ -14,9 +16,13 @@ import java.io.File
  *
  * Note: These are `my` ideal settings, in the future this should be made configurable.
  */
-class YamlGenerator(private val outputDirectory : File) {
+class YamlGenerator(
+    private val environmentFileSystem: EnvironmentFileSystem,
+    private val outputFileConvention: OutputFileConvention
+) {
 
     private val objectMapper : ObjectMapper
+    private val outputDirectory : File
 
     init {
         val yamlFactory = YAMLFactory()
@@ -30,22 +36,16 @@ class YamlGenerator(private val outputDirectory : File) {
         objectMapper.registerModule(byteArrayModule)
         objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT)
 
-        if (outputDirectory.exists()) {
-            if(!outputDirectory.deleteRecursively()) {
-                throw IllegalStateException("Failed to clear the output directory ${outputDirectory.absolutePath}")
-            }
-        }
-        outputDirectory.mkdirs()
+        this.environmentFileSystem.clearGeneratedYamlDirectory()
+        this.environmentFileSystem.createGeneratedYamlDirectory()
+
+        this.outputDirectory = this.environmentFileSystem.generatedYamlDirectory()
 
         println("Generating YAML resources into output directory: $outputDirectory")
     }
 
-    fun generateYaml(resource: Any) : String {
+    private fun generateYaml(resource: Any) : String {
         return this.objectMapper.writeValueAsString(resource)
-    }
-
-    fun generateYaml(resultFile: File, resource: Any) {
-        this.objectMapper.writeValue(resultFile, resource)
     }
 
     fun generate(methodResults: List<ResourceGeneratorMethodResult>) : List<File> {
@@ -55,7 +55,7 @@ class YamlGenerator(private val outputDirectory : File) {
             if (methodResult is SuccessResult) {
                 val yaml = this.generateYaml(methodResult.resource)
 
-                val outputFile = File(outputDirectory, "${methodResult.method.methodName}.yaml")
+                val outputFile = this.outputFileConvention.outputFile(this.outputDirectory, methodResult.method, yaml)
 
                 outputFile.writeText(yaml)
 
