@@ -16,7 +16,6 @@ abstract class AbstractResourceTask : AbstractEncryptionSupportTask() {
         val compileKotlin = project.tasks.getByName("compileKotlin") as KotlinCompile
 
         return ResourceGeneratorExecutor(
-            this.project.projectDir,
             compileKotlin.getDestinationDir(),
             this.buildResourceGenerationRuntimeClasspathClassLoader(),
             this.environment,

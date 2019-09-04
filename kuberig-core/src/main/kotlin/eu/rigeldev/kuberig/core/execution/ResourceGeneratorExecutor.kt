@@ -9,11 +9,12 @@ import eu.rigeldev.kuberig.dsl.DslType
 import eu.rigeldev.kuberig.fs.EnvironmentFileSystem
 import java.io.File
 
-class ResourceGeneratorExecutor(private val projectDirectory: File,
-                                private val compileOutputDirectory : File,
-                                private val resourceGenerationRuntimeClasspathClassLoader: ClassLoader,
-                                private val environment: KubeRigEnvironment,
-                                private val environmentFileSystem: EnvironmentFileSystem) {
+class ResourceGeneratorExecutor(
+    private val compileOutputDirectory: File,
+    private val resourceGenerationRuntimeClasspathClassLoader: ClassLoader,
+    private val environment: KubeRigEnvironment,
+    private val environmentFileSystem: EnvironmentFileSystem
+) {
 
     fun execute(): List<ResourceGeneratorMethodResult> {
         val detector = ResourceGeneratorDetector(compileOutputDirectory)
@@ -26,8 +27,8 @@ class ResourceGeneratorExecutor(private val projectDirectory: File,
         return methodResults
     }
 
-    private fun reportAndFailOnErrors(methodResults : List<ResourceGeneratorMethodResult>) {
-        val errorResults : List<ErrorResult> = methodResults
+    private fun reportAndFailOnErrors(methodResults: List<ResourceGeneratorMethodResult>) {
+        val errorResults: List<ErrorResult> = methodResults
             .filter { it.javaClass == ErrorResult::class.java }
             .map { it as ErrorResult }
 
@@ -50,7 +51,8 @@ class ResourceGeneratorExecutor(private val projectDirectory: File,
             environment,
             environmentDirectory,
             environmentConfigs,
-            environmentEncryptionSupport
+            environmentEncryptionSupport,
+            environmentFileSystem.rootFileSystem
         )
 
         try {
@@ -62,8 +64,8 @@ class ResourceGeneratorExecutor(private val projectDirectory: File,
 
             val envFilterAnnotation = method.getDeclaredAnnotation(EnvFilter::class.java)
             val executionNeeded = if (envFilterAnnotation != null) {
-                  envFilterAnnotation.environments
-                     .map(String::toLowerCase)
+                envFilterAnnotation.environments
+                    .map(String::toLowerCase)
                     .contains(this.environment.name.toLowerCase())
             } else {
                 true
@@ -79,8 +81,7 @@ class ResourceGeneratorExecutor(private val projectDirectory: File,
                     val tick = tickAnnotation?.tick ?: 1
 
                     SuccessResult(resourceGeneratorMethod, resource, tick)
-                }
-                catch(t : Throwable) {
+                } catch (t: Throwable) {
                     ErrorResult(resourceGeneratorMethod, t)
                 }
 
@@ -89,8 +90,7 @@ class ResourceGeneratorExecutor(private val projectDirectory: File,
             }
 
 
-        }
-        finally {
+        } finally {
             ResourceGeneratorContext.clear()
         }
     }

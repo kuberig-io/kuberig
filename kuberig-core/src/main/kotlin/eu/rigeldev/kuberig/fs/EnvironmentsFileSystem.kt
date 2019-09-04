@@ -35,4 +35,8 @@ class EnvironmentsFileSystem(private val environmentsDirectory: File,
         return this.environments[environmentName]!!
     }
 
+    fun environmentExists(environmentName: String): Boolean {
+        return this.environments.containsKey(environmentName)
+    }
+
 }

@@ -13,7 +13,7 @@ import java.util.*
 class EnvironmentFileSystem(
     val environmentName: String,
     val environmentDirectory: File,
-    private val rootFileSystem: RootFileSystem,
+    val rootFileSystem: RootFileSystem,
     private val encryptionSupportFactory: EncryptionSupportFactory
 ) {
     val clusterCaCertPemFile = File(environmentDirectory, "$environmentName-cluster-ca-cert.pem")
@@ -21,12 +21,16 @@ class EnvironmentFileSystem(
     private val encryptedAccessTokenFile = File(environmentDirectory, ".encrypted.$environmentName.access-token")
     private val plainAccessTokenFile = File(environmentDirectory, ".plain.$environmentName.access-token")
 
+    private val containerVersionsFile = ContainerVersionsFile(environmentDirectory)
+
     fun init(apiServerUrl: String) {
 
         FileSystemOperations.createDirectoryIfNeeded(this.environmentDirectory)
 
         this.initEncryption()
         this.initConfigsFile(apiServerUrl)
+
+        this.containerVersionsFile.init()
     }
 
     fun storeClusterCertificateAuthorityData(certificateAuthorityData: String) {
@@ -164,5 +168,17 @@ class EnvironmentFileSystem(
         val generatedYamlDirectory = this.generatedYamlDirectory()
 
         FileSystemOperations.createDirectoryIfNeeded(generatedYamlDirectory)
+    }
+
+    fun addOrUpdateContainerVersion(containerAlias: String, containerVersion: String){
+        return this.containerVersionsFile.addOrUpdateContainerVersion(containerAlias, containerVersion)
+    }
+
+    fun readContainerVersion(containerAlias: String): String? {
+        return this.containerVersionsFile.readContainerVersion(containerAlias)
+    }
+
+    fun removeContainerVersion(containerAlias: String) {
+        return this.containerVersionsFile.removeContainerVersion(containerAlias)
     }
 }

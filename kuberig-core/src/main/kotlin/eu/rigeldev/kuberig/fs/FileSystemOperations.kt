@@ -10,4 +10,8 @@ object FileSystemOperations {
         }
     }
 
+    fun isExistingFile(fileToCheck: File) {
+        check(fileToCheck.exists()) { "${fileToCheck.absolutePath} does not exists!" }
+        check(fileToCheck.isFile) { "${fileToCheck.absolutePath} is no a file!" }
+    }
 }

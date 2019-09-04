@@ -96,7 +96,15 @@ open class KubeRigPlugin : Plugin<Project> {
             it.group = "kuberig"
         }
 
-        project.tasks.register("initEnvironment", eu.rigeldev.kuberig.gradle.tasks.InitEnvironmentTask::class.java) {
+        project.tasks.register("initEnvironment", InitEnvironmentTask::class.java) {
+            it.group = "kuberig"
+        }
+
+        project.tasks.register("setContainerVersion", SetContainerVersionTask::class.java) {
+            it.group = "kuberig"
+        }
+
+        project.tasks.register("clearContainerVersion", ClearContainerVersion::class.java) {
             it.group = "kuberig"
         }
 

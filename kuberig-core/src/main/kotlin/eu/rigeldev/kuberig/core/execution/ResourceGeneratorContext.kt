@@ -2,6 +2,7 @@ package eu.rigeldev.kuberig.core.execution
 
 import eu.rigeldev.kuberig.config.KubeRigEnvironment
 import eu.rigeldev.kuberig.encryption.EncryptionSupport
+import eu.rigeldev.kuberig.fs.RootFileSystem
 import java.io.File
 import java.nio.charset.Charset
 import java.util.*
@@ -14,6 +15,7 @@ object ResourceGeneratorContext {
     private val environmentDirectoryThreadLocal = ThreadLocal<File>()
     private val environmentConfigsThreadLocal = ThreadLocal<Properties>()
     private val environmentEncryptionSupportThreadLocal = ThreadLocal<EncryptionSupport>()
+    private val rootFileSystemThreadLocal = ThreadLocal<RootFileSystem>()
 
     /**
      * The KubeRigEnvironment that is currently being processed.
@@ -69,6 +71,13 @@ object ResourceGeneratorContext {
         return environmentFile.readBytes()
     }
 
+    fun containerVersion(containerAlias: String): String {
+        return this.rootFileSystemThreadLocal.get().readContainerVersion(
+            this.environment().name,
+            containerAlias
+        )
+    }
+
     private fun requiredEnvironmentFile(filePath: String) : File {
         val environmentFile = requiredFile(
             this.environmentDirectoryThreadLocal.get(),
@@ -111,11 +120,13 @@ object ResourceGeneratorContext {
     fun fill(environment : KubeRigEnvironment,
              environmentDirectory: File,
              environmentConfigs : Properties,
-             environmentEncryptionSupport: EncryptionSupport) {
+             environmentEncryptionSupport: EncryptionSupport,
+             rootFileSystem: RootFileSystem) {
         this.environmentThreadLocal.set(environment)
         this.environmentDirectoryThreadLocal.set(environmentDirectory)
         this.environmentConfigsThreadLocal.set(environmentConfigs)
         this.environmentEncryptionSupportThreadLocal.set(environmentEncryptionSupport)
+        this.rootFileSystemThreadLocal.set(rootFileSystem)
     }
 
     fun clear() {
@@ -123,5 +134,6 @@ object ResourceGeneratorContext {
         environmentDirectoryThreadLocal.remove()
         environmentConfigsThreadLocal.remove()
         environmentEncryptionSupportThreadLocal.remove()
+        rootFileSystemThreadLocal.remove()
     }
 }
