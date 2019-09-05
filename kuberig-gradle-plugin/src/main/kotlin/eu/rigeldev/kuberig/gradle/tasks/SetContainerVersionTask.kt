@@ -4,8 +4,18 @@ import org.gradle.api.tasks.options.Option
 
 open class SetContainerVersionTask : AbstractContainerVersionTask() {
 
-    @Option(option = "version", description = "The container version.")
-    protected var containerVersion: String = ""
+    var containerVersion: String = ""
+        @Option(option = "containerVersion", description = "The container version.")
+        set
+
+    override fun startCheck(): Boolean {
+        return if (this.containerAlias == "" || this.containerVersion == "") {
+            println("--alias and --version are required!")
+            false
+        } else {
+            true
+        }
+    }
 
     override fun globalAction() {
         rootFileSystem.addOrUpdateGlobalContainerVersion(this.containerAlias, this.containerVersion)

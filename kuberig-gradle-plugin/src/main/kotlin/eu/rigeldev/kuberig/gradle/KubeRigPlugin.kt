@@ -108,6 +108,10 @@ open class KubeRigPlugin : Plugin<Project> {
             it.group = "kuberig"
         }
 
+        project.tasks.register("getContainerVersion", GetContainerVersionTask::class.java) {
+            it.group = "kuberig"
+        }
+
         project.tasks.withType(KotlinCompile::class.java) {
             it.kotlinOptions.jvmTarget = "1.8"
         }

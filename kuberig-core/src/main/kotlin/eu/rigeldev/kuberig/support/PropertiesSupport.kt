@@ -1,30 +1,35 @@
 package eu.rigeldev.kuberig.support
 
-import eu.rigeldev.kuberig.fs.FileSystemOperations
 import java.io.File
 
 object PropertiesSupport {
 
     fun readConfig(propertiesFile: File, key: String): String? {
-        FileSystemOperations.isExistingFile(propertiesFile)
+        val currentLines = readLines(propertiesFile)
 
-        var configValue: String? = null
+        val linesForKey = currentLines.filter { it.startsWith(key) }
 
-        val currentLines = propertiesFile.readLines()
-        for (currentLine in currentLines) {
-            if (currentLine.startsWith(key)) {
-                val splitIndex = currentLine.indexOf('=')
-                configValue = currentLine.substring(splitIndex + 1).trim()
+        return if (linesForKey.isEmpty()) {
+            null
+        } else {
+            check(linesForKey.size == 1) {
+                "Multiple lines for key $key, ${propertiesFile.absolutePath} is no valid properties file!"
             }
-        }
 
-        return configValue
+            val lineForKey = linesForKey[0]
+
+            val splitIndex = lineForKey.indexOf('=')
+
+            check(splitIndex != -1) {
+                "Line for key $key is not valid, it does not contain a '=': $lineForKey"
+            }
+
+            return lineForKey.substring(splitIndex + 1).trim()
+        }
     }
 
     fun addOrChangeConfig(propertiesFile: File, key: String, newValue: String) {
-        FileSystemOperations.isExistingFile(propertiesFile)
-
-        val currentLines = propertiesFile.readLines()
+        val currentLines = readLines(propertiesFile)
         val newLines = mutableListOf<String>()
 
         var changed = false
@@ -43,12 +48,10 @@ object PropertiesSupport {
             newLines.add("$key=$newValue")
         }
 
-        propertiesFile.writeText(newLines.joinToString("\n"))
+        writeLines(propertiesFile, newLines)
     }
 
     fun changeConfig(propertiesFile: File, key: String, changeAction: (value:String) -> String): Boolean {
-        FileSystemOperations.isExistingFile(propertiesFile)
-
         val currentValue = this.readConfig(propertiesFile, key)
 
         var changed = false
@@ -65,9 +68,8 @@ object PropertiesSupport {
     }
 
     fun removeConfig(propertiesFile: File, key: String): Boolean {
-        FileSystemOperations.isExistingFile(propertiesFile)
+        val currentLines = readLines(propertiesFile)
 
-        val currentLines = propertiesFile.readLines()
         val newLines = mutableListOf<String>()
 
         var removed = false
@@ -80,11 +82,57 @@ object PropertiesSupport {
             }
         }
 
-        propertiesFile.writeText(newLines.joinToString("\n"))
+        writeLines(propertiesFile, newLines)
 
         return removed
     }
 
+    /**
+     * Read all the lines of a properties file.
+     *
+     * In case all the file contains is whitespace; the file is treated as empty and an empty list is returned.
+     *
+     * Context:
+     * After clearing all properties 1 empty line will be left in the properties file.
+     * When you add a new property afterwards. The new property will be appended after that line. Which is sloppy.
+     * Treating the file as empty when it only contains whitespace fixes this.
+     */
+    private fun readLines(propertiesFile: File): List<String> {
+        return if (propertiesFile.exists()) {
+            val currentLines = propertiesFile.readLines()
 
+            var allLinesEmpty = true
+
+            val currentLinesIterator = currentLines.iterator()
+            while (allLinesEmpty && currentLinesIterator.hasNext()) {
+                val currentLine = currentLinesIterator.next()
+
+                allLinesEmpty = currentLine.trim().isEmpty()
+            }
+
+            if (allLinesEmpty) {
+                listOf()
+            } else {
+                currentLines
+            }
+        } else {
+            listOf()
+        }
+    }
+
+    private fun writeLines(propertiesFile: File, lines: MutableList<String>) {
+        val noLines = lines.isEmpty()
+        val lastLineEmpty =if (noLines) {
+            false
+        } else {
+            lines[lines.lastIndex].trim().isEmpty()
+        }
+
+        if (noLines || !lastLineEmpty) {
+            lines.add("\n")
+        }
+
+        propertiesFile.writeText(lines.joinToString("\n"))
+    }
 
 }

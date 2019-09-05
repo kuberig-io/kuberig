@@ -8,10 +8,11 @@ class ContainerVersionsFile(private val parentDirectory: File) {
 
     fun init() {
         check(parentDirectory.isDirectory) { "${parentDirectory.absolutePath} is not a directory!" }
-        containerVersionsFile.writeText("")
     }
 
     fun addOrUpdateContainerVersion(containerAlias: String, containerVersion: String) {
+        this.lateInit()
+
         PropertiesSupport.addOrChangeConfig(
             this.containerVersionsFile,
             containerAlias,
@@ -20,12 +21,20 @@ class ContainerVersionsFile(private val parentDirectory: File) {
     }
 
     fun readContainerVersion(containerAlias: String): String? {
+        this.lateInit()
+
         return PropertiesSupport.readConfig(this.containerVersionsFile, containerAlias)
     }
 
     fun removeContainerVersion(containerAlias: String) {
+        this.lateInit()
+
         PropertiesSupport.removeConfig(this.containerVersionsFile, containerAlias)
     }
 
-
+    private fun lateInit() {
+        if (!this.containerVersionsFile.exists()) {
+            this.init()
+        }
+    }
 }
