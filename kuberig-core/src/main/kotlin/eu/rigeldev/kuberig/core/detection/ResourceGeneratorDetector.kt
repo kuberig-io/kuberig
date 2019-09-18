@@ -3,7 +3,7 @@ package eu.rigeldev.kuberig.core.detection
 import org.objectweb.asm.ClassReader
 import java.io.File
 
-class ResourceGeneratorDetector(private val compileOutputDirectory : File) {
+class ResourceGeneratorDetector(private val compileOutputDirectory: File, private val classpath: Set<File>) {
 
     private val resourceGeneratorMethods = mutableListOf<ResourceGeneratorMethod>()
 
@@ -31,7 +31,7 @@ class ResourceGeneratorDetector(private val compileOutputDirectory : File) {
     }
 
     private fun scanClassFile(classFile : File) {
-        val classVisitor = ResourceGeneratorClassVisitor()
+        val classVisitor = EnvResourceClassVisitor()
 
         val classReader = ClassReader(classFile.readBytes())
         classReader.accept(classVisitor, ClassReader.SKIP_DEBUG or ClassReader.SKIP_CODE or ClassReader.SKIP_FRAMES)

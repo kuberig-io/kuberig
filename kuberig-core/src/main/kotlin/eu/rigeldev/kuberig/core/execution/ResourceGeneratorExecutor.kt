@@ -17,7 +17,8 @@ class ResourceGeneratorExecutor(
 ) {
 
     fun execute(): List<ResourceGeneratorMethodResult> {
-        val detector = ResourceGeneratorDetector(compileOutputDirectory)
+        // FIXME emptySet()
+        val detector = ResourceGeneratorDetector(compileOutputDirectory, emptySet())
         val methods = detector.detectResourceGeneratorMethods()
 
         val methodResults = methods.map(this::execute)
