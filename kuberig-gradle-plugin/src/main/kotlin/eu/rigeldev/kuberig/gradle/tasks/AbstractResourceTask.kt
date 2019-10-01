@@ -17,6 +17,7 @@ abstract class AbstractResourceTask : AbstractEncryptionSupportTask() {
 
         return ResourceGeneratorExecutor(
             compileKotlin.getDestinationDir(),
+            compileKotlin.classpath.files.toSet(),
             this.buildResourceGenerationRuntimeClasspathClassLoader(),
             this.environment,
             this.environmentFileSystem()

@@ -48,6 +48,8 @@ class EnvResourceClassVisitor : ClassVisitor(Opcodes.ASM7) {
                 override fun visitAnnotation(desc: String?, visible: Boolean): AnnotationVisitor? {
                     if ("Leu/rigeldev/kuberig/core/annotations/EnvResource;" == desc) {
                         resourceMethods.add(name)
+                    } else if ("Leu/rigeldev/kuberig/core/annotations/EnvResources;" == desc) {
+                        resourceMethods.add(name)
                     }
                     return null
                 }

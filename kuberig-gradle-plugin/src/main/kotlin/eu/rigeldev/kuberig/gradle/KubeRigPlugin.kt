@@ -25,6 +25,7 @@ open class KubeRigPlugin : Plugin<Project> {
 
         project.dependencies.add("implementation", "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
         project.dependencies.add("implementation", "eu.rigeldev.kuberig:kuberig-annotations:$kuberigVersion")
+        project.dependencies.add("implementation", "eu.rigeldev.kuberig:kuberig-dsl-support:$kuberigVersion")
         project.dependencies.add("implementation", "eu.rigeldev.kuberig:kuberig-dsl-base:$kuberigDslVersion")
 
         extension.environments.all { environment ->
