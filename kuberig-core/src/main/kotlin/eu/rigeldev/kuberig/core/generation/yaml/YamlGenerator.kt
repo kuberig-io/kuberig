@@ -53,13 +53,15 @@ class YamlGenerator(
 
         for (methodResult in methodResults) {
             if (methodResult is SuccessResult) {
-                val yaml = this.generateYaml(methodResult.resource)
+                for (resource in methodResult.resources) {
+                    val yaml = this.generateYaml(resource)
 
-                val outputFile = this.outputFileConvention.outputFile(this.outputDirectory, methodResult.method, yaml)
+                    val outputFile = this.outputFileConvention.outputFile(this.outputDirectory, methodResult.method, yaml)
 
-                outputFile.writeText(yaml)
+                    outputFile.writeText(yaml)
 
-                generatedFiles.add(outputFile)
+                    generatedFiles.add(outputFile)
+                }
             }
         }
 

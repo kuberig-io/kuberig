@@ -5,7 +5,7 @@ import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
 
-class ResourceGeneratorClassVisitor : ClassVisitor(Opcodes.ASM7) {
+class EnvResourceClassVisitor : ClassVisitor(Opcodes.ASM7) {
 
     var isAbstract = true
     var className = ""
@@ -47,6 +47,8 @@ class ResourceGeneratorClassVisitor : ClassVisitor(Opcodes.ASM7) {
         return object : MethodVisitor(Opcodes.ASM7) {
                 override fun visitAnnotation(desc: String?, visible: Boolean): AnnotationVisitor? {
                     if ("Leu/rigeldev/kuberig/core/annotations/EnvResource;" == desc) {
+                        resourceMethods.add(name)
+                    } else if ("Leu/rigeldev/kuberig/core/annotations/EnvResources;" == desc) {
                         resourceMethods.add(name)
                     }
                     return null

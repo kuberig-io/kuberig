@@ -6,7 +6,7 @@ sealed class ResourceGeneratorMethodResult(val method : ResourceGeneratorMethod)
 
 class SuccessResult(
     method: ResourceGeneratorMethod,
-    val resource : Any,
+    val resources : List<Any>,
     val tick: Int) : ResourceGeneratorMethodResult(method)
 
 class SkippedResult(method: ResourceGeneratorMethod) : ResourceGeneratorMethodResult(method)

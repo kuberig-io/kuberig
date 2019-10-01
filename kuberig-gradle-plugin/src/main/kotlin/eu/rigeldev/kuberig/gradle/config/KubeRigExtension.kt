@@ -5,7 +5,7 @@ import eu.rigeldev.kuberig.config.KubeRigFlags
 import eu.rigeldev.kuberig.core.deploy.control.DeployControl
 import eu.rigeldev.kuberig.encryption.EncryptionSupportFactory
 import eu.rigeldev.kuberig.encryption.tink.TinkEncryptionSupportFactory
-import eu.rigeldev.kuberig.fs.MethodNameOutputFileConvention
+import eu.rigeldev.kuberig.fs.NameKindOutputFileConvention
 import eu.rigeldev.kuberig.fs.OutputFileConvention
 import eu.rigeldev.kuberig.fs.RootFileSystem
 import org.gradle.api.NamedDomainObjectContainer
@@ -21,7 +21,7 @@ open class KubeRigExtension(private val project : Project) {
 
     var encryptionSupportFactoryType: Class<out EncryptionSupportFactory>? = TinkEncryptionSupportFactory::class.java
 
-    var yamlOutputFileConvention: OutputFileConvention = MethodNameOutputFileConvention()
+    var yamlOutputFileConvention: OutputFileConvention = NameKindOutputFileConvention()
 
     private var deployControl = DeployControl()
 
