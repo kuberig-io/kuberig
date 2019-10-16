@@ -9,7 +9,7 @@ repositories {
 }
 
 kuberig {
-    kubernetes("v1.12.8")
+    kubernetes("v1.16.1")
 
     environments {
         create("local") {
