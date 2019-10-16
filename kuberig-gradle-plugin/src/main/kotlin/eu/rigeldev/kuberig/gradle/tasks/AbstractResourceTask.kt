@@ -1,16 +1,12 @@
 package eu.rigeldev.kuberig.gradle.tasks
 
 import eu.rigeldev.kuberig.core.execution.ResourceGeneratorExecutor
-import org.gradle.api.tasks.Input
 import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.io.File
 import java.net.URLClassLoader
 
 abstract class AbstractResourceTask : AbstractEncryptionSupportTask() {
-
-    @Input
-    var kuberigVersion : String = ""
 
     protected fun resourceGeneratorMethodExecutor() : ResourceGeneratorExecutor {
         val compileKotlin = project.tasks.getByName("compileKotlin") as KotlinCompile
@@ -43,6 +39,8 @@ abstract class AbstractResourceTask : AbstractEncryptionSupportTask() {
         val completeRuntimeClasspath = mutableListOf<File>()
         completeRuntimeClasspath.add(jar.archiveFile.get().asFile)
         completeRuntimeClasspath.addAll(runtimeClasspath.resolve())
+
+        val kuberigVersion = this.kubeRigExtension.kuberigVersion()
 
         val filteredRuntimeClasspath = completeRuntimeClasspath
             .filter { it.name != "kuberig-annotations-$kuberigVersion.jar" }

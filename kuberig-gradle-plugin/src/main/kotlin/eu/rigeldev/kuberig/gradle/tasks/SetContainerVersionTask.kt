@@ -10,7 +10,7 @@ open class SetContainerVersionTask : AbstractContainerVersionTask() {
 
     override fun startCheck(): Boolean {
         return if (this.containerAlias == "" || this.containerVersion == "") {
-            println("--alias and --version are required!")
+            println("--containerAlias and --containerVersion are required!")
             false
         } else {
             true

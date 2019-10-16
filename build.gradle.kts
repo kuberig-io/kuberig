@@ -2,7 +2,7 @@ import com.jfrog.bintray.gradle.BintrayExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 buildscript {
-    val kotlinVersion by extra("1.3.30")
+    val kotlinVersion by extra("1.3.50")
 
     repositories {
         jcenter()

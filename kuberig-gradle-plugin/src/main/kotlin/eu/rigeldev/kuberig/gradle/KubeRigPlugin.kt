@@ -6,7 +6,6 @@ import eu.rigeldev.kuberig.gradle.tasks.encryption.*
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import java.util.*
 
 open class KubeRigPlugin : Plugin<Project> {
 
@@ -15,33 +14,21 @@ open class KubeRigPlugin : Plugin<Project> {
         project.plugins.apply("idea")
         project.plugins.apply("org.jetbrains.kotlin.jvm")
 
-
-        val props = this.loadProps()
-        val kuberigVersion = props["kuberig.version"] as String
-        val kuberigDslVersion = props["kuberig.dsl.version"] as String
-        val kotlinVersion = props["kotlin.version"] as String
-
         val extension = project.extensions.create("kuberig", KubeRigExtension::class.java, project)
 
-        project.dependencies.add("implementation", "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
-        project.dependencies.add("implementation", "eu.rigeldev.kuberig:kuberig-annotations:$kuberigVersion")
-        project.dependencies.add("implementation", "eu.rigeldev.kuberig:kuberig-dsl-support:$kuberigVersion")
-        project.dependencies.add("implementation", "eu.rigeldev.kuberig:kuberig-dsl-base:$kuberigDslVersion")
-
         extension.environments.all { environment ->
-
 
             project.tasks.registerEnvironmentTask(
                 "generateYaml",
                 environment,
                 ResourceGenerationTask::class.java,
-                ResourceTaskConfigurationAction(environment, kuberigVersion)
+                ResourceTaskConfigurationAction(environment)
             )
             project.tasks.registerEnvironmentTask(
                 "deploy",
                 environment,
                 ResourceDeploymentTask::class.java,
-                ResourceTaskConfigurationAction(environment, kuberigVersion)
+                ResourceTaskConfigurationAction(environment)
             )
             project.tasks.registerEnvironmentTask(
                 "createEncryptionKey",
@@ -123,25 +110,40 @@ open class KubeRigPlugin : Plugin<Project> {
             val platformTypeName = evaluatedExtension.targetPlatform.platform.name.toLowerCase()
             val platformVersion = evaluatedExtension.targetPlatform.platformVersion
 
+            val kuberigDslVersion = evaluatedExtension.kuberigDslVersion()
+            val kuberigVersion = evaluatedExtension.kuberigVersion()
+            val kotlinVersion = evaluatedExtension.kotlinVersion()
+
             it.dependencies.add(
                 "implementation",
                 "eu.rigeldev.kuberig.dsl.$platformTypeName:kuberig-dsl-$platformTypeName-$platformVersion:$kuberigDslVersion"
             )
-
+            it.dependencies.add(
+                "implementation",
+                "eu.rigeldev.kuberig:kuberig-dsl-base:$kuberigDslVersion"
+            )
             it.dependencies.add(
                 "implementation",
                 "eu.rigeldev.kuberig:kuberig-core:$kuberigVersion"
+            )
+            it.dependencies.add(
+                "implementation",
+                "eu.rigeldev.kuberig:kuberig-annotations:$kuberigVersion"
+            )
+            it.dependencies.add(
+                "implementation",
+                "eu.rigeldev.kuberig:kuberig-dsl-support:$kuberigVersion"
+            )
+            it.dependencies.add(
+                "implementation",
+                "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
             )
 
             this.createEnvironmentsFromDirectories(project)
         }
     }
 
-    private fun loadProps(): Properties {
-        val props = Properties()
-        props.load(this.javaClass.getResourceAsStream("/kuberig.properties"))
-        return props
-    }
+
 
     private fun createEnvironmentsFromDirectories(project: Project) {
         val evaluatedExtension = project.extensions.getByType(KubeRigExtension::class.java)
