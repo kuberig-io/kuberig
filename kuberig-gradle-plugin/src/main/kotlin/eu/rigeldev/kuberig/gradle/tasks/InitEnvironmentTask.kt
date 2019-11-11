@@ -50,11 +50,12 @@ abstract class InitEnvironmentTask: AbstractKubeRigTask() {
         val rootFileSystem = this.kubeRigExtension.rootFileSystem()
         val environmentFileSystem = rootFileSystem.environment(this.environmentName)
 
+        environmentFileSystem.init(this.apiServerUrl)
+
         if (currentKubectlContext) {
 
             val kubectlConfigReader = KubectlConfigReader()
             val contextResult = kubectlConfigReader.readKubectlConfig()
-
 
             when (contextResult) {
                 is OkContextResult -> {
@@ -72,7 +73,5 @@ abstract class InitEnvironmentTask: AbstractKubeRigTask() {
             }
 
         }
-
-        environmentFileSystem.init(this.apiServerUrl)
     }
 }
