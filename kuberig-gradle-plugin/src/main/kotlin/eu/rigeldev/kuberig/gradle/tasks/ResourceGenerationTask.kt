@@ -7,6 +7,7 @@ import java.io.File
 
 open class ResourceGenerationTask : AbstractResourceTask() {
 
+    @OutputFiles
     private var generatedFiles = listOf<File>()
 
     @TaskAction
@@ -22,8 +23,7 @@ open class ResourceGenerationTask : AbstractResourceTask() {
         this.generatedFiles = generator.generate(methodResults)
     }
 
-    @OutputFiles
-    fun generatedFiles() : List<File> {
+    fun getGeneratedFiles() : List<File> {
         return this.generatedFiles
     }
 }

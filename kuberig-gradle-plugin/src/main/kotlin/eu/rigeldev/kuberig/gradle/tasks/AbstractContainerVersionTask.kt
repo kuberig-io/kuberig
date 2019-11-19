@@ -1,22 +1,26 @@
 package eu.rigeldev.kuberig.gradle.tasks
 
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.options.Option
 
 abstract class AbstractContainerVersionTask: AbstractKubeRigTask() {
 
+    @Input
     protected var containerAlias: String = ""
         @Option(option = "containerAlias", description = "The container alias to add/update the container version for.")
         set
 
+    @Input
     protected var environmentName: String = ""
         @Option(option = "environment", description = "The name of the environment to add/update the container version for.")
         set
 
+    @Input
     protected val rootFileSystem = this.kubeRigExtension.rootFileSystem()
 
     @TaskAction
-    fun setContainerVersion() {
+    fun applyContainerVersion() {
         val allInfoAvailable = this.startCheck()
         if (!allInfoAvailable) {
             println("Not all info available")

@@ -1,9 +1,11 @@
 package eu.rigeldev.kuberig.gradle.tasks
 
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.options.Option
 
 open class SetContainerVersionTask : AbstractContainerVersionTask() {
 
+    @Input
     var containerVersion: String = ""
         @Option(option = "containerVersion", description = "The container version.")
         set
