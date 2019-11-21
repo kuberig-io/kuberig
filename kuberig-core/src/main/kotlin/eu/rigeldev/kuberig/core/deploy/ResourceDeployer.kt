@@ -47,14 +47,16 @@ class ResourceDeployer(private val flags: KubeRigFlags,
             ClusterClientBuilder(flags, objectMapper, unirestInstance)
                 .initializeClient(certificateAuthorityData, authDetail)
 
-            if (this.deployControl.tickRange.isEmpty()) {
+            val tickRange = IntRange(this.deployControl.tickRangeStart, this.deployControl.tickRangeEnd)
+
+            if (tickRange.isEmpty()) {
                 methodResults.forEach { this.deploy(unirestInstance, it) }
             } else {
                 val successResults = methodResults
                     .filter { it.javaClass == SuccessResult::class.java }
                     .map { it as SuccessResult }
 
-                val tickIterator = this.deployControl.tickRange.iterator()
+                val tickIterator = tickRange.iterator()
                 var currentTick = 0
 
                 @Suppress("UNCHECKED_CAST") val tickGateKeeperType: Class<out TickGateKeeper> =

@@ -40,7 +40,7 @@ abstract class AbstractResourceTask : AbstractEncryptionSupportTask() {
         completeRuntimeClasspath.add(jar.archiveFile.get().asFile)
         completeRuntimeClasspath.addAll(runtimeClasspath.resolve())
 
-        val kuberigVersion = this.kubeRigExtension.kuberigVersion()
+        val kuberigVersion = this.kubeRigExtension().kuberigVersion()
 
         val filteredRuntimeClasspath = completeRuntimeClasspath
             .filter { it.name != "kuberig-annotations-$kuberigVersion.jar" }

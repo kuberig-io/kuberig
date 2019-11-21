@@ -1,5 +1,7 @@
 package eu.rigeldev.kuberig.config
 
-open class KubeRigEnvironment(val name: String) {
+import java.io.Serializable
+
+open class KubeRigEnvironment(val name: String) : Serializable {
 
 }

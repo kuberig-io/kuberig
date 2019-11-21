@@ -17,7 +17,7 @@ abstract class AbstractContainerVersionTask: AbstractKubeRigTask() {
         set
 
     @Input
-    protected val rootFileSystem = this.kubeRigExtension.rootFileSystem()
+    protected val rootFileSystem = this.kubeRigExtension().rootFileSystem()
 
     @TaskAction
     fun applyContainerVersion() {
@@ -27,7 +27,7 @@ abstract class AbstractContainerVersionTask: AbstractKubeRigTask() {
             return
         }
 
-        val rootFileSystem = this.kubeRigExtension.rootFileSystem()
+        val rootFileSystem = this.kubeRigExtension().rootFileSystem()
 
         if (this.environmentName == "") {
             globalAction()

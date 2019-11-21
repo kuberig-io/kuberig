@@ -7,6 +7,6 @@ class ResourceTaskConfigurationAction<A:AbstractResourceTask>(environment: KubeR
     override fun execute(task: A) {
         super.execute(task)
 
-        task.dependsOn("jar")
+        task.dependsOn("build")
     }
 }

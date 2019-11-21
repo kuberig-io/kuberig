@@ -47,7 +47,7 @@ abstract class InitEnvironmentTask: AbstractKubeRigTask() {
             return
         }
 
-        val rootFileSystem = this.kubeRigExtension.rootFileSystem()
+        val rootFileSystem = this.kubeRigExtension().rootFileSystem()
         val environmentFileSystem = rootFileSystem.environment(this.environmentName)
 
         environmentFileSystem.init(this.apiServerUrl)
@@ -59,7 +59,7 @@ abstract class InitEnvironmentTask: AbstractKubeRigTask() {
 
             when (contextResult) {
                 is OkContextResult -> {
-                    val serviceAccountCreator = ServiceAccountCreator(kubeRigExtension.flags)
+                    val serviceAccountCreator = ServiceAccountCreator(kubeRigExtension().flags)
 
                     serviceAccountCreator.createDefaultServiceAccount(contextResult, environmentFileSystem)
 

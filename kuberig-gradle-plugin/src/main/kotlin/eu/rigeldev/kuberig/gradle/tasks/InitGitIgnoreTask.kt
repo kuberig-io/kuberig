@@ -6,7 +6,7 @@ open class InitGitIgnoreTask : AbstractKubeRigTask() {
 
     @TaskAction
     fun init() {
-        this.kubeRigExtension.rootFileSystem()
+        this.kubeRigExtension().rootFileSystem()
             .gitIgnoresFile.init()
     }
 }

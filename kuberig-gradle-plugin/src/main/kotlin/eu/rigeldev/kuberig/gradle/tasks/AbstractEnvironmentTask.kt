@@ -10,7 +10,7 @@ abstract class AbstractEnvironmentTask: AbstractKubeRigTask() {
     lateinit var environment: KubeRigEnvironment
 
     fun environmentFileSystem(): EnvironmentFileSystem {
-        return this.kubeRigExtension.rootFileSystem().environment(this.environment.name)
+        return this.kubeRigExtension().rootFileSystem().environment(this.environment.name)
     }
 
 }
