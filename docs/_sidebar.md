@@ -1,6 +1,6 @@
-- User Manual
+- Getting Started
 
-    - [Getting started](getting-started.md)
+    - [Quick start](quick-start.md)
     - [Installing KubeRig](installation.md)
 
 - Working With Environments
