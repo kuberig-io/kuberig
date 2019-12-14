@@ -3,8 +3,13 @@
 KubeRig is an open-source deployment automation tool for Kubernetes/OpenShift focused on making deployments smarter.
 
 In order to make deployments smarter a number of things are important to know about KubeRig.
+- KubeRig has environment support.
 - KubeRig itself is a [Gradle](https://gradle.org/) plugin.
 - Kubernetes resources are defined using [Kotlin](https://kotlinlang.org/) code.
+
+## Environment Support?
+When developing applications there is a natural need to have more then 1 environment where applications can be deployed to. 1 for development, 1 for testing and production. 
+The amount of environments and their names vary (a lot).  
 
 ## Why a Gradle Plugin?
 [Gradle](https://gradle.org/) itself is a very powerful build tool. 
