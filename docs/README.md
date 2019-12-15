@@ -11,6 +11,8 @@ In order to make deployments smarter a number of things are important to know ab
 When developing applications there is a natural need to have more then 1 environment where applications can be deployed to. 1 for development, 1 for testing and production. 
 The amount of environments and their names vary (a lot).  
 
+Regardless of the amount of different environments, there is a need to maintain a separate set of configuration for each environment.
+
 ## Why a Gradle Plugin?
 [Gradle](https://gradle.org/) itself is a very powerful build tool. 
 
