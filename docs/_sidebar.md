@@ -1,7 +1,6 @@
 - Getting Started
 
     - [Quick start](quick-start.md)
-    - [Installing KubeRig](installation.md)
 
 - Working With Environments
 

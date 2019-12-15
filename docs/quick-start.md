@@ -11,6 +11,13 @@ git clone https://github.com/teyckmans/kuberig-empty
 ## Downloading
 Download the [kuberig-empty zip](https://github.com/teyckmans/kuberig-empty/archive/master.zip) extract the zip and open a terminal in the extracted directory.
 
+## Prerequisites
+As KubeRig is a Gradle plugin, it needs a [Java JDK or JRE](http://www.oracle.com/technetwork/java/javase/downloads/index.html) version 8 or higher to be installed. To check, run `java -version`:
+```shell
+$ java -version 
+java version "1.8.0_121"
+```
+
 ## Check
 Open a terminal in the git clone directory or extracted zip directory and check that the KubeRig tasks are available.
 
@@ -48,7 +55,7 @@ The easiest way to start playing around with KubeRig is to use [Kind](https://gi
 
 In case you don't have Kind yet, follow the [installation instructions](https://github.com/kubernetes-sigs/kind#installation-and-usage).
 
-The create a new cluster
+Then create a new cluster
 ```shell
 kind create cluster
 
