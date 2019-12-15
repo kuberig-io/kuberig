@@ -1,21 +1,20 @@
 # Quick Start
 
-## For the impatient
 The fastest way to get started is by cloning or downloading the [kuberig-empty](https://github.com/teyckmans/kuberig-empty) repository.
 
-### Cloning
+## Cloning
 Execute git clone, change into the git clone directory and check that the KubeRig tasks are available.  
-```shell script
+```shell
 git clone https://github.com/teyckmans/kuberig-empty
 ```
 
-### Downloading
+## Downloading
 Download the [kuberig-empty zip](https://github.com/teyckmans/kuberig-empty/archive/master.zip) extract the zip and open a terminal in the extracted directory.
 
-### Check
+## Check
 Open a terminal in the git clone directory or extracted zip directory and check that the KubeRig tasks are available.
 
-```shell script
+```shell
 cd kuberig-empty
 ./gradlew tasks --group kuberig
 
@@ -44,13 +43,13 @@ In case you see a similar output you are good to go.
 
 If this is the first time you execute a Gradle build, the Gradle wrapper will download Gradle. This is a one time action that takes a bit more time to complete.
 
-### First Environment
+## First Environment
 The easiest way to start playing around with KubeRig is to use [Kind](https://github.com/kubernetes-sigs/kind) and bootstrap a Kubernetes cluster locally.
 
 In case you don't have Kind yet, follow the [installation instructions](https://github.com/kubernetes-sigs/kind#installation-and-usage).
 
 The create a new cluster
-```shell script
+```shell
 kind create cluster
 
 Creating cluster "kind" ...
@@ -68,8 +67,8 @@ kubectl cluster-info --context kind-kind
 Have a question, bug, or feature request? Let us know! https://kind.sigs.k8s.io/#community 🙂
 ``` 
 
-Now that your local Kubernetes cluster is now up and running we can initialize a KubeRig environment so we can start deploying to it.
-```shell script
+Now that your local Kubernetes cluster is up and running we can initialize a KubeRig environment so we can start deploying to it.
+```shell
 ./gradlew initEnvironment --currentKubectlContext --name localdev
 
 > Task :initEnvironment
@@ -87,7 +86,7 @@ BUILD SUCCESSFUL in 6s
 ```
 
 The localdev environment is now ready for use. Check the KubeRig tasks again and you will see that a number of new tasks are shown specifically for the localdev environment.
-```shell script
+```shell
 ./gradlew tasks --group kuberig
 
 > Task :tasks
