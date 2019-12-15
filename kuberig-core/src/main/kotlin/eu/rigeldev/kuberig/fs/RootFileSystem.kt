@@ -10,7 +10,7 @@ class RootFileSystem(
 
     val environments = EnvironmentsFileSystem(File(repoRootDir, "environments"), this, encryptionSupportFactory)
     val sources = SourcesFileSystem(File(repoRootDir, "src"))
-    val gitIgnoresFile = GitIgnoresFile(File(repoRootDir, ".gitignores"))
+    val gitIgnoresFile = GitIgnoresFile(File(repoRootDir, ".gitignore"))
     val containerVersionsFile = ContainerVersionsFile(repoRootDir)
 
     init {
