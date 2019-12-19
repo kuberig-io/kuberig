@@ -22,8 +22,8 @@ java version "1.8.0_121"
 Open a terminal in the git clone directory or extracted zip directory and check that the KubeRig tasks are available.
 
 ```shell
-cd kuberig-empty
-./gradlew tasks --group kuberig
+$ cd kuberig-empty
+$ ./gradlew tasks --group kuberig
 
 ...
 
@@ -57,7 +57,7 @@ In case you don't have Kind yet, follow the [installation instructions](https://
 
 Then create a new cluster
 ```shell
-kind create cluster
+$ kind create cluster
 
 Creating cluster "kind" ...
  ✓ Ensuring node image (kindest/node:v1.16.3) 🖼 
@@ -76,7 +76,7 @@ Have a question, bug, or feature request? Let us know! https://kind.sigs.k8s.io/
 
 Now that your local Kubernetes cluster is up and running we can initialize a KubeRig environment so we can start deploying to it.
 ```shell
-./gradlew initEnvironment --currentKubectlContext --name localdev
+$ ./gradlew initEnvironment --currentKubectlContext --name localdev
 
 > Task :initEnvironment
 Using current-context: kind-kind
@@ -94,7 +94,7 @@ BUILD SUCCESSFUL in 6s
 
 The localdev environment is now ready for use. Check the KubeRig tasks again and you will see that a number of new tasks are shown specifically for the localdev environment.
 ```shell
-./gradlew tasks --group kuberig
+$ ./gradlew tasks --group kuberig
 
 > Task :tasks
 

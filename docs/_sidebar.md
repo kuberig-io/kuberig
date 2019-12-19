@@ -27,5 +27,6 @@
     - [Configuration](configuration.md)
     - [Repository organisation](repository-organisation.md)
     - [Encryption support](encryption-support.md)
+    - [Service Account Setup](service-account-setup.md)
     
     
