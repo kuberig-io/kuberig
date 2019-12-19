@@ -25,7 +25,7 @@ For deployments the 'one-size-fits-all' rule does not apply. So when you need it
 [Kotlin](https://kotlinlang.org/) is a safe, concise language that has great DSL support this makes it ideal for defining Kubernetes resources in a smart way.
 
 ## Why a DSL?
-The KubeRig DSL is generated based on the API specification of a Kubernetes/OpenShift cluster and provides a type-safe base to define your resources. 
+The KubeRig DSL is generated based on the API specification of a Kubernetes or OpenShift cluster and provides a type-safe base to define your resources. 
 This gives you auto-complete and automatic validation on version updates.
 
 A quick example that defines a ConfigMap.
