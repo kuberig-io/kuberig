@@ -1,15 +1,17 @@
 # Service Account Setup
 
+> work-in-progress
+
 Create a service account and grant the edit role: 
 
 ```shell
-$ kubectl create sa kuberig-deployer --namespace=default
-$ kubectl create rolebinding kuberig-deployer-edit --clusterrole=edit --serviceaccount=default:kuberig-deployer --namespace=default
+$ kubectl create sa kuberig --namespace=default
+$ kubectl create rolebinding kuberig-edit --clusterrole=edit --serviceaccount=default:kuberig --namespace=default
 ```
 
 Retrieve the access token:
 ```shell
-$ kubectl describe sa kuberig-deployer --namespace=default
+$ kubectl describe sa kuberig --namespace=default
 $ kubectl describe secret <name-of-token-secret>
 ```
 
