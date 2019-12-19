@@ -66,18 +66,14 @@ class GettingStarted {
 
     @EnvResource
     fun backendSecret(): SecretDsl {
-
         return secret {
-
             metadata {
                 name("backend-secret")
             }
-
             // use an encrypted file
             data("app-secrets.properties", environmentFileBytes("files/.encrypted.custom-app-secrets.properties"))
             // use an encrypted config value
             data("some.password", environmentConfig("some.password").toByteArray())
         }
-
     }
 }

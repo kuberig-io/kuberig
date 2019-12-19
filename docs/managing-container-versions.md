@@ -1,7 +1,5 @@
 # Managing Container Versions
 
-> work-in-progress
-
 KubeRig provides tasks that allow you to manage container versions/tags globally for all environments or for a specific environment.
 
 #  `setContainerVersion`
