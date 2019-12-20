@@ -5,7 +5,7 @@
 KubeRig helps you maintain Kubernetes/OpenShift resources in a smarter way. 
 You define your resources with [Kotlin](https://kotlinlang.org/) code.
 
-# KubeRig DSL
+## KubeRig DSL
 The KubeRig DSL is generated based on the API specification of a Kubernetes or OpenShift cluster and provides a type-safe base to define your resources. 
 This gives you auto-complete and automatic validation on version updates.
 
