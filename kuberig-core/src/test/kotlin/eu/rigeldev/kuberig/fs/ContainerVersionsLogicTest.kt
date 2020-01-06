@@ -26,7 +26,7 @@ class ContainerVersionsLogicTest {
 
         assertNull(rootFileSystem.readGlobalContainerVersion("does-not-exist"))
 
-        rootFileSystem.environment("local").init("https://localhost:8080")
+        rootFileSystem.environment("local").init()
 
         assertNull(rootFileSystem.readEnvironmentContainerVersion("local", "does-not-exist"))
     }
@@ -60,8 +60,8 @@ class ContainerVersionsLogicTest {
     fun combinedLogicCheck() {
         val rootFileSystem = RootFileSystem(tempDir, TinkEncryptionSupportFactory())
 
-        rootFileSystem.environment("local").init("https://localhost:8080")
-        rootFileSystem.environment("dev").init("https://localhost:8080")
+        rootFileSystem.environment("local").init()
+        rootFileSystem.environment("dev").init()
 
         // verify environment level takes precedence
         rootFileSystem.addOrUpdateGlobalContainerVersion("nginx", "1.2.3")

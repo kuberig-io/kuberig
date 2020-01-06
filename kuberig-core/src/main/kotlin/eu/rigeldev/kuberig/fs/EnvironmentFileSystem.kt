@@ -23,12 +23,11 @@ class EnvironmentFileSystem(
 
     private val containerVersionsFile = ContainerVersionsFile(environmentDirectory)
 
-    fun init(apiServerUrl: String) {
+    fun init() {
 
         FileSystemOperations.createDirectoryIfNeeded(this.environmentDirectory)
 
         this.initEncryption()
-        this.initConfigsFile(apiServerUrl)
 
         this.containerVersionsFile.init()
     }
@@ -69,7 +68,7 @@ class EnvironmentFileSystem(
         this.encryptionSupportFactory.initForEnvironment(this)
     }
 
-    private fun initConfigsFile(apiServerUrl: String) {
+    fun initConfigsFile(apiServerUrl: String) {
         val environmentEncryptionSupport = this.encryptionSupport()
 
         val encryptedApiServerUrl = environmentEncryptionSupport.encryptValue(apiServerUrl)

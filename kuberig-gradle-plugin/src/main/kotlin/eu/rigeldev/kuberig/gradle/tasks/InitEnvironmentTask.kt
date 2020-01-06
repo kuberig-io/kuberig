@@ -50,7 +50,7 @@ abstract class InitEnvironmentTask: AbstractKubeRigTask() {
         val rootFileSystem = this.kubeRigExtension().rootFileSystem()
         val environmentFileSystem = rootFileSystem.environment(this.environmentName)
 
-        environmentFileSystem.init(this.apiServerUrl)
+        environmentFileSystem.init()
 
         if (currentKubectlContext) {
 
@@ -63,15 +63,21 @@ abstract class InitEnvironmentTask: AbstractKubeRigTask() {
 
                     serviceAccountCreator.createDefaultServiceAccount(contextResult, environmentFileSystem)
 
-                    this.apiServerUrl = contextResult.clusterDetail.server
-
                     environmentFileSystem.storeClusterCertificateAuthorityData(contextResult.clusterDetail.certificateAuthorityData)
+                    environmentFileSystem.initConfigsFile(contextResult.clusterDetail.server)
                 }
                 is ErrorContextResult -> {
                     println("Failed to read current kubectl context:[error]${contextResult.error}")
                 }
             }
 
+        } else {
+            if (this.apiServerUrl == "") {
+                println("--apiServerUrl is required")
+                return
+            }
+
+            environmentFileSystem.initConfigsFile(this.apiServerUrl)
         }
     }
 }
