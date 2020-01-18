@@ -1,21 +1,37 @@
 # Encryption Support
 
-> work-in-progress
-
 KubeRig uses the [Google Tink](https://github.com/google/tink) library in order to provide encryption support. 
+We are currently using AeadKeyTemplates.AES256_CTR_HMAC_SHA256 keysets. 
+A different keyset file is generated for every environment in the `{environment-name}.keyset.json` in the environment directory.
 
-If you prefix all sensitive filenames with `.plain.` and configure your .gitignore file properly by using the `initGitIgnore` task
-you can prevent yourself from committing sensitive information. But even then it requires a lot of rigor to not accidentally commit sensitive information. You have been warned!
+You should **NEVER EVER** commit the {environment-name}.keyset file. If you have used the `initEnvironment` or `initGitIgnore` task this file will already get ignored.
+You should have multiple secure backups of the .keyset files without them you can't decrypt/deploy to the environment. 
 
-So before proceeding please run the `initGitIgnore` task and remember to prefix files that contain sensitive information with the `.plain.` prefix! 
+> If you loose a keyset file we can't help you!
 
-You create an encryption key for every environment by using the `createEncryptionKey{Environment-name}Environment` task. We currently generate a AeadKeyTemplates.AES256_CTR_HMAC_SHA256 keyset.
+In case you use the `initEnvironment` task encryption setup is setup already and you don't need to create an encryption key manually.
+The `initEnvironment` task will also make sure that your .gitignore file is updated.
 
-This will create a {environment-name}.keyset file in the `environment` directory. You should **NEVER EVER** commit the {environment-name}.keyset file. If you have used the `initGitIgnore` task this file will already get ignored.
+If you have not used the `initEnvironment` task you can initialize the .gitignore file using the `initGitIgnore` task.
 
-You should have multiple secure backups of the .keyset files without them you can't decrypt/deploy to the environment. If you loose a .keyset file we can't help you.
+## Conventions
+KubeRig provides some basic conventions to deal with sensitive information in your environment repositories.
+But even then it requires a lot of rigor to not accidentally commit sensitive information. You have been warned!
 
-When you run the `encrypt{Environment-name}Environment` task all files that have the `.plain.` prefix will be encrypted. A file prefixed with `.encrypted.` will be created and the `.plain.` file will be removed.
+### Sensitive Configuration Values
+All configuration values for environments go in the {environment-name}-configs.properties file. Sensitive values can be encrypted.
 
-The `decrypt{Environment-name}Environment` works in the other direction. The only difference is that it will not delete the files with the `.encrypted.` prefix. 
+Add your sensitive property and execute the `encryptConfig` task for the environment with the `--key` parameter passing in the property key.
 
+The value of the property will be encrypted. You can use the `decryptConfig` task to update the value back to the plain value.
+
+> Remember to encrypt it back before you commit!
+
+### Sensitive Files
+All configuration files for environments should go in the environments/{environment-name} directory.
+
+Add your sensitive file and prefix it with `.plain.`. If you have used the `initEnvironment` task you will notice that the file is already ignored by git.
+
+There are 2 tasks that you can use to encrypt/decrypt files.
+The `encryptFile` task that encrypts only the file that you specify with the `--file` parameter.
+The `encrypt` task that encrypts all `.plain.` files for the environment.
