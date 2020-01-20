@@ -11,6 +11,7 @@ import eu.rigeldev.kuberig.dsl.DslType
 import eu.rigeldev.kuberig.dsl.support.DslResourceEmitter
 import eu.rigeldev.kuberig.dsl.support.DslResourceReceiver
 import eu.rigeldev.kuberig.fs.EnvironmentFileSystem
+import org.slf4j.LoggerFactory
 import java.io.File
 
 class ResourceGeneratorExecutor(
@@ -20,6 +21,8 @@ class ResourceGeneratorExecutor(
     private val environment: KubeRigEnvironment,
     private val environmentFileSystem: EnvironmentFileSystem
 ) {
+
+    private val logger = LoggerFactory.getLogger(ResourceGeneratorExecutor::class.java)
 
     fun execute(): List<ResourceGeneratorMethodResult> {
         val resourceGeneratorMethods = mutableListOf<ResourceGeneratorMethod>()
@@ -52,7 +55,7 @@ class ResourceGeneratorExecutor(
 
         if (errorResults.isNotEmpty()) {
             errorResults.forEach {
-                println("[ERROR] ${it.method.generatorType}.${it.method.methodName}: ${it.errorMessage()}")
+                logger.error("${it.method.generatorType}.${it.method.methodName}: ${it.errorMessage()}")
                 it.rootCause.printStackTrace()
             }
 
@@ -119,7 +122,7 @@ class ResourceGeneratorExecutor(
                 }
 
                 if (resources.isEmpty()) {
-                    println("[WARNING] ${resourceGeneratorMethod.generatorType}.${resourceGeneratorMethod.methodName} did not emit any resources!")
+                    logger.warn("${resourceGeneratorMethod.generatorType}.${resourceGeneratorMethod.methodName} did not emit any resources!")
                 }
 
                 return SuccessResult(

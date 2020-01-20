@@ -1,6 +1,7 @@
 package eu.rigeldev.kuberig.core.detection
 
 import org.objectweb.asm.ClassReader
+import org.slf4j.LoggerFactory
 import java.io.File
 import java.util.regex.Pattern
 
@@ -10,7 +11,9 @@ class EnvResourceAnnotationDetector(
     private val listener: EnvResourceAnnotationDetectionListener
 ) {
 
-    private val anonymousClassName = Pattern.compile(".*\\$\\d+");
+    private val logger = LoggerFactory.getLogger(EnvResourceAnnotationDetector::class.java)
+
+    private val anonymousClassName = Pattern.compile(".*\\$\\d+")
 
     private val classFileExtractionManager = ClassFileExtractionManager()
     private val superClasses = mutableMapOf<File, EnvResourceTypeDetectionData>()
@@ -70,8 +73,9 @@ class EnvResourceAnnotationDetector(
                     val anonymousClass = anonymousClassName.matcher(className).matches()
 
                     if (it.extension == "class" && !anonymousClass) {
-                        println("[PROCESSING] ${it.absolutePath}")
-
+                        if (logger.isDebugEnabled) {
+                            logger.debug("Scanning annotations for {}", it.absolutePath)
+                        }
                         processClass(it)
                     }
                 }
@@ -83,7 +87,7 @@ class EnvResourceAnnotationDetector(
         return relativePath.replace("\\.class".toRegex(), "").replace('/', '.')
     }
 
-    fun processClass(classFile: File) {
+    private fun processClass(classFile: File) {
         processClass(classFile, false)
     }
     

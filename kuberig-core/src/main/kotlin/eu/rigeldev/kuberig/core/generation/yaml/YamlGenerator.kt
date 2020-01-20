@@ -9,6 +9,7 @@ import eu.rigeldev.kuberig.core.execution.ResourceGeneratorMethodResult
 import eu.rigeldev.kuberig.core.execution.SuccessResult
 import eu.rigeldev.kuberig.fs.EnvironmentFileSystem
 import eu.rigeldev.kuberig.fs.OutputFileConvention
+import org.slf4j.LoggerFactory
 import java.io.File
 
 /**
@@ -20,6 +21,8 @@ class YamlGenerator(
     private val environmentFileSystem: EnvironmentFileSystem,
     private val outputFileConvention: OutputFileConvention
 ) {
+
+    private val logger = LoggerFactory.getLogger(YamlGenerator::class.java)
 
     private val objectMapper : ObjectMapper
     private val outputDirectory : File
@@ -41,7 +44,7 @@ class YamlGenerator(
 
         this.outputDirectory = this.environmentFileSystem.generatedYamlDirectory()
 
-        println("Generating YAML resources into output directory: $outputDirectory")
+        logger.info("Generating YAML resources into output directory: $outputDirectory")
     }
 
     private fun generateYaml(resource: Any) : String {

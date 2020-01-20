@@ -17,6 +17,7 @@ import org.apache.http.conn.ssl.TrustSelfSignedStrategy
 import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.impl.conn.BasicHttpClientConnectionManager
 import org.apache.http.ssl.SSLContexts
+import org.slf4j.LoggerFactory
 import java.security.KeyStore
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
@@ -25,6 +26,8 @@ import javax.net.ssl.SSLContext
 class ClusterClientBuilder(private val flags: KubeRigFlags,
                            private val objectMapper: ObjectMapper,
                            private val unirestInstance: UnirestInstance) {
+
+    private val logger = LoggerFactory.getLogger(ClusterClientBuilder::class.java)
 
     fun initializeClient(certificateAuthorityData: String?, authDetails: AuthDetails) {
 
@@ -51,9 +54,9 @@ class ClusterClientBuilder(private val flags: KubeRigFlags,
                 unirestInstance.config().setDefaultHeader("Authorization", "Bearer ${authDetails.accessToken}")
             }
             is NoAuthDetails -> {
-                println("Connecting without authentication")
+                logger.warn("Connecting without authentication")
             }
-            else -> println("Auth details not supported")
+            else -> logger.error("Auth details not supported")
         }
 
         val sslContextBuilder = SSLContexts.custom()

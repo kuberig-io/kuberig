@@ -3,6 +3,10 @@ package eu.rigeldev.kuberig.core.detection
 import org.junit.jupiter.api.Test
 import java.io.File
 
+/**
+ * TODO change this test so that it clones the kuberig-starter repo, executes a build using the version being build.
+ * TODO actually verify the classes being detected.
+ */
 internal class EnvResourceAnnotationDetectorTest {
 
     @Test

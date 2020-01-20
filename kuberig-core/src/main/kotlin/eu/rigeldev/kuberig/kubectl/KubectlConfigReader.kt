@@ -15,6 +15,7 @@ import org.bouncycastle.openssl.PEMKeyPair
 import org.bouncycastle.openssl.PEMParser
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter
 import org.json.JSONObject
+import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.IOException
 import java.security.KeyStore
@@ -33,6 +34,8 @@ import java.util.concurrent.TimeUnit
  *
  */
 class KubectlConfigReader {
+
+    private val logger = LoggerFactory.getLogger(KubectlConfigReader::class.java)
 
     fun readKubectlConfig(): ContextResult {
 
@@ -57,7 +60,7 @@ class KubectlConfigReader {
 
         val currentContextName = tree.get("current-context").textValue()
 
-        println("Using current-context: $currentContextName")
+        logger.info("Using current-context: $currentContextName")
 
         val contextsNode = tree.get("contexts") as ArrayNode
         val clustersNode = tree.get("clusters") as ArrayNode
@@ -69,9 +72,9 @@ class KubectlConfigReader {
             var clusterDetail = clusterDetail(clustersNode, contextDetail.clusterName)
 
             if (clusterDetail != null) {
-                println("Using server: ${clusterDetail.server}")
-                println("Using namespace: ${contextDetail.namespace}")
-                println("Using ca-certificate: \n ${clusterDetail.certificateAuthorityData}")
+                logger.info("Using server: ${clusterDetail.server}")
+                logger.info("Using namespace: ${contextDetail.namespace}")
+                logger.info("Using ca-certificate: \n ${clusterDetail.certificateAuthorityData}")
 
 
             } else {
@@ -83,11 +86,11 @@ class KubectlConfigReader {
             if (userDetail != null) {
                 if (userDetail is ClientCertificateUserDetail) {
 
-                    println("Using client-certificate: \n ${userDetail.clientCertificateData}")
-                    println("Using client-key: \n ${userDetail.clientKeyData}")
+                    logger.debug("Using client-certificate: \n ${userDetail.clientCertificateData}")
+                    logger.debug("Using client-key: \n ${userDetail.clientKeyData}")
 
                 } else if (userDetail is AccessTokenUserDetail) {
-                    println("Using access-token: \n ${userDetail.accessToken}")
+                    logger.debug("Using access-token: \n ${userDetail.accessToken}")
                 } else {
                     return ErrorContextResult("User detail type not supported")
                 }
@@ -246,7 +249,7 @@ class KubectlConfigReader {
             } else if (statusObject.has("token")) {
                 return AccessTokenUserDetail(statusObject.getString("token"))
             } else {
-                println("Unsupported exec credentials json encountered")
+                logger.error("Unsupported exec credentials json encountered")
                 return null
             }
         }
@@ -294,7 +297,7 @@ class KubectlConfigReader {
             return AccessTokenUserDetail(accessToken)
         }
         else {
-            println("User configuration is not supported yet \n $userNode")
+            logger.error("User configuration is not supported yet \n $userNode")
             return null
         }
     }
