@@ -1,7 +1,7 @@
 - Getting Started
 
     - [Quick Start](quick-start.md)
-    - [Quick DSL intro](quick-dsl-intro.md)
+    - [DSL intro](dsl-intro.md)
 
 - Working With Environments
 

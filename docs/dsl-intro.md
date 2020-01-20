@@ -1,4 +1,4 @@
-# Quick DSL intro
+# DSL intro
 
 In the [Quick Start](quick-start.md) we deployed some resources but did not go into the details of to use the KubeRig DSL to define them.
 
@@ -200,12 +200,14 @@ abstract class HttpEchoApp(private val name: String) {
         }
     }
 }
+```
 
+We can now use this class to create FooApp and BarApp specific classes. This shows that you can place the `@EnvResource` annotation on methods of parent classes.
+
+```kotlin
 class FooApp : HttpEchoApp("foo")
 class BarApp : HttpEchoApp("bar")
 ```
-
-And we use this class to create FooApp and BarApp specific classes. This shows that you can place the `@EnvResource` annotation on methods of parent classes.
 
 The `@EnvResource` annotation is great to start with but it is limited because it can only be used to define a single resource.
 
