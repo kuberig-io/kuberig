@@ -4,8 +4,8 @@
 
 - Working With Environments
 
-    - [Environment support](environment-support.md)
     - [Initializing an environment](initializing-an-environment.md)
+    - [Environment support](environment-support.md)
     
 - Resource Coding Basics
 
