@@ -30,7 +30,7 @@ The kuberig service account is created in the namespace of the Kubectl context. 
 
 A kuberig-edit rolebinding is created granting ClusterRole edit to the kuberig service account.
 
-The access token for the kuberig service acount is added to the environment and encrypted (see environments/$environment.name$/.encrypted.$environment.name$.access-token)
+The access token for the kuberig service account is added to the environment and encrypted.
 
 ## Limitations
 The Kubectl configuration file has a lot of possible ways to configure access to a Kubernetes cluster and it will take more work to make the `--currentKubectlContext` deal with them all. 

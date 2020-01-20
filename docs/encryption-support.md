@@ -16,7 +16,7 @@ If you have not used the `initEnvironment` task you can initialize the .gitignor
 
 ## Conventions
 KubeRig provides some basic conventions to deal with sensitive information in your environment repositories.
-But even then it requires a lot of rigor to not accidentally commit sensitive information. You have been warned!
+> But even then it requires a lot of rigor to not accidentally commit sensitive information. You have been warned!
 
 ### Sensitive Configuration Values
 All configuration values for environments go in the {environment-name}-configs.properties file. Sensitive values can be encrypted.

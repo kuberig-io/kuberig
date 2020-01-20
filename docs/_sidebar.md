@@ -1,6 +1,7 @@
 - Getting Started
 
-    - [Quick start](quick-start.md)
+    - [Quick Start](quick-start.md)
+    - [Quick DSL intro](quick-dsl-intro.md)
 
 - Working With Environments
 
@@ -23,7 +24,6 @@
 - Reference documentation
     
     - [Global tasks](global-tasks.md)
-    - [Environment tasks](environment-tasks.md)
     - [Configuration](configuration.md)
     - [Repository organisation](repository-organisation.md)
     - [Encryption support](encryption-support.md)

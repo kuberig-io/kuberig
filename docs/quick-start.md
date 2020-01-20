@@ -144,7 +144,11 @@ BUILD SUCCESSFUL in 1s
 ```
 
 ## First Deployment
-The kuberig-starter repository comes with a very basic ingress example. Lets deploy that now.
+The kuberig-starter repository comes with a very basic ingress example. 
+
+We will go into detail about how to define the resources in the [Quick DSL Intro](quick-dsl-intro.md).
+ 
+For now lets just deploy the example.
 
 To execute a deployment to the localdev environment we can use the `deployLocaldevEnvironment` task.
 
