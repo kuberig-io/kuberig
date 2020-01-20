@@ -23,7 +23,6 @@
 
 - Reference documentation
     
-    - [Global tasks](global-tasks.md)
     - [Configuration](configuration.md)
     - [Repository organisation](repository-organisation.md)
     - [Encryption support](encryption-support.md)
