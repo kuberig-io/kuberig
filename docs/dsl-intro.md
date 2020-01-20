@@ -284,7 +284,7 @@ object HttpEchoApps {
 ```
 THe HttpEchoApps object uses the names to create an instance of HttpEchoApp for every name that comes in.
 
-Next it ask each HttpEchoApp to `emit` the resources needed to deploy an HttpEchoApp.
+Next it asks each HttpEchoApp to `emit` the resources needed to deploy an HttpEchoApp.
 
 And as a last action the ingress resource is created by using the list of HttpEchoApp instances.
 In the `paths` block we ask each HttpEchoApp for the ingressPath and add it to the ingress.
@@ -360,8 +360,10 @@ class HttpEchoApp(private val name: String) {
     }
 }
 ```
-The `@EnvResource` annotations have been removed. The pod and service definition methods have become private.
+The `@EnvResource` annotations have been removed and the pod and service definition methods have become private.
+
 The appIngressPath method is new and generates a part of the ingress resource that is used in the HttpEchoApps.exampleIngress method.
+
 Everything that is specific to an HttpEchoApp is now defined inside the HttpEchoApp class.
 
 ## Next steps
