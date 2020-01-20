@@ -38,6 +38,7 @@ The Kubectl configuration file has a lot of possible ways to configure access to
 Currently it is known to work for:
 - Digital Ocean Kubernetes service
 - Google Kubernetes Engine
+- Amazone Elastic Kubernetes Service
 - minikube
 - KIND
 - microk8s
@@ -48,4 +49,5 @@ In case you run into problems please create an issue on [github](https://github.
 - [Digital Ocean Kubernetes (DOKS)](https://www.rigel.dev/kuberig-doks/)
 - [Google Kubernetes Engine (GKE)](https://www.rigel.dev/kuberig-gke/)
 - [Elastic Kubernetes Service (Amazone EKS)](https://www.rigel.dev/kuberig-eks/)
+- [KubeRig + microk8s](https://www.rigel.dev/kuberig-microk8s/)
 
