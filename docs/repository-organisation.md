@@ -16,5 +16,3 @@ Each `environment` directory contains the following files:
 - other files that are environment specific, remember to prefix files that contains sensitive information with `.plain.` . 
 
 The `src\main\kotlin` directory is where you place your [Kotlin](https://kotlinlang.org/) resource generation code.
-
-The kuberig extension in the `build.gradle.kts` file allows you to define your environments, target platform and more. 
