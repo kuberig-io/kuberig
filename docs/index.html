@@ -7,6 +7,12 @@
   <meta name="description" content="Description">
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
   <link rel="stylesheet" href="//unpkg.com/docsify/lib/themes/vue.css">
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-156809347-1"></script>
+  <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+  </script>
 </head>
 <body>
   <div id="app"></div>
@@ -15,11 +21,46 @@
       name: 'KubeRig',
       repo: 'https://github.com/teyckmans/kuberig',
       loadSidebar: true,
-      ga: 'UA-156809347-1'
+      plugins: [
+        function(hook, vm) {
+          hook.init(function() {
+            // Called when the script starts running, only trigger once, no arguments,
+          });
+
+          hook.beforeEach(function(content) {
+            // Invoked each time before parsing the Markdown file.
+            // ...
+            return content;
+          });
+
+          hook.afterEach(function(html, next) {
+            gtag('js', new Date());
+            console.log(html);
+            gtag('config', 'UA-156809347-1', { 'anonymize_ip': true, page_path: location.hash });
+            // Invoked each time after the Markdown file is parsed.
+            // beforeEach and afterEach support asynchronous。
+            // ...
+            // call `next(html)` when task is done.
+            next(html);
+          });
+
+          hook.doneEach(function() {
+            // Invoked each time after the data is fully loaded, no arguments,
+            // ...
+          });
+
+          hook.mounted(function() {
+            // Called after initial completion. Only trigger once, no arguments.
+          });
+
+          hook.ready(function() {
+            // Called after initial completion, no arguments.
+          });
+        }
+      ]
     }
   </script>
   <script src="//unpkg.com/docsify/lib/docsify.min.js"></script>
-  <script src="//unpkg.com/docsify/lib/plugins/ga.min.js"></script>
   <script src="//unpkg.com/prismjs/components/prism-bash.min.js"></script>
   <script src="//unpkg.com/prismjs/components/prism-shell.min.js"></script>
   <script src="//unpkg.com/prismjs/components/prism-kotlin.min.js"></script>
