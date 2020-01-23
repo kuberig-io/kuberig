@@ -35,7 +35,6 @@
 
           hook.afterEach(function(html, next) {
             gtag('js', new Date());
-            console.log(html);
             gtag('config', 'UA-156809347-1', { 'anonymize_ip': true, page_path: location.hash });
             // Invoked each time after the Markdown file is parsed.
             // beforeEach and afterEach support asynchronous。
@@ -62,7 +61,6 @@
   </script>
   <script src="//unpkg.com/docsify/lib/docsify.min.js"></script>
   <script src="//unpkg.com/prismjs/components/prism-bash.min.js"></script>
-  <script src="//unpkg.com/prismjs/components/prism-shell.min.js"></script>
   <script src="//unpkg.com/prismjs/components/prism-kotlin.min.js"></script>
 </body>
 </html>
