@@ -52,7 +52,7 @@ class KubectlConfigReader {
         objectMapper.registerModule(byteArrayModule)
         objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT)
 
-        val configFileLocation = System.getenv("KUBECONFIG") ?: "${System.getProperty("user.home")}/.kube/config"
+        val configFileLocation = System.getenv("KUBECONFIG") ?: "${System.getenv("HOME")}/.kube/config"
 
         val configFile = File(configFileLocation)
 
@@ -69,7 +69,7 @@ class KubectlConfigReader {
         val contextDetail = contextDetail(contextsNode, currentContextName)
 
         if (contextDetail != null) {
-            var clusterDetail = clusterDetail(clustersNode, contextDetail.clusterName)
+            val clusterDetail = clusterDetail(clustersNode, contextDetail.clusterName)
 
             if (clusterDetail != null) {
                 logger.info("Using server: ${clusterDetail.server}")
@@ -81,18 +81,19 @@ class KubectlConfigReader {
                 return ErrorContextResult("Could not find cluster details for cluster with name ${contextDetail.clusterName} referenced from current context $currentContextName")
             }
 
-            var userDetail = userDetail(usersNode, contextDetail.userName)
+            val userDetail = userDetail(usersNode, contextDetail.userName)
 
             if (userDetail != null) {
-                if (userDetail is ClientCertificateUserDetail) {
+                when (userDetail) {
+                    is ClientCertificateUserDetail -> {
 
-                    logger.debug("Using client-certificate: \n ${userDetail.clientCertificateData}")
-                    logger.debug("Using client-key: \n ${userDetail.clientKeyData}")
+                        logger.debug("Using client-certificate: \n ${userDetail.clientCertificateData}")
+                        logger.debug("Using client-key: \n ${userDetail.clientKeyData}")
 
-                } else if (userDetail is AccessTokenUserDetail) {
-                    logger.debug("Using access-token: \n ${userDetail.accessToken}")
-                } else {
-                    return ErrorContextResult("User detail type not supported")
+                    }
+                    is AccessTokenUserDetail -> {
+                        logger.debug("Using access-token: \n ${userDetail.accessToken}")
+                    }
                 }
             } else {
                 return ErrorContextResult("Could not find user details for user with name ${contextDetail.userName} referenced from current context $currentContextName")
@@ -183,8 +184,10 @@ class KubectlConfigReader {
 
                 val certificateAuthorityData = if (clusterNode.has("certificate-authority")) {
                     File(clusterNode.get("certificate-authority").textValue()).readText()
-                } else {
+                } else if (clusterNode.has("certificate-authority-data")) {
                     String(Base64.getDecoder().decode(clusterNode.get("certificate-authority-data").textValue()))
+                } else {
+                    ""
                 }
 
                 clusterDetail = ClusterDetail(
@@ -295,6 +298,9 @@ class KubectlConfigReader {
             }
 
             return AccessTokenUserDetail(accessToken)
+        }
+        else if (userNode.has("token")) {
+            return AccessTokenUserDetail(userNode.get("token").textValue())
         }
         else {
             logger.error("User configuration is not supported yet \n $userNode")

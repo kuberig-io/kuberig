@@ -33,7 +33,9 @@ class EnvironmentFileSystem(
     }
 
     fun storeClusterCertificateAuthorityData(certificateAuthorityData: String) {
-        clusterCaCertPemFile.writeText(certificateAuthorityData)
+        if (certificateAuthorityData != "") {
+            clusterCaCertPemFile.writeText(certificateAuthorityData)
+        }
     }
 
     fun storeAccessToken(accessToken: String) {

@@ -61,9 +61,8 @@ abstract class InitEnvironmentTask: AbstractKubeRigTask() {
         if (currentKubectlContext) {
 
             val kubectlConfigReader = KubectlConfigReader()
-            val contextResult = kubectlConfigReader.readKubectlConfig()
 
-            when (contextResult) {
+            when (val contextResult = kubectlConfigReader.readKubectlConfig()) {
                 is OkContextResult -> {
                     val serviceAccountCreator = ServiceAccountCreator(kubeRigExtension().flags)
 
