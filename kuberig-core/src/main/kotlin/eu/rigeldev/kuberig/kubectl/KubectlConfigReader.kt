@@ -10,14 +10,19 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
 import com.jayway.jsonpath.JsonPath
 import eu.rigeldev.kuberig.core.generation.yaml.ByteArrayDeserializer
 import eu.rigeldev.kuberig.core.generation.yaml.ByteArraySerializer
+import org.apache.http.conn.ssl.TrustStrategy
+import org.apache.http.ssl.SSLContexts
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.bouncycastle.openssl.PEMKeyPair
 import org.bouncycastle.openssl.PEMParser
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter
+import org.bouncycastle.openssl.jcajce.JcaPEMWriter
 import org.json.JSONObject
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.IOException
+import java.io.StringWriter
+import java.net.URL
 import java.security.KeyStore
 import java.security.Security
 import java.security.cert.CertificateFactory
@@ -25,6 +30,10 @@ import java.security.cert.X509Certificate
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.TimeUnit
+import javax.net.ssl.SSLException
+import javax.net.ssl.SSLSocket
+import javax.net.ssl.TrustManagerFactory
+import javax.net.ssl.X509TrustManager
 
 
 /**
@@ -182,18 +191,17 @@ class KubectlConfigReader {
             if (currentNode.get("name").textValue() == clusterName) {
                 val clusterNode = currentNode.get("cluster")
 
+                val server = clusterNode.get("server").textValue()
+
                 val certificateAuthorityData = if (clusterNode.has("certificate-authority")) {
                     File(clusterNode.get("certificate-authority").textValue()).readText()
                 } else if (clusterNode.has("certificate-authority-data")) {
                     String(Base64.getDecoder().decode(clusterNode.get("certificate-authority-data").textValue()))
                 } else {
-                    ""
+                    retrieveCertificateAuthorityDataFromServer(server)
                 }
 
-                clusterDetail = ClusterDetail(
-                        certificateAuthorityData,
-                        clusterNode.get("server").textValue()
-                )
+                clusterDetail = ClusterDetail(certificateAuthorityData, server)
             }
 
             currentIndex++
@@ -308,6 +316,66 @@ class KubectlConfigReader {
         }
     }
 
+    /**
+     * Not completely happy with this part as it does not yet go up the certificate chain.
+     */
+    private fun retrieveCertificateAuthorityDataFromServer(url: String): String {
+        println("Failing back to retrieve certificate from $url, we may not get the CA but only the server certificate in this case.")
+
+        var result : String? = null
+
+        val tm = SavingTrustManager()
+
+        val context = SSLContexts.custom()
+                .loadTrustMaterial(null, tm)
+                .build()
+
+        val urlObject = URL(url)
+
+        val factory = context.socketFactory
+        val socket = factory.createSocket(urlObject.host, urlObject.port) as SSLSocket
+        socket.soTimeout = 10000
+        try {
+            socket.use {
+                it.startHandshake()
+            }
+        }
+        catch (e: SSLException) {
+            // ignore
+        }
+
+        if (tm.chain == null) {
+            println("Could not obtain server certificate chain")
+        } else {
+            val certList = tm.chain!!.asList()
+            if (certList.isNotEmpty()) {
+                // We should improve here and actually detect what the most top level certificate is.
+                val certificate = certList[0]
+                println("Using ${certificate.subjectDN}")
+                println("Issued by ${certificate.issuerDN}")
+                val stringWriter = StringWriter()
+                JcaPEMWriter(stringWriter).use { pemWriter ->
+                    pemWriter.writeObject(certificate)
+                }
+                result = stringWriter.toString()
+            }
+        }
+
+        check(result != null) { "Failed to retrieve Certificate from $url" }
+
+        return result
+    }
+
+}
+
+class SavingTrustManager : TrustStrategy {
+
+    var chain: Array<out X509Certificate>? = null
+
+    override fun isTrusted(chain: Array<out X509Certificate>?, authType: String?): Boolean {
+        this.chain = chain
+        return false
+    }
 }
 
 data class ContextDetail(val clusterName: String, val userName: String, val namespace: String = "")

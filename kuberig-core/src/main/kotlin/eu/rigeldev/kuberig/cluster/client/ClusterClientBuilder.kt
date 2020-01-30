@@ -65,7 +65,7 @@ class ClusterClientBuilder(private val flags: KubeRigFlags,
             sslContextBuilder.loadKeyMaterial(keyStore, keyStorePass.toCharArray())
         }
 
-        val sslcontext : SSLContext = if (certificateAuthorityData == null) {
+        val sslcontext : SSLContext = if (certificateAuthorityData == null || certificateAuthorityData == "") {
             when {
                 flags.trustAllSSL -> sslContextBuilder
                     .loadTrustMaterial(null, TrustAllStrategy())
