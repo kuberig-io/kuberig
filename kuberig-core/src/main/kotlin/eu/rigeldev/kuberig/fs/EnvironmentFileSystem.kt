@@ -68,10 +68,8 @@ class EnvironmentFileSystem(
         this.encryptionSupportFactory.initForEnvironment(this)
     }
 
-    fun initConfigsFile(apiServerUrl: String) {
+    fun initConfigsFile(apiServerUrl: String, serviceAccountName: String) {
         val environmentEncryptionSupport = this.encryptionSupport()
-
-        val encryptedApiServerUrl = environmentEncryptionSupport.encryptValue(apiServerUrl)
 
         val currentLines = if (environmentConfigsFile.exists()) {
             environmentConfigsFile.readLines()
@@ -79,24 +77,52 @@ class EnvironmentFileSystem(
             listOf()
         }
 
-        val newLines = mutableListOf<String>()
-
-        var updated = false
-        val apiServerUrlPropertyKey = "api.server.url"
-        for (currentLine in currentLines) {
-            if (currentLine.trim().toLowerCase().startsWith(apiServerUrlPropertyKey)) {
-                newLines.add("$apiServerUrlPropertyKey=$encryptedApiServerUrl")
-                updated = true
-            } else {
-                newLines.add(currentLine.trim())
-            }
-        }
-
-        if (!updated) {
-            newLines.add("$apiServerUrlPropertyKey=$encryptedApiServerUrl")
-        }
+        val newLines = this.replaceConfig(
+            currentLines,
+            listOf(
+                Pair(API_SERVER_URL_CONFIG_KEY, environmentEncryptionSupport.encryptValue(apiServerUrl)),
+                Pair(DEFAULT_SERVICE_ACCOUNT_NAME_CONFIG_KEY, environmentEncryptionSupport.encryptValue(serviceAccountName))
+            )
+        )
 
         environmentConfigsFile.writeText(newLines.joinToString("\n"))
+    }
+
+    private fun replaceConfig(currentLines: List<String>, configUpdates: List<Pair<String, String>>): List<String> {
+        val resultLines = mutableListOf<String>()
+
+        for (configUpdate in configUpdates) {
+            val configKey = configUpdate.first
+            val newConfigValue = configUpdate.second
+
+            val linesToUpdate = mutableListOf<String>()
+            val configUpdateResult = mutableListOf<String>()
+
+            if (resultLines.isEmpty()) {
+                linesToUpdate.addAll(currentLines)
+            } else {
+                linesToUpdate.addAll(resultLines)
+            }
+
+            var updated = false
+            for (lineToUpdate in linesToUpdate) {
+                if (lineToUpdate.trim().toLowerCase().startsWith(configKey.toLowerCase())) {
+                    configUpdateResult.add("$configKey=$newConfigValue")
+                    updated = true
+                } else {
+                    configUpdateResult.add(lineToUpdate.trim())
+                }
+            }
+
+            if (!updated) {
+                configUpdateResult.add("$configKey=$newConfigValue")
+            }
+
+            resultLines.clear()
+            resultLines.addAll(configUpdateResult)
+        }
+
+        return resultLines.toList()
     }
 
     fun decryptConfig(key: String): Boolean {
@@ -179,5 +205,10 @@ class EnvironmentFileSystem(
 
     fun removeContainerVersion(containerAlias: String) {
         return this.containerVersionsFile.removeContainerVersion(containerAlias)
+    }
+
+    companion object {
+        const val API_SERVER_URL_CONFIG_KEY = "api.server.url"
+        const val DEFAULT_SERVICE_ACCOUNT_NAME_CONFIG_KEY = "default.service.account.name"
     }
 }

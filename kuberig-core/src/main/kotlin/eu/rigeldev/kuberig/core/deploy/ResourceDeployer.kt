@@ -29,7 +29,7 @@ class ResourceDeployer(private val flags: KubeRigFlags,
         objectMapper.findAndRegisterModules()
         objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT)
 
-        this.apiServerUrl = this.environmentFileSystem.readConfig("api.server.url")!!
+        this.apiServerUrl = this.environmentFileSystem.readConfig(EnvironmentFileSystem.API_SERVER_URL_CONFIG_KEY)!!
     }
 
     fun deploy(methodResults : List<ResourceGeneratorMethodResult>) {

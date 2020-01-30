@@ -1,134 +1,169 @@
 package eu.rigeldev.kuberig.init
 
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.databind.ObjectMapper
-import eu.rigeldev.kuberig.cluster.client.ClusterClientBuilder
+import eu.rigeldev.kuberig.cluster.client.*
 import eu.rigeldev.kuberig.config.KubeRigFlags
 import eu.rigeldev.kuberig.fs.EnvironmentFileSystem
 import eu.rigeldev.kuberig.kubectl.OkContextResult
-import kong.unirest.Unirest
 import org.json.JSONArray
 import org.json.JSONObject
 
 class ServiceAccountCreator(private val flags: KubeRigFlags) {
 
-    fun createDefaultServiceAccount(contextResult: OkContextResult, environmentFileSystem: EnvironmentFileSystem) {
-        val objectMapper = ObjectMapper()
-        objectMapper.findAndRegisterModules()
-        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT)
+    private val serviceAccountBasics = KindBasics("v1", "ServiceAccount", "serviceaccounts")
+    private val roleBindingBasics = KindBasics("rbac.authorization.k8s.io/v1", "RoleBinding", "rolebindings")
+    private val secretBasics = KindBasics("v1", "Secret", "secrets")
 
-        val unirestInstance = Unirest.spawnInstance()
+    fun createDefaultServiceAccount(
+        contextResult: OkContextResult,
+        environmentFileSystem: EnvironmentFileSystem,
+        serviceAccountName: String
+    ) {
+        val clusterInteractionService = ClusterInteractionService(
+            contextResult.clusterDetail.server,
+            flags,
+            contextResult.clusterDetail.certificateAuthorityData,
+            contextResult.authDetails
+        )
+
+        var accessTokenStored = false
+        val namespace = contextResult.namespace
+
         try {
-            ClusterClientBuilder(flags, objectMapper, unirestInstance)
-                .initializeClient(contextResult.clusterDetail.certificateAuthorityData, contextResult.authDetails)
+            var readResult = this.readServiceAccount(clusterInteractionService, namespace, serviceAccountName)
 
-            val apiServer = contextResult.clusterDetail.server
+            val serviceAccountAvailable : Boolean = if (readResult is NotFoundResourceReadResult) {
+                val continueCreation = this.createServiceAccountIfNeeded(clusterInteractionService, namespace, serviceAccountName)
 
-            val serviceAccountName = "kuberig"
-            val namespace = contextResult.namespace
-
-            // create service account
-            // POST - https://64260954-bb12-4801-b518-70e331c1c6bf.k8s.ondigitalocean.com/api/v1/namespaces/default/serviceaccounts
-            // {"apiVersion":"v1","kind":"ServiceAccount","metadata":{"creationTimestamp":null,"name":"kuberig-deployer"}}
-            val sa = JSONObject()
-                .put("apiVersion", "v1")
-                .put("kind", "ServiceAccount")
-                .put(
-                    "metadata", JSONObject()
-                        .put("name", serviceAccountName)
-                        .put("namespace", namespace)
-                )
-            val saPost = unirestInstance.post("$apiServer/api/v1/namespaces/$namespace/serviceaccounts")
-                .header("Content-Type", "application/json")
-                .body(sa)
-                .asJson()
-
-            if (saPost.status == 201) {
-                println("Created $serviceAccountName service account in namespace $namespace.")
-
-                // create role binding (edit)
-                // POST POST https://64260954-bb12-4801-b518-70e331c1c6bf.k8s.ondigitalocean.com/apis/rbac.authorization.k8s.io/v1/namespaces/default/rolebindings
-                // {"apiVersion":"rbac.authorization.k8s.io/v1","kind":"RoleBinding","metadata":{"creationTimestamp":null,"name":"kuberig-deployer-edit"},"roleRef":{"apiGroup":"rbac.authorization.k8s.io","kind":"ClusterRole","name":"edit"},"subjects":[{"kind":"ServiceAccount","name":"kuberig-deployer","namespace":"default"}
-
-                val rb = JSONObject()
-                    .put("apiVersion", "rbac.authorization.k8s.io/v1")
-                    .put("kind", "RoleBinding")
-                    .put(
-                        "metadata",
-                        JSONObject()
-                            .put("name", "$serviceAccountName-edit")
-                            .put("namespace", namespace)
-                    )
-                    .put(
-                        "roleRef",
-                        JSONObject()
-                            .put("apiGroup", "rbac.authorization.k8s.io")
-                            .put("kind", "ClusterRole")
-                            .put("name", "edit")
-                    )
-                    .put(
-                        "subjects",
-                        JSONArray(
-                            arrayOf(
-                                JSONObject()
-                                    .put("kind", "ServiceAccount")
-                                    .put("name", serviceAccountName)
-                                    .put("namespace", namespace)
-                            )
-                        )
-
-                    )
-
-                val rbPost =
-                    unirestInstance.post("$apiServer/apis/rbac.authorization.k8s.io/v1/namespaces/$namespace/rolebindings")
-                        .header("Content-Type", "application/json")
-                        .body(rb)
-                        .asJson()
-
-                if (rbPost.status == 201) {
-                    println("Created edit role binding for $serviceAccountName service account in namespace $namespace")
-
-                    // describe sa
-                    // GET https://64260954-bb12-4801-b518-70e331c1c6bf.k8s.ondigitalocean.com/api/v1/namespaces/default/serviceaccounts/kuberig-deployer
-                    // {"kind":"ServiceAccount","apiVersion":"v1","metadata":{"name":"kuberig-deployer","namespace":"default","selfLink":"/api/v1/namespaces/default/serviceaccounts/kuberig-deployer","uid":"c1d6e5eb-938e-11e9-8593-3a05544fda29","resourceVersion":"128506","creationTimestamp":"2019-06-20T19:08:15Z"},"secrets":[{"name":"kuberig-deployer-token-m4kdm"}]}
-                    val saDescGet =
-                        unirestInstance.get("$apiServer/api/v1/namespaces/$namespace/serviceaccounts/$serviceAccountName")
-                            .asJson()
-
-                    val saDesc = saDescGet.body.getObject()
-                    val secretName = saDesc.getJSONArray("secrets").getJSONObject(0).getString("name")
-
-                    // describe secret
-                    // GET https://64260954-bb12-4801-b518-70e331c1c6bf.k8s.ondigitalocean.com/api/v1/namespaces/default/secrets/kuberig-deployer-token-m4kdm
-                    val secretGet = unirestInstance.get("$apiServer/api/v1/namespaces/$namespace/secrets/$secretName")
-                        .asJson()
-
-                    val token = secretGet.body.getObject().getJSONObject("data").getString("token")
-
-                    environmentFileSystem.storeAccessToken(token)
-
+                if (continueCreation) {
+                    this.createRoleBinding(clusterInteractionService, namespace, serviceAccountName)
                 } else {
-                    println("Failed to create edit role binding")
+                    false
                 }
             } else {
-                println("Failed to create service account")
-                println(saPost.status)
-                println(saPost.statusText)
-                println(saPost.body.toString())
+                true
             }
 
+            if (serviceAccountAvailable) {
+                readResult = this.readServiceAccount(clusterInteractionService, namespace, serviceAccountName)
+            }
 
-            // describe sa
-            // GET https://64260954-bb12-4801-b518-70e331c1c6bf.k8s.ondigitalocean.com/api/v1/namespaces/default/serviceaccounts/kuberig-deployer
-            // {"kind":"ServiceAccount","apiVersion":"v1","metadata":{"name":"kuberig-deployer","namespace":"default","selfLink":"/api/v1/namespaces/default/serviceaccounts/kuberig-deployer","uid":"c1d6e5eb-938e-11e9-8593-3a05544fda29","resourceVersion":"128506","creationTimestamp":"2019-06-20T19:08:15Z"},"secrets":[{"name":"kuberig-deployer-token-m4kdm"}]}
+            if (readResult is FoundResourceReadResult) {
+                val accessToken = this.readServiceAccountAccessToken(clusterInteractionService, namespace, readResult.resourceBody)
 
-            // describe secret
-            // GET https://64260954-bb12-4801-b518-70e331c1c6bf.k8s.ondigitalocean.com/api/v1/namespaces/default/secrets/kuberig-deployer-token-m4kdm
-            //
+                if (accessToken != null) {
+                    environmentFileSystem.storeAccessToken(accessToken)
+                    accessTokenStored = true
+                }
+            }
+
+        } finally {
+            clusterInteractionService.shutdown()
         }
-        finally {
-            unirestInstance.shutDown()
+
+        if (accessTokenStored) {
+            println("[SUCCESS] Access-token for service account $serviceAccountName, stored in environment directory.")
+        } else {
+            println("[FAILURE] Failed to store access-token $serviceAccountName in environment directory, please check previous error messages for clues.")
         }
     }
 
+    private fun readServiceAccount(
+        clusterInteractionService: ClusterInteractionService,
+        namespace: String,
+        serviceAccountName: String
+    ): ResourceReadResult {
+        return clusterInteractionService.read(serviceAccountBasics, namespace, serviceAccountName)
+    }
+
+    private fun createServiceAccountIfNeeded(
+        clusterInteractionService: ClusterInteractionService,
+        namespace: String,
+        serviceAccountName: String
+    ): Boolean {
+        var continueCreation = true
+
+        when (clusterInteractionService.read(serviceAccountBasics, namespace, serviceAccountName)) {
+            is FoundResourceReadResult -> {
+                println("ServiceAccount $serviceAccountName, already exists in namespace $namespace no need to create it.")
+                continueCreation = false
+            }
+            is NotFoundResourceReadResult -> {
+                val serviceAccountObject = serviceAccountBasics.startObject(namespace, serviceAccountName)
+
+                when (val saCreateResult = clusterInteractionService.create(serviceAccountBasics, namespace, serviceAccountObject)) {
+                    is ResourceCreateSuccessResult -> {
+                        println("Created $serviceAccountName service account in namespace $namespace.")
+                    }
+                    is ResourceCreateFailedResult -> {
+                        println("Failed to create service account $serviceAccountName in namespace $namespace.")
+                        printCreateFailureInfo(saCreateResult)
+                        continueCreation = false
+                    }
+                }
+            }
+        }
+
+        return continueCreation
+    }
+
+    private fun createRoleBinding(
+        clusterInteractionService: ClusterInteractionService,
+        namespace: String,
+        serviceAccountName: String
+    ): Boolean {
+        var continueCreation = true
+
+        val rb = roleBindingBasics.startObject(namespace, "$serviceAccountName-edit")
+            .put(
+                "roleRef",
+                JSONObject()
+                    .put("apiGroup", "rbac.authorization.k8s.io")
+                    .put("kind", "ClusterRole")
+                    .put("name", "edit")
+            )
+            .put(
+                "subjects",
+                JSONArray(
+                    arrayOf(
+                        JSONObject()
+                            .put("kind", serviceAccountBasics.kind)
+                            .put("name", serviceAccountName)
+                            .put("namespace", namespace)
+                    )
+                )
+            )
+
+        when (val rbCreateResult = clusterInteractionService.create(roleBindingBasics, namespace, rb)) {
+            is ResourceCreateFailedResult -> {
+                println("Failed to create edit role binding for service account $serviceAccountName in namespace $namespace.")
+                printCreateFailureInfo(rbCreateResult)
+                continueCreation = false
+            }
+        }
+
+        return continueCreation
+    }
+
+    private fun readServiceAccountAccessToken(
+        clusterInteractionService: ClusterInteractionService,
+        namespace: String,
+        serviceAccountObject: JSONObject
+    ): String? {
+        val secretName = serviceAccountObject.getJSONArray("secrets").getJSONObject(0).getString("name")
+
+        val secretReadResult = clusterInteractionService.read(secretBasics, namespace, secretName)
+
+        return if (secretReadResult is FoundResourceReadResult) {
+            secretReadResult.resourceBody.getJSONObject("data").getString("token")
+        } else {
+            println("Secret $secretName not found in namespace $namespace")
+            null
+        }
+    }
+
+    private fun printCreateFailureInfo(createFailureResult: ResourceCreateFailedResult) {
+        println(createFailureResult.status)
+        println(createFailureResult.statusText)
+        println(createFailureResult.body.toString())
+    }
 }
