@@ -164,7 +164,12 @@ class KubectlConfigReader {
                 val contextNode = currentNode.get("context")
 
                 val namespace = if (contextNode.has("namespace")) {
-                    contextNode.get("namespace").textValue()
+                    val namespaceValue = contextNode.get("namespace").textValue()
+                    if (namespaceValue == "") {
+                        "default"
+                    } else {
+                        namespaceValue
+                    }
                 } else {
                     "default"
                 }

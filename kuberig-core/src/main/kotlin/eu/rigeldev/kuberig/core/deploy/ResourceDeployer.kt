@@ -24,12 +24,14 @@ class ResourceDeployer(private val flags: KubeRigFlags,
 
     val objectMapper = ObjectMapper()
     val apiServerUrl : String
+    val defaultNamespace : String
 
     init {
         objectMapper.findAndRegisterModules()
         objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT)
 
         this.apiServerUrl = this.environmentFileSystem.readConfig(EnvironmentFileSystem.API_SERVER_URL_CONFIG_KEY)!!
+        this.defaultNamespace = this.environmentFileSystem.readConfig(EnvironmentFileSystem.DEFAULT_NAMESPACE_NAME_CONFIG_KEY)!!
     }
 
     fun deploy(methodResults : List<ResourceGeneratorMethodResult>) {
@@ -131,7 +133,7 @@ class ResourceDeployer(private val flags: KubeRigFlags,
         val namespace = if (newJson.getJSONObject("metadata").has("namespace")) {
             newJson.getJSONObject("metadata").getString("namespace")
         } else {
-            "default"
+            this.defaultNamespace
         }
 
         println("------")

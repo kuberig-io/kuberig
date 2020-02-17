@@ -149,16 +149,32 @@ class ServiceAccountCreator(private val flags: KubeRigFlags) {
         namespace: String,
         serviceAccountObject: JSONObject
     ): String? {
-        val secretName = serviceAccountObject.getJSONArray("secrets").getJSONObject(0).getString("name")
+        val secretsArray = serviceAccountObject.getJSONArray("secrets")
 
-        val secretReadResult = clusterInteractionService.read(secretBasics, namespace, secretName)
+        var accessToken : String? = null
+        var secretIndex = 0
+        while (accessToken == null && secretIndex < secretsArray.length()) {
+            val secretReferenceObject = secretsArray.getJSONObject(secretIndex)
 
-        return if (secretReadResult is FoundResourceReadResult) {
-            secretReadResult.resourceBody.getJSONObject("data").getString("token")
-        } else {
-            println("Secret $secretName not found in namespace $namespace")
-            null
+            val secretName = secretReferenceObject.getString("name")
+
+            val secretReadResult = clusterInteractionService.read(secretBasics, namespace, secretName)
+
+            if (secretReadResult is FoundResourceReadResult) {
+                val secretResourceJson = secretReadResult.resourceBody
+                val secretType = secretResourceJson.getString("type")
+
+                if (secretType == "kubernetes.io/service-account-token") {
+                    accessToken = secretResourceJson.getJSONObject("data").getString("token")
+                }
+            } else {
+                println("Secret $secretName not found in namespace $namespace")
+            }
+
+            secretIndex++
         }
+
+        return accessToken
     }
 
     private fun printCreateFailureInfo(createFailureResult: ResourceCreateFailedResult) {

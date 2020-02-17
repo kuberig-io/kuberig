@@ -70,7 +70,7 @@ class EnvironmentFileSystem(
         this.encryptionSupportFactory.initForEnvironment(this)
     }
 
-    fun initConfigsFile(apiServerUrl: String, serviceAccountName: String) {
+    fun initConfigsFile(apiServerUrl: String, defaultNamespace: String, serviceAccountName: String) {
         val environmentEncryptionSupport = this.encryptionSupport()
 
         val currentLines = if (environmentConfigsFile.exists()) {
@@ -83,6 +83,7 @@ class EnvironmentFileSystem(
             currentLines,
             listOf(
                 Pair(API_SERVER_URL_CONFIG_KEY, environmentEncryptionSupport.encryptValue(apiServerUrl)),
+                Pair(DEFAULT_NAMESPACE_NAME_CONFIG_KEY, defaultNamespace),
                 Pair(DEFAULT_SERVICE_ACCOUNT_NAME_CONFIG_KEY, environmentEncryptionSupport.encryptValue(serviceAccountName))
             )
         )
@@ -211,6 +212,7 @@ class EnvironmentFileSystem(
 
     companion object {
         const val API_SERVER_URL_CONFIG_KEY = "api.server.url"
+        const val DEFAULT_NAMESPACE_NAME_CONFIG_KEY = "default.namespace.name"
         const val DEFAULT_SERVICE_ACCOUNT_NAME_CONFIG_KEY = "default.service.account.name"
     }
 }

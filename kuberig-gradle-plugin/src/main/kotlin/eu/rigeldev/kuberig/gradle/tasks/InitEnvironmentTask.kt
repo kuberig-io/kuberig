@@ -13,7 +13,8 @@ abstract class InitEnvironmentTask: AbstractKubeRigTask() {
     private var environmentName = ""
     private var apiServerUrl = ""
     private var currentKubectlContext = false
-    private var serviceAccountName = "kuberig"
+    private var serviceAccount = "kuberig"
+    private var defaultNamespace = "default"
 
     @Input
     fun getEnvironmentName(): String {
@@ -40,9 +41,14 @@ abstract class InitEnvironmentTask: AbstractKubeRigTask() {
         this.currentKubectlContext = currentKubectlContext
     }
 
-    @Option(option = "serviceAccountName", description = "Allows you to overwrite the default service account name (kuberig)")
-    fun setServiceAccountName(serviceAccountName: String) {
-        this.serviceAccountName = serviceAccountName
+    @Option(option = "serviceAccount", description = "Allows you to overwrite the default service account name (kuberig)")
+    fun setServiceAccount(serviceAccount: String) {
+        this.serviceAccount = serviceAccount
+    }
+
+    @Option(option = "defaultNamespace", description = "Allows you to specify the default namespace (ignored when --currentKubectlContext flag is used)")
+    fun setDefaultNamespace(defaultNamespace: String) {
+        this.defaultNamespace = defaultNamespace
     }
 
     @TaskAction
@@ -66,10 +72,10 @@ abstract class InitEnvironmentTask: AbstractKubeRigTask() {
                 is OkContextResult -> {
                     val serviceAccountCreator = ServiceAccountCreator(kubeRigExtension().flags)
 
-                    serviceAccountCreator.createDefaultServiceAccount(contextResult, environmentFileSystem, this.serviceAccountName)
+                    serviceAccountCreator.createDefaultServiceAccount(contextResult, environmentFileSystem, this.serviceAccount)
 
                     environmentFileSystem.storeClusterCertificateAuthorityData(contextResult.clusterDetail.certificateAuthorityData)
-                    environmentFileSystem.initConfigsFile(contextResult.clusterDetail.server, this.serviceAccountName)
+                    environmentFileSystem.initConfigsFile(contextResult.clusterDetail.server, contextResult.namespace, this.serviceAccount)
                 }
                 is ErrorContextResult -> {
                     println("Failed to read current kubectl context:[error]${contextResult.error}")
@@ -82,7 +88,7 @@ abstract class InitEnvironmentTask: AbstractKubeRigTask() {
                 return
             }
 
-            environmentFileSystem.initConfigsFile(this.apiServerUrl, this.serviceAccountName)
+            environmentFileSystem.initConfigsFile(this.apiServerUrl, this.defaultNamespace, this.serviceAccount)
         }
     }
 }

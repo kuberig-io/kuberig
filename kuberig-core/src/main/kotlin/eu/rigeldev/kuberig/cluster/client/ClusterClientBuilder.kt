@@ -85,6 +85,8 @@ class ClusterClientBuilder(private val flags: KubeRigFlags,
 
             sslContextBuilder
                 .loadTrustMaterial(trustStore, null)
+                // https://github.com/golang/go/issues/35722 - limit to 1.2 for now, needs a more fine grained behaviour.
+                .setProtocol("TLSv1.2")
                 .build()
         }
 
