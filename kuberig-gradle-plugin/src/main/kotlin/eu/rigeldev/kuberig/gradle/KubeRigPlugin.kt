@@ -31,6 +31,12 @@ open class KubeRigPlugin : Plugin<Project> {
                 ResourceTaskConfigurationAction(environment)
             )
             project.tasks.registerEnvironmentTask(
+                "createEncryptionKey",
+                environment,
+                GenerateEncryptionKeyTask::class.java,
+                EnvironmentTaskConfigurationAction(environment)
+            )
+            project.tasks.registerEnvironmentTask(
                 "encryptConfig",
                 environment,
                 EncryptEnvironmentConfigTask::class.java,
