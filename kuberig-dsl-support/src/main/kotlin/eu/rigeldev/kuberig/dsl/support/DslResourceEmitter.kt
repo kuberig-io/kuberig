@@ -22,6 +22,8 @@ object DslResourceEmitter {
      * The emit function can be used to publish one or more resources.
      */
     fun <T> emit(vararg dslTypes: DslType<T>) {
+        check(receivers.get().isNotEmpty()) { "\n\tDslResourceEmitter.emit() not supported in this method. \n\tMake sure you call DslResourceEmitter.emit() from within a method annotated with @EnvResources.\n\tIn @EnvResource methods you need to return the resource from the method." }
+
         receivers.get().forEach { receiver ->
             logger.info("[EMITTING] to ${receiver.getName()}")
             dslTypes.forEach {dslType ->

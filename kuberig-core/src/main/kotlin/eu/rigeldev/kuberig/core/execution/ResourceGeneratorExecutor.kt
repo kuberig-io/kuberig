@@ -55,11 +55,10 @@ class ResourceGeneratorExecutor(
 
         if (errorResults.isNotEmpty()) {
             errorResults.forEach {
-                logger.error("${it.method.generatorType}.${it.method.methodName}: ${it.errorMessage()}")
-                it.rootCause.printStackTrace()
+                logger.error("Error during execution of ${it.method.generatorType}.${it.method.methodName}: ${it.errorMessage()}")
             }
 
-            throw IllegalStateException("Not all @EnvResource method executions were successful")
+            throw IllegalStateException("Not all resource generation methods were executed successfully.")
         }
     }
 
@@ -81,17 +80,6 @@ class ResourceGeneratorExecutor(
 
         DslResourceEmitter.init()
 
-        DslResourceEmitter.registerReceiver(object : DslResourceReceiver {
-            override fun getName(): String {
-                return "default-receiver"
-            }
-
-            override fun <T> receive(dslType: DslType<T>) {
-                dslType::class.java.typeParameters.forEach { println(it) }
-                resources.add(dslType.toValue() as Any)
-            }
-        })
-
         try {
             val type = resourceGenerationRuntimeClasspathClassLoader.loadClass(resourceGeneratorMethod.generatorType)
 
@@ -100,6 +88,18 @@ class ResourceGeneratorExecutor(
             val method = type.getMethod(resourceGeneratorMethod.methodName)
 
             val singleResourceMethod = method.getDeclaredAnnotation(EnvResource::class.java) != null
+
+            if (!singleResourceMethod) {
+                DslResourceEmitter.registerReceiver(object : DslResourceReceiver {
+                    override fun getName(): String {
+                        return "default-receiver"
+                    }
+
+                    override fun <T> receive(dslType: DslType<T>) {
+                        resources.add(dslType.toValue() as Any)
+                    }
+                })
+            }
 
             val envFilterAnnotation = method.getDeclaredAnnotation(EnvFilter::class.java)
             val executionNeeded = envFilterAnnotation?.environments?.map(String::toLowerCase)?.contains(this.environment.name.toLowerCase())
@@ -113,12 +113,12 @@ class ResourceGeneratorExecutor(
                     if (singleResourceMethod) {
                         @Suppress("UNCHECKED_CAST") val dslType = method.invoke(typeInstance) as DslType<Any>
 
-                        DslResourceEmitter.emit(dslType)
+                        resources.add(dslType.toValue())
                     } else {
                         method.invoke(typeInstance)
                     }
                 } catch (t: Throwable) {
-                    return ErrorResult(resourceGeneratorMethod, t)
+                    return ErrorResult(resourceGeneratorMethod, t.cause ?: t)
                 }
 
                 if (resources.isEmpty()) {
