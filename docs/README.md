@@ -1,3 +1,5 @@
+![KubeRig Logo](images/website_logo_transparent_background.png "KubeRig Logo")
+
 # KubeRig User Manual
 
 KubeRig is an open-source deployment automation tool for Kubernetes/OpenShift focused on making deployments smarter.
