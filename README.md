@@ -1,3 +1,5 @@
+![KubeRig Logo](https://github.com/teyckmans/kuberig/blob/master/docs/images/website_logo_transparent_background.png)
+
 ![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/teyckmans/kuberig.svg?label=latest%20release)
 
 # KubeRig
