@@ -8,6 +8,8 @@ package eu.rigeldev.kuberig.core.annotations
 annotation class EnvFilter(
     /**
      * The environments the environment resource should be included.
+     *
+     * Matched in a case insensitive way.
      */
     val environments: Array<String>
 )

@@ -8,5 +8,6 @@ class ResourceTaskConfigurationAction<A:AbstractResourceTask>(environment: KubeR
         super.execute(task)
 
         task.dependsOn("build")
+
     }
 }

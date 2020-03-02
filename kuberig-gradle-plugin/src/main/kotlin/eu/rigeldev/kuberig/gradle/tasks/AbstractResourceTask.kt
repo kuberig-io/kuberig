@@ -1,6 +1,6 @@
 package eu.rigeldev.kuberig.gradle.tasks
 
-import eu.rigeldev.kuberig.core.execution.ResourceGeneratorExecutor
+import eu.rigeldev.kuberig.core.execution.*
 import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.io.File
@@ -8,7 +8,7 @@ import java.net.URLClassLoader
 
 abstract class AbstractResourceTask : AbstractEncryptionSupportTask() {
 
-    protected fun resourceGeneratorMethodExecutor() : ResourceGeneratorExecutor {
+    protected fun resourceGeneratorMethodExecutor(groupNameMatcher: ResourceGroupNameMatcher) : ResourceGeneratorExecutor {
         val compileKotlin = project.tasks.getByName("compileKotlin") as KotlinCompile
 
         return ResourceGeneratorExecutor(
@@ -16,8 +16,23 @@ abstract class AbstractResourceTask : AbstractEncryptionSupportTask() {
             compileKotlin.classpath.files.toSet(),
             this.buildResourceGenerationRuntimeClasspathClassLoader(),
             this.environment,
-            this.environmentFileSystem()
+            this.environmentFileSystem(),
+            groupNameMatcher
         )
+    }
+
+    protected fun groupNameMatcher(groupName: String, allGroups: Boolean): ResourceGroupNameMatcher {
+        return when {
+            allGroups -> {
+                AlwaysResourceGroupNameMatcher()
+            }
+            groupName != "" -> {
+                RequestedResourceGroupNameMatcher(groupName)
+            }
+            else -> {
+                NoResourceGroupNameMatcher()
+            }
+        }
     }
 
     /**
