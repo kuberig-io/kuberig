@@ -9,28 +9,9 @@ import java.io.File
 
 open class ResourceGenerationTask : AbstractResourceTask() {
 
-    private var generatedFiles = listOf<File>()
-
-    private var groupName: String = ""
-    private var allGroups: Boolean = false
-
-    fun getGroupName(): String? {
-        return this.groupName
-    }
-
-    @Option(option = "group", description = "The resource group to deploy. (optional)")
-    fun setGroupName(groupName: String) {
-        this.groupName = groupName
-    }
-
-    fun getAllGroups(): Boolean {
-        return this.allGroups
-    }
-
-    @Option(option = "allGroups", description = "Trigger deployment for all resource groups.")
-    fun setAllGroups(allGroups: Boolean) {
-        this.allGroups = allGroups
-    }
+    var generatedFiles = listOf<File>()
+        @OutputFiles
+        get
 
     @TaskAction
     fun generateResources() {
@@ -46,7 +27,4 @@ open class ResourceGenerationTask : AbstractResourceTask() {
         this.generatedFiles = generator.generate(methodResults)
     }
 
-    fun getGeneratedFiles() : List<File> {
-        return this.generatedFiles
-    }
 }

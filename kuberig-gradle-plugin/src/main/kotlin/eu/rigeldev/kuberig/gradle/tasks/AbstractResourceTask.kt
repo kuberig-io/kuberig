@@ -1,12 +1,26 @@
 package eu.rigeldev.kuberig.gradle.tasks
 
 import eu.rigeldev.kuberig.core.execution.*
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.options.Option
 import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.io.File
 import java.net.URLClassLoader
 
 abstract class AbstractResourceTask : AbstractEncryptionSupportTask() {
+
+    var groupName: String = ""
+        @Input
+        get
+        @Option(option = "group", description = "The resource group to deploy. (optional)")
+        set
+
+    var allGroups: Boolean = false
+        @Input
+        get
+        @Option(option = "allGroups", description = "Trigger deployment for all resource groups.")
+        set
 
     protected fun resourceGeneratorMethodExecutor(groupNameMatcher: ResourceGroupNameMatcher) : ResourceGeneratorExecutor {
         val compileKotlin = project.tasks.getByName("compileKotlin") as KotlinCompile
