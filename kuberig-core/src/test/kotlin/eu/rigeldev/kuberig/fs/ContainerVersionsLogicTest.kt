@@ -20,7 +20,7 @@ class ContainerVersionsLogicTest {
 
     @Test
     fun noVersionForContainerAliasAvailable() {
-        val rootFileSystem = RootFileSystem(tempDir, TinkEncryptionSupportFactory())
+        val rootFileSystem = RootFileSystem(tempDir, tempDir, TinkEncryptionSupportFactory())
 
         rootFileSystem.containerVersionsFile.containerVersionsFile.writeText("nginx=1.2.3")
 
@@ -33,7 +33,7 @@ class ContainerVersionsLogicTest {
 
     @Test
     fun globalVersionCheck() {
-        val rootFileSystem = RootFileSystem(tempDir, TinkEncryptionSupportFactory())
+        val rootFileSystem = RootFileSystem(tempDir, tempDir, TinkEncryptionSupportFactory())
 
         rootFileSystem.containerVersionsFile.containerVersionsFile.writeText("nginx=1.2.3")
 
@@ -58,7 +58,7 @@ class ContainerVersionsLogicTest {
 
     @Test
     fun combinedLogicCheck() {
-        val rootFileSystem = RootFileSystem(tempDir, TinkEncryptionSupportFactory())
+        val rootFileSystem = RootFileSystem(tempDir, tempDir, TinkEncryptionSupportFactory())
 
         rootFileSystem.environment("local").init()
         rootFileSystem.environment("dev").init()

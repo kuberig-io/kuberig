@@ -149,23 +149,13 @@ open class KubeRigPlugin : Plugin<Project> {
         val evaluatedExtension = project.extensions.getByType(KubeRigExtension::class.java)
         val environmentsContainer = evaluatedExtension.environments.asMap
 
-        val environmentsDirectory = project.file("environments")
-        if (environmentsDirectory.exists()) {
+        val rootFileSystem = evaluatedExtension.rootFileSystem()
 
-            val fileOrDirectoryList = environmentsDirectory.listFiles()
-            for (fileOrDirectory in fileOrDirectoryList) {
-                if (fileOrDirectory.isDirectory) {
-
-                    val environmentName = fileOrDirectory.name
-
-                    if (!environmentsContainer.containsKey(environmentName)) {
-
-                        evaluatedExtension.environments.create(environmentName)
-                    }
-
+        rootFileSystem.environments.environments.keys
+            .forEach {environmentName ->
+                if (!environmentsContainer.containsKey(environmentName)) {
+                    evaluatedExtension.environments.create(environmentName)
                 }
             }
-
-        }
     }
 }

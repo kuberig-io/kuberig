@@ -5,16 +5,17 @@ import java.io.File
 
 class RootFileSystem(
     val repoRootDir: File,
+    val projectRootDir: File,
     encryptionSupportFactory: EncryptionSupportFactory
 ) {
 
-    val environments = EnvironmentsFileSystem(File(repoRootDir, "environments"), this, encryptionSupportFactory)
-    val sources = SourcesFileSystem(File(repoRootDir, "src"))
+    val environments = EnvironmentsFileSystem(File(projectRootDir, "environments"), this, encryptionSupportFactory)
+    val sources = SourcesFileSystem(File(projectRootDir, "src"))
     val gitIgnoresFile = GitIgnoresFile(File(repoRootDir, ".gitignore"))
-    val containerVersionsFile = ContainerVersionsFile(repoRootDir)
+    val containerVersionsFile = ContainerVersionsFile(projectRootDir)
 
     init {
-        FileSystemOperations.createDirectoryIfNeeded(repoRootDir)
+        FileSystemOperations.createDirectoryIfNeeded(projectRootDir)
 
         this.environments.init()
         this.sources.init()

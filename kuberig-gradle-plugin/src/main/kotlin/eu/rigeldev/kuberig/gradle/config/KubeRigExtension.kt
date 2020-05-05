@@ -70,7 +70,7 @@ open class KubeRigExtension(private val project : Project) {
     }
 
     fun rootFileSystem(): RootFileSystem {
-        return RootFileSystem(project.rootDir, this.encryptionSupportFactory())
+        return RootFileSystem(project.rootDir, project.projectDir, this.encryptionSupportFactory())
     }
 
     /**
