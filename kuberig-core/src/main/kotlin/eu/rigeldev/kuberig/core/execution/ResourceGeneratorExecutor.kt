@@ -5,6 +5,7 @@ import eu.rigeldev.kuberig.core.annotations.Tick
 import eu.rigeldev.kuberig.core.detection.EnvResourceAnnotationDetectionListener
 import eu.rigeldev.kuberig.core.detection.EnvResourceAnnotationDetector
 import eu.rigeldev.kuberig.core.detection.ResourceGeneratorMethod
+import eu.rigeldev.kuberig.dsl.model.FullResource
 import eu.rigeldev.kuberig.dsl.support.DslResourceEmitter
 import eu.rigeldev.kuberig.fs.EnvironmentFileSystem
 import org.slf4j.LoggerFactory
@@ -22,7 +23,7 @@ class ResourceGeneratorExecutor(
     private val logger = LoggerFactory.getLogger(ResourceGeneratorExecutor::class.java)
 
     private val methodCallContextProcessors = mapOf(
-        Pair(ResourceGenerationMethodType.RESOURCE_RETURNING, ResourceReturningMethodCallContextProcessor()),
+        Pair(ResourceGenerationMethodType.RESOURCE_RETURNING, ResourceReturningMethodCallContextProcessor(resourceGenerationRuntimeClasspathClassLoader)),
         Pair(ResourceGenerationMethodType.RESOURCE_EMITTING, ResourceEmittingMethodCallContextProcessor())
     )
 
@@ -74,13 +75,14 @@ class ResourceGeneratorExecutor(
             val methodCallContext = methodCallContextFactory.createMethodCallContext(resourceGeneratorMethod, resourceGenerationRuntimeClasspathClassLoader)
 
             if (filterDelegate.shouldGenerate(methodCallContext.method)) {
-                val resources = mutableListOf<Any>()
+                val resources = mutableListOf<FullResource>()
 
                 try {
                     methodCallContextProcessors.getValue(methodCallContext.methodType)
                         .process(methodCallContext, resources)
 
                 } catch (t: Throwable) {
+                    logger.error("Failed to execute resource generation method", t)
                     return ErrorResult(resourceGeneratorMethod, t.cause ?: t)
                 }
 

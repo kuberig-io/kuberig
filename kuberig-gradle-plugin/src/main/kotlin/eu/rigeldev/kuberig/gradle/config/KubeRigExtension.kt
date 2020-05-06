@@ -28,13 +28,19 @@ open class KubeRigExtension(private val project : Project) {
 
     private var dependencyVersions: DependencyVersions
 
+    /**
+     * From KubeRig version 0.0.42 the minimal KubeRig-DSL version is 0.0.21 as there is a hard dependency on
+     * the new eu.rigeldev.kuberig.dsl.KubernetesResourceDslType and eu.rigeldev.kuberig.dsl.model package.
+     */
+    private val minimalKuberigDslVersion = SemVersion(0, 0, 21)
+
     init {
         val props = this.loadProps()
 
         this.dependencyVersions = DependencyVersions(
-            props["kuberig.version"] as String,
-            props["kuberig.dsl.version"] as String,
-            props["kotlin.version"] as String
+            SemVersion.fromVersionText(props["kuberig.version"] as String),
+            SemVersion.fromVersionText(props["kuberig.dsl.version"] as String),
+            SemVersion.fromVersionText(props["kotlin.version"] as String)
         )
     }
 
@@ -80,9 +86,16 @@ open class KubeRigExtension(private val project : Project) {
      * This method provides a way to overwrite the version of the kuberig-dsl-xxx that is used.
      */
     fun kuberigDslVersion(kuberigDslVersion: String) {
+        val parsedKuberigDslVersion = SemVersion.fromVersionText(kuberigDslVersion)
+
+        check(parsedKuberigDslVersion.isEqual(minimalKuberigDslVersion) || parsedKuberigDslVersion.isHigher(minimalKuberigDslVersion)) {
+            "KubeRig version ${this.dependencyVersions.kuberigVersion} requires the KubeRig-DSL version to be $minimalKuberigDslVersion or higher; as there is a hard dependency on\n" +
+                    " the new eu.rigeldev.kuberig.dsl.KubernetesResourceDslType and eu.rigeldev.kuberig.dsl.model package. "
+        }
+
         this.dependencyVersions = DependencyVersions(
             this.dependencyVersions.kuberigVersion,
-            kuberigDslVersion,
+            parsedKuberigDslVersion,
             this.dependencyVersions.kotlinVersion
         )
     }
@@ -97,20 +110,20 @@ open class KubeRigExtension(private val project : Project) {
         this.dependencyVersions = DependencyVersions(
             this.dependencyVersions.kuberigVersion,
             this.dependencyVersions.kuberigDslVersion,
-            kotlinVersion
+            SemVersion.fromVersionText(kotlinVersion)
         )
     }
 
     fun kuberigDslVersion(): String {
-        return this.dependencyVersions.kuberigDslVersion
+        return this.dependencyVersions.kuberigDslVersion.toString()
     }
 
     fun kuberigVersion(): String {
-        return this.dependencyVersions.kuberigVersion
+        return this.dependencyVersions.kuberigVersion.toString()
     }
 
     fun kotlinVersion(): String {
-        return this.dependencyVersions.kotlinVersion
+        return this.dependencyVersions.kotlinVersion.toString()
     }
 
     private fun loadProps(): Properties {

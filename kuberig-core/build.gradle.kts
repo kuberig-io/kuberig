@@ -22,6 +22,8 @@ dependencies {
 
     implementation("com.jayway.jsonpath:json-path:2.4.0")
 
+    implementation("org.javassist:javassist:3.27.0-GA")
+
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.3.2")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.3.2")
 

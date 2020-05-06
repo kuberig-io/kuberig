@@ -1,6 +1,6 @@
 package eu.rigeldev.kuberig.gradle.config
 
-class DependencyVersions(val kuberigVersion: String, val kuberigDslVersion : String, val kotlinVersion: String) {
+class DependencyVersions(val kuberigVersion: SemVersion, val kuberigDslVersion : SemVersion, val kotlinVersion: SemVersion) {
 
 
 

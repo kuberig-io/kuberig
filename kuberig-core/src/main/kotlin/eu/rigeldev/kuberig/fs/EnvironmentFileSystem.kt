@@ -178,7 +178,7 @@ class EnvironmentFileSystem(
     }
 
     fun generatedYamlDirectory() : File {
-        val buildDirectory = File(this.rootFileSystem.repoRootDir, "build")
+        val buildDirectory = File(this.rootFileSystem.projectRootDir, "build")
         val generatedYamlDirectory = File(buildDirectory,"generated-yaml")
 
         return File(generatedYamlDirectory, environmentName)

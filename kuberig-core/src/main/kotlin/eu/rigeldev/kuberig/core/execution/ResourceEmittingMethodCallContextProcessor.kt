@@ -1,12 +1,14 @@
 package eu.rigeldev.kuberig.core.execution
 
-import eu.rigeldev.kuberig.dsl.DslType
+import eu.rigeldev.kuberig.dsl.KubernetesResourceDslType
+import eu.rigeldev.kuberig.dsl.model.BasicResource
+import eu.rigeldev.kuberig.dsl.model.FullResource
 import eu.rigeldev.kuberig.dsl.support.DslResourceEmitter
 import eu.rigeldev.kuberig.dsl.support.DslResourceReceiver
 
 class ResourceEmittingMethodCallContextProcessor : MethodCallContextProcessor {
 
-    override fun process(methodCallContext: MethodCallContext, resources: MutableList<Any>) {
+    override fun process(methodCallContext: MethodCallContext, resources: MutableList<FullResource>) {
 
         DslResourceEmitter.registerReceiver(object : DslResourceReceiver {
             override fun getName(): String {
