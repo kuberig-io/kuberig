@@ -32,7 +32,7 @@ pluginBundle {
     tags = listOf("kubernetes", "kotlin", "dsl", "openshift")
 }
 
-tasks.withType<ProcessResources> {
+(tasks.getByName("processResources") as ProcessResources).apply {
     filesMatching("kuberig.properties") {
         expand(
             Pair("kuberigVersion", project.version.toString()),
