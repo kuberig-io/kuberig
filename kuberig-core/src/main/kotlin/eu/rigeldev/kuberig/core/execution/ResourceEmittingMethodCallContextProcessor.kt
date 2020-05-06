@@ -15,8 +15,30 @@ class ResourceEmittingMethodCallContextProcessor : MethodCallContextProcessor {
                 return "default-receiver"
             }
 
-            override fun <T> receive(dslType: DslType<T>) {
-                resources.add(dslType.toValue() as Any)
+            override fun <T: BasicResource> receive(dslType: KubernetesResourceDslType<T>) {
+                val resource = dslType.toValue()
+
+                MethodCallContextProcessorResourceFilter.filteringAdd(
+                    dslType,
+                    resource,
+                    resources,
+                    {
+                        val e = IllegalStateException("")
+
+                        var userCallLocation : String? = null
+                        val stackIterator = e.stackTrace.iterator()
+
+                        while (userCallLocation == null && stackIterator.hasNext()) {
+                            val stackTraceElement = stackIterator.next()
+
+                            if (stackTraceElement.className == methodCallContext.type.name) {
+                                userCallLocation = stackTraceElement.toString()
+                            }
+                        }
+
+                        userCallLocation
+                    }
+                )
             }
         })
 
