@@ -1,0 +1,115 @@
+version: 2.1
+
+executors:
+  gradle:
+    docker:
+      - image: circleci/openjdk:11-jdk
+    working_directory: ~/repo
+    environment:
+      JVM_OPTS: -Xmx3200m
+      GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
+
+commands:
+  gradle-build:
+    description: "Execute a gradle-wrapper build with a specific version and conditionally upload it"
+    parameters:
+      version:
+        type: string
+      upload:
+        type: boolean
+        default: false
+      publishPlugins:
+        type: boolean
+        default: false
+    steps:
+      - restore_cache:
+          key: v1-gradle-cache-{{ checksum "build.gradle.kts" }}
+      - restore_cache:
+          key: v1-gradle-wrapper-{{ checksum "gradle/wrapper/gradle-wrapper.properties" }}
+      #
+      - run: |
+          export VERSION="<< parameters.version >>"
+          echo "VERSION=${VERSION}"
+          ./gradlew -Pversion=$VERSION build
+          <<# parameters.upload >>
+          ./gradlew -Pversion=$VERSION bintrayUpload
+          <</ parameters.upload >>
+          <<# parameters.publishPlugins >>
+          GRADLE_PROPS=~/.gradle/gradle.properties
+          if test -f "$GRADLE_PROPS"; then
+            rm -rf $GRADLE_PROPS
+          fi
+          touch $GRADLE_PROPS
+          echo "gradle.publish.key=${GRADLE_PUBLISH_KEY}" >> $GRADLE_PROPS
+          echo "gradle.publish.secret=${GRADLE_PUBLISH_SECRET}" >> $GRADLE_PROPS
+          ./gradlew -Pversion=$VERSION publishPlugins
+          <</ parameters.publishPlugins >>
+      #
+      - run:
+          command: |
+            GRADLE_PROPS=~/.gradle/gradle.properties
+            if test -f "$GRADLE_PROPS"; then
+              rm -rf $GRADLE_PROPS
+            fi
+          when: always
+      - save_cache:
+          paths:
+            - ~/.gradle/wrapper
+          key: v1-gradle-wrapper-{{ checksum "gradle/wrapper/gradle-wrapper.properties" }}
+      - save_cache:
+          paths:
+            - ~/.gradle/caches
+          key: v1-gradle-cache-{{ checksum "build.gradle.kts" }}
+      - run:
+          name: Save test results into single directory
+          command: |
+            mkdir -p ~/test-results/junit/
+            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/junit/ \;
+          when: always
+      - run:
+          name: Save generated jars into single directory
+          command: |
+            mkdir -p ~/libs/
+            find . -type f -regex ".*/build/libs/.*jar" -exec cp {} ~/libs/ \;
+          when: always
+      - store_test_results:
+          path: ~/test-results
+      - store_artifacts:
+          path: ~/test-results/junit
+      - store_artifacts:
+          path: ~/libs
+
+jobs:
+  build:
+    executor: gradle
+    steps:
+      - checkout
+      - gradle-build:
+          version: ${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM}
+          upload: false
+  release-build:
+    executor: gradle
+    steps:
+      - checkout
+      - gradle-build:
+          version: ${CIRCLE_TAG}
+          upload: true
+          publishPlugins: true
+
+workflows:
+  build:
+    jobs:
+      - build:
+          context: kuberig-context
+          filters:
+            tags:
+              ignore: /.*/
+  release:
+    jobs:
+      - release-build:
+          context: kuberig-context
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/

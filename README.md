@@ -1,6 +1,7 @@
 [![KubeRig Logo](https://github.com/teyckmans/kuberig/blob/master/docs/images/website_logo_transparent_background.png)](https://github.com/teyckmans/kuberig)
 
 ![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/teyckmans/kuberig.svg?label=latest%20release)
+[![teyckmans](https://circleci.com/gh/teyckmans/kuberig.svg?style=svg)](https://app.circleci.com/pipelines/github/teyckmans/kuberig)
 
 # KubeRig
 
