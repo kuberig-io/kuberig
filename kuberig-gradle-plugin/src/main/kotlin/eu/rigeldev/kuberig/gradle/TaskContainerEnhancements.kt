@@ -1,15 +1,17 @@
 package eu.rigeldev.kuberig.gradle
 
 import eu.rigeldev.kuberig.config.KubeRigEnvironment
+import eu.rigeldev.kuberig.gradle.tasks.AbstractEnvironmentTask
+import eu.rigeldev.kuberig.gradle.tasks.EnvironmentTaskConfigurationAction
 import org.gradle.api.Action
 import org.gradle.api.Task
 import org.gradle.api.tasks.TaskContainer
 
-fun <A: Task> TaskContainer.registerEnvironmentTask(taskActionName: String, environment: KubeRigEnvironment, taskType: Class<A>, configurationAction: Action<A>) {
+fun <A: AbstractEnvironmentTask> TaskContainer.registerEnvironmentTask(taskActionName: String, environment: KubeRigEnvironment, taskType: Class<A>) {
     this.register(
         taskName(taskActionName, environment),
         taskType,
-        configurationAction
+        EnvironmentTaskConfigurationAction<A>(environment)
     )
 }
 

@@ -19,86 +19,62 @@ open class KubeRigPlugin : Plugin<Project> {
         extension.environments.all { environment ->
 
             project.tasks.registerEnvironmentTask(
-                "generateYaml",
-                environment,
-                ResourceGenerationTask::class.java,
-                ResourceTaskConfigurationAction(environment)
+                    "generateYaml",
+                    environment,
+                    ResourceGenerationTask::class.java
             )
             project.tasks.registerEnvironmentTask(
-                "deploy",
-                environment,
-                ResourceDeploymentTask::class.java,
-                ResourceTaskConfigurationAction(environment)
+                    "deploy",
+                    environment,
+                    ResourceDeploymentTask::class.java
             )
             project.tasks.registerEnvironmentTask(
-                "createEncryptionKey",
-                environment,
-                GenerateEncryptionKeyTask::class.java,
-                EnvironmentTaskConfigurationAction(environment)
+                    "createEncryptionKey",
+                    environment,
+                    GenerateEncryptionKeyTask::class.java
             )
             project.tasks.registerEnvironmentTask(
-                "encryptConfig",
-                environment,
-                EncryptEnvironmentConfigTask::class.java,
-                EnvironmentTaskConfigurationAction(environment)
+                    "encryptConfig",
+                    environment,
+                    EncryptEnvironmentConfigTask::class.java
             )
             project.tasks.registerEnvironmentTask(
-                "decryptConfig",
-                environment,
-                DecryptEnvironmentConfigTask::class.java,
-                EnvironmentTaskConfigurationAction(environment)
+                    "decryptConfig",
+                    environment,
+                    DecryptEnvironmentConfigTask::class.java
             )
             project.tasks.registerEnvironmentTask(
-                "encryptFile",
-                environment,
-                EncryptEnvironmentFileTask::class.java,
-                EnvironmentTaskConfigurationAction(environment)
+                    "encryptFile",
+                    environment,
+                    EncryptEnvironmentFileTask::class.java
             )
             project.tasks.registerEnvironmentTask(
-                "decryptFile",
-                environment,
-                DecryptEnvironmentFileTask::class.java,
-                EnvironmentTaskConfigurationAction(environment)
+                    "decryptFile",
+                    environment,
+                    DecryptEnvironmentFileTask::class.java
             )
             project.tasks.registerEnvironmentTask(
-                "encrypt",
-                environment,
-                EncryptEnvironmentTask::class.java,
-                EnvironmentTaskConfigurationAction(environment)
+                    "encrypt",
+                    environment,
+                    EncryptEnvironmentTask::class.java
             )
             project.tasks.registerEnvironmentTask(
-                "decrypt",
-                environment,
-                DecryptEnvironmentTask::class.java,
-                EnvironmentTaskConfigurationAction(environment)
+                    "decrypt",
+                    environment,
+                    DecryptEnvironmentTask::class.java
             )
             project.tasks.registerEnvironmentTask(
-                "showConfig",
-                environment,
-                ShowEnvironmentConfigTask::class.java,
-                EnvironmentTaskConfigurationAction(environment)
+                    "showConfig",
+                    environment,
+                    ShowEnvironmentConfigTask::class.java
             )
         }
 
-        project.tasks.register("initGitIgnore", InitGitIgnoreTask::class.java) {
-            it.group = "kuberig"
-        }
-
-        project.tasks.register("initEnvironment", InitEnvironmentTask::class.java) {
-            it.group = "kuberig"
-        }
-
-        project.tasks.register("setContainerVersion", SetContainerVersionTask::class.java) {
-            it.group = "kuberig"
-        }
-
-        project.tasks.register("clearContainerVersion", ClearContainerVersion::class.java) {
-            it.group = "kuberig"
-        }
-
-        project.tasks.register("getContainerVersion", GetContainerVersionTask::class.java) {
-            it.group = "kuberig"
-        }
+        project.tasks.register("initGitIgnore", InitGitIgnoreTask::class.java)
+        project.tasks.register("initEnvironment", InitEnvironmentTask::class.java)
+        project.tasks.register("setContainerVersion", SetContainerVersionTask::class.java)
+        project.tasks.register("clearContainerVersion", ClearContainerVersion::class.java)
+        project.tasks.register("getContainerVersion", GetContainerVersionTask::class.java)
 
         project.tasks.withType(KotlinCompile::class.java) {
             it.kotlinOptions.jvmTarget = "1.8"
@@ -114,36 +90,48 @@ open class KubeRigPlugin : Plugin<Project> {
             val kuberigVersion = evaluatedExtension.kuberigVersion()
             val kotlinVersion = evaluatedExtension.kotlinVersion()
 
+            if (evaluatedExtension.apiDslDependencyOverride != null) {
+                it.dependencies.add(
+                        "implementation",
+                        evaluatedExtension.apiDslDependencyOverride!!
+                )
+            } else {
+                it.dependencies.add(
+                        "implementation",
+                        "eu.rigeldev.kuberig.dsl.$platformTypeName:kuberig-dsl-$platformTypeName-$platformVersion:$kuberigDslVersion"
+                )
+            }
             it.dependencies.add(
-                "implementation",
-                "eu.rigeldev.kuberig.dsl.$platformTypeName:kuberig-dsl-$platformTypeName-$platformVersion:$kuberigDslVersion"
+                    "implementation",
+                    "eu.rigeldev.kuberig:kuberig-dsl-base:$kuberigDslVersion"
             )
             it.dependencies.add(
-                "implementation",
-                "eu.rigeldev.kuberig:kuberig-dsl-base:$kuberigDslVersion"
+                    "implementation",
+                    "eu.rigeldev.kuberig:kuberig-core:$kuberigVersion"
             )
             it.dependencies.add(
-                "implementation",
-                "eu.rigeldev.kuberig:kuberig-core:$kuberigVersion"
+                    "implementation",
+                    "eu.rigeldev.kuberig:kuberig-annotations:$kuberigVersion"
             )
             it.dependencies.add(
-                "implementation",
-                "eu.rigeldev.kuberig:kuberig-annotations:$kuberigVersion"
+                    "implementation",
+                    "eu.rigeldev.kuberig:kuberig-dsl-support:$kuberigVersion"
             )
             it.dependencies.add(
-                "implementation",
-                "eu.rigeldev.kuberig:kuberig-dsl-support:$kuberigVersion"
-            )
-            it.dependencies.add(
-                "implementation",
-                "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
+                    "implementation",
+                    "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
             )
 
             this.createEnvironmentsFromDirectories(project)
+
+            project.tasks.withType(ResourceGenerationTask::class.java).forEach { resourceGenerationTask ->
+                resourceGenerationTask.dependsOn("build")
+            }
+            project.tasks.withType(ResourceDeploymentTask::class.java).forEach { resourceDeploymentTask ->
+                resourceDeploymentTask.dependsOn("build")
+            }
         }
     }
-
-
 
     private fun createEnvironmentsFromDirectories(project: Project) {
         val evaluatedExtension = project.extensions.getByType(KubeRigExtension::class.java)
@@ -152,10 +140,10 @@ open class KubeRigPlugin : Plugin<Project> {
         val rootFileSystem = evaluatedExtension.rootFileSystem()
 
         rootFileSystem.environments.environments.keys
-            .forEach {environmentName ->
-                if (!environmentsContainer.containsKey(environmentName)) {
-                    evaluatedExtension.environments.create(environmentName)
+                .forEach { environmentName ->
+                    if (!environmentsContainer.containsKey(environmentName)) {
+                        evaluatedExtension.environments.create(environmentName)
+                    }
                 }
-            }
     }
 }

@@ -17,6 +17,12 @@ open class KubeRigExtension(private val project : Project) {
     var flags : KubeRigFlags = KubeRigFlags()
 
     var targetPlatform : TargetPlatform = TargetPlatform(PlatformType.KUBERNETES, "v1.14.2")
+
+    /**
+     * Allows using a custom KubeRig DSL.
+     */
+    var apiDslDependencyOverride: String? = null
+
     val environments : NamedDomainObjectContainer<KubeRigEnvironment> = this.project.container(
         KubeRigEnvironment::class.java)
 

@@ -7,6 +7,5 @@ open class EnvironmentTaskConfigurationAction<A:AbstractEnvironmentTask>(val env
 
     override fun execute(task: A) {
         task.environment = this.environment
-        task.group = "kuberig"
     }
 }
