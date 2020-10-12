@@ -90,10 +90,10 @@ open class KubeRigPlugin : Plugin<Project> {
             val kuberigVersion = evaluatedExtension.kuberigVersion()
             val kotlinVersion = evaluatedExtension.kotlinVersion()
 
-            if (evaluatedExtension.apiDslDependencyOverride != null) {
+            if (evaluatedExtension.dslDependencyOverride != null) {
                 it.dependencies.add(
                         "implementation",
-                        evaluatedExtension.apiDslDependencyOverride!!
+                        evaluatedExtension.dslDependencyOverride!!
                 )
             } else {
                 it.dependencies.add(

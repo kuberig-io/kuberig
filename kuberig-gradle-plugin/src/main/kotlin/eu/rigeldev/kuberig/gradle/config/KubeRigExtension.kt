@@ -21,7 +21,7 @@ open class KubeRigExtension(private val project : Project) {
     /**
      * Allows using a custom KubeRig DSL.
      */
-    var apiDslDependencyOverride: String? = null
+    var dslDependencyOverride: String? = null
 
     val environments : NamedDomainObjectContainer<KubeRigEnvironment> = this.project.container(
         KubeRigEnvironment::class.java)

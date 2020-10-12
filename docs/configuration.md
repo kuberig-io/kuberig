@@ -18,3 +18,13 @@ kuberig {
   openshift("v3.9.0")
 }
 ```
+
+## Using a custom KubeRig DSL dependency
+In case you are generating a custom KubeRig DSL specifically for your clusters API specification.
+
+You can use `dslDependencyOverride` to use specify it. When you do this the default dependency will not be added.
+```kotlin
+kuberig {
+  dslDependencyOverride = "groupId:artifactId:1.2.3"
+}
+```
