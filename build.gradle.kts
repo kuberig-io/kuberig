@@ -2,14 +2,12 @@ import com.jfrog.bintray.gradle.BintrayExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 buildscript {
-    val kotlinVersion by extra("1.3.72")
-
     repositories {
         jcenter()
     }
     dependencies {
         classpath("com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${project.properties["kotlinVersion"]}")
     }
 }
 
@@ -23,7 +21,7 @@ subprojects {
 
     val subProject = this
 
-    subProject.group = "eu.rigeldev.kuberig"
+    subProject.group = "io.kuberig"
     subProject.version = project.version
 
     repositories {

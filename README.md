@@ -1,7 +1,7 @@
-[![KubeRig Logo](https://github.com/teyckmans/kuberig/blob/master/docs/images/website_logo_transparent_background.png)](https://kuberig.io)
+[![KubeRig Logo](https://github.com/kuberig-io/kuberig/blob/master/docs/images/website_logo_transparent_background.png)](https://kuberig.io)
 
-![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/teyckmans/kuberig.svg?label=latest%20release)
-[![teyckmans](https://circleci.com/gh/teyckmans/kuberig.svg?style=svg)](https://app.circleci.com/pipelines/github/teyckmans/kuberig)
+![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/kuberig-io/kuberig.svg?label=latest%20release)
+[![kuberig-io](https://circleci.com/gh/kuberig-io/kuberig.svg?style=svg)](https://app.circleci.com/pipelines/github/kuberig-io/kuberig)
 
 # KubeRig
 
