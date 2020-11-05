@@ -18,22 +18,22 @@ dependencies {
 gradlePlugin {
     plugins {
         create("kuberig-gradle-plugin") {
-            id = "eu.rigeldev.kuberig"
+            id = "io.kuberig.kuberig"
             displayName = "Kuberig plugin"
             description = "This plugin is used to deploy to Kubernetes or Openshift using a Kotlin DSL to define the resources that need to be deploy."
-            implementationClass = "eu.rigeldev.kuberig.gradle.KubeRigPlugin"
+            implementationClass = "io.kuberig.gradle.KubeRigPlugin"
         }
     }
 }
 
 pluginBundle {
-    website = "https://github.com/teyckmans/kuberig"
-    vcsUrl = "https://github.com/teyckmans/kuberig"
+    website = project.properties["websiteUrl"]!! as String
+    vcsUrl = project.properties["vcsUrl"]!! as String
     tags = listOf("kubernetes", "kotlin", "dsl", "openshift")
 }
 
 (tasks.getByName("processResources") as ProcessResources).apply {
-    filesMatching("kuberig.properties") {
+    filesMatching("io.kuberig.kuberig.properties") {
         expand(
             Pair("kuberigVersion", project.version.toString()),
             Pair("kotlinVersion", project.properties["kotlinVersion"]),

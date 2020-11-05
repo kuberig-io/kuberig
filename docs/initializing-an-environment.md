@@ -43,7 +43,7 @@ Currently it is known to work for:
 - KIND
 - microk8s
 
-In case you run into problems please create an issue on [github](https://github.com/teyckmans/kuberig/issues) or jump in and create a pull-request.
+In case you run into problems please create an issue on [github](https://github.com/kuberig-io/kuberig/issues) or jump in and create a pull-request.
 
 ## In Action
 - [Digital Ocean Kubernetes (DOKS)](https://www.rigel.dev/kuberig-doks/)

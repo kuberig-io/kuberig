@@ -1,7 +1,7 @@
-[![KubeRig Logo](https://github.com/teyckmans/kuberig/blob/master/docs/images/website_logo_transparent_background.png)](https://kuberig.io)
+[![KubeRig Logo](https://github.com/kuberig-io/kuberig/blob/master/docs/images/website_logo_transparent_background.png)](https://kuberig.io)
 
-![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/teyckmans/kuberig.svg?label=latest%20release)
-[![teyckmans](https://circleci.com/gh/teyckmans/kuberig.svg?style=svg)](https://app.circleci.com/pipelines/github/teyckmans/kuberig)
+![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/kuberig-io/kuberig.svg?label=latest%20release)
+[![kuberig-io](https://circleci.com/gh/kuberig-io/kuberig.svg?style=svg)](https://app.circleci.com/pipelines/github/kuberig-io/kuberig)
 
 # KubeRig
 
@@ -32,12 +32,12 @@ fun basicConfigMap() : ConfigMapDsl {
 ### DSL availability
 For both Kubernetes and OpenShift the DSLs are available on JCenter, for specific version availability please check their 
 respective availability pages.
-- [Kubernetes DSL availability](https://github.com/teyckmans/kuberig-dsl-kubernetes/blob/master/AVAILABILITY.MD)
-- [OpenShift DSL availability](https://github.com/teyckmans/kuberig-dsl-openshift/blob/master/AVAILABILITY.MD)
+- [Kubernetes DSL availability](https://github.com/kuberig-io/kuberig-dsl-kubernetes/blob/master/AVAILABILITY.MD)
+- [OpenShift DSL availability](https://github.com/kuberig-io/kuberig-dsl-openshift/blob/master/AVAILABILITY.MD)
 
 ## Additional Information
 ### User Manual
-For more information please consult the [User Manual](https://teyckmans.github.io/kuberig/#/).
+For more information please consult the [User Manual](https://kuberig-op.github.io/kuberig/#/).
 
 ### Blog posts
 You can find blog posts about KubeRig [here](https://rigel.dev/tag/kuberig/). 

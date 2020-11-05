@@ -44,5 +44,5 @@ fun basicConfigMap() : ConfigMapDsl {
 ```
 
 For vanilla Kubernetes and Openshift you can find the supported versions here
-- [Kubernetes](https://github.com/teyckmans/kuberig-dsl-kubernetes)
-- [Openshift](https://github.com/teyckmans/kuberig-dsl-openshift)
+- [Kubernetes](https://github.com/kuberig-io/kuberig-dsl-kubernetes)
+- [Openshift](https://github.com/kuberig-io/kuberig-dsl-openshift)

@@ -1,9 +1,7 @@
 dependencies {
-    implementation(project(":kuberig-annotations"))
-    
     val kuberigDslVersion : String by project
     
-    implementation("eu.rigeldev.kuberig:kuberig-dsl-base:${kuberigDslVersion}")
+    implementation("io.kuberig:kuberig-dsl-base:${kuberigDslVersion}")
 
     implementation("org.slf4j:slf4j-api:1.7.26")
 

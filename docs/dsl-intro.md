@@ -12,7 +12,7 @@ As a first step we have converted the yaml files to DSL code one-on-one. But we 
 ```kotlin
 package ingress
 
-import eu.rigeldev.kuberig.core.annotations.EnvResource
+import io.kuberig.annotations.EnvResource
 import kinds.extensions.v1beta1.IngressDsl
 import kinds.extensions.v1beta1.ingress
 import kinds.v1.PodDsl
@@ -151,7 +151,7 @@ Both the foo and bar pod and service are similar so we can extract this in a ded
 ```kotlin
 package ingress
 
-import eu.rigeldev.kuberig.core.annotations.EnvResource
+import io.kuberig.annotations.EnvResource
 import kinds.v1.PodDsl
 import kinds.v1.ServiceDsl
 import kinds.v1.pod
@@ -222,7 +222,7 @@ Our top level IngressExample class should not be too difficult. We should be abl
 ```kotlin
 package ingress
 
-import eu.rigeldev.kuberig.core.annotations.EnvResources
+import io.kuberig.annotations.EnvResources
 
 class IngressExample {
 
@@ -238,7 +238,7 @@ The new HttpEchoApps object exposes an echoApps method that takes in some config
 ```kotlin
 package ingress
 
-import eu.rigeldev.kuberig.dsl.support.DslResourceEmitter.emit
+import io.kuberig.dsl.support.DslResourceEmitter.emit
 import kinds.extensions.v1beta1.IngressDsl
 import kinds.extensions.v1beta1.ingress
 
@@ -294,7 +294,7 @@ The HttpEchoApp looks pretty similar as before.
 ```kotlin
 package ingress
 
-import eu.rigeldev.kuberig.dsl.support.DslResourceEmitter.emit
+import io.kuberig.dsl.support.DslResourceEmitter.emit
 import io.k8s.api.extensions.v1beta1.HTTPIngressPathDsl
 import io.k8s.api.extensions.v1beta1.hTTPIngressPath
 import kinds.v1.PodDsl

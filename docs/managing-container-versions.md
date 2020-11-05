@@ -16,7 +16,7 @@ Path
      :setContainerVersion
 
 Type
-     SetContainerVersionTask (eu.rigeldev.kuberig.gradle.tasks.SetContainerVersionTask)
+     SetContainerVersionTask (io.kuberig.gradle.tasks.SetContainerVersionTask)
 
 Options
      --containerAlias     The container alias to add/update the container version for.
@@ -49,7 +49,7 @@ Path
      :clearContainerVersion
 
 Type
-     ClearContainerVersion (eu.rigeldev.kuberig.gradle.tasks.ClearContainerVersion)
+     ClearContainerVersion (io.kuberig.gradle.tasks.ClearContainerVersion)
 
 Options
      --containerAlias     The container alias to add/update the container version for.
@@ -80,7 +80,7 @@ Path
      :getContainerVersion
 
 Type
-     GetContainerVersionTask (eu.rigeldev.kuberig.gradle.tasks.GetContainerVersionTask)
+     GetContainerVersionTask (io.kuberig.gradle.tasks.GetContainerVersionTask)
 
 Options
      --containerAlias     The container alias to add/update the container version for.
