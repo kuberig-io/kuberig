@@ -1,15 +1,15 @@
 # Quick Start
 
-The fastest way to get started is by cloning or downloading the [kuberig-starter](https://github.com/teyckmans/kuberig-starter) repository.
+The fastest way to get started is by cloning or downloading the [kuberig-starter](https://github.com/kuberig-io/kuberig-starter) repository.
 
 ## Cloning
 Clone the git repository.  
 ```shell
-$ git clone https://github.com/teyckmans/kuberig-starter
+$ git clone https://github.com/kuberig-io/kuberig-starter
 ```
 
 ## Downloading
-Download the [kuberig-starter zip](https://github.com/teyckmans/kuberig-starter/archive/master.zip) and extract it.
+Download the [kuberig-starter zip](https://github.com/kuberig-io/kuberig-starter/archive/master.zip) and extract it.
 
 ## Prerequisites
 As KubeRig is a Gradle plugin, it needs a [Java JDK or JRE](http://www.oracle.com/technetwork/java/javase/downloads/index.html) version 8 or higher to be installed. To check, run `java -version`:

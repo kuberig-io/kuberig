@@ -27,8 +27,8 @@ gradlePlugin {
 }
 
 pluginBundle {
-    website = "https://github.com/teyckmans/kuberig"
-    vcsUrl = "https://github.com/teyckmans/kuberig"
+    website = project.properties["websiteUrl"]!! as String
+    vcsUrl = project.properties["vcsUrl"]!! as String
     tags = listOf("kubernetes", "kotlin", "dsl", "openshift")
 }
 

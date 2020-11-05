@@ -1,14 +1,9 @@
 import com.jfrog.bintray.gradle.BintrayExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-buildscript {
-    repositories {
-        jcenter()
-    }
-    dependencies {
-        classpath("com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${project.properties["kotlinVersion"]}")
-    }
+plugins {
+    id("org.jetbrains.kotlin.jvm") apply(false)
+    id("com.jfrog.bintray") apply(false)
 }
 
 subprojects {
@@ -17,6 +12,7 @@ subprojects {
         plugin("java")
         plugin("idea")
         plugin("org.jetbrains.kotlin.jvm")
+        plugin("com.jfrog.bintray")
     }
 
     val subProject = this
@@ -69,27 +65,32 @@ subprojects {
 
     }
 
-    if (System.getenv("BINTRAY_API_KEY") != null){
-        apply {
-            plugin("com.jfrog.bintray")
-        }
+    val bintrayApiKey : String by project
+    val bintrayUser : String by project
 
-        configure<BintrayExtension> {
-            val bintrayApiKey = System.getenv("BINTRAY_API_KEY")
-            val bintrayUser = System.getenv("BINTRAY_USER")
+    configure<BintrayExtension> {
+        user = bintrayUser
+        key = bintrayApiKey
+        publish = true
 
-            user = bintrayUser
-            key = bintrayApiKey
-            publish = true
+        pkg(closureOf<BintrayExtension.PackageConfig> {
+            repo = "rigeldev-oss-maven"
+            name = "io-kuberig-" + subProject.name
+            setLicenses("Apache-2.0")
+            isPublicDownloadNumbers = true
+            websiteUrl = project.properties["websiteUrl"]!! as String
+            vcsUrl = project.properties["vcsUrl"]!! as String
+        })
 
-            pkg(closureOf<BintrayExtension.PackageConfig> {
-                repo = "rigeldev-oss-maven"
-                name = subProject.name
-                setLicenses("Apache-2.0")
-                vcsUrl = "https://github.com/teyckmans/kuberig"
-            })
+        setPublications(subProject.name)
+    }
 
-            setPublications(subProject.name)
+    tasks.withType<Jar> {
+        manifest {
+            attributes(
+                    "Implementation-Title" to project.name,
+                    "Implementation-Version" to project.version
+            )
         }
     }
 }

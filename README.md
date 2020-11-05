@@ -32,12 +32,12 @@ fun basicConfigMap() : ConfigMapDsl {
 ### DSL availability
 For both Kubernetes and OpenShift the DSLs are available on JCenter, for specific version availability please check their 
 respective availability pages.
-- [Kubernetes DSL availability](https://github.com/teyckmans/kuberig-dsl-kubernetes/blob/master/AVAILABILITY.MD)
-- [OpenShift DSL availability](https://github.com/teyckmans/kuberig-dsl-openshift/blob/master/AVAILABILITY.MD)
+- [Kubernetes DSL availability](https://github.com/kuberig-io/kuberig-dsl-kubernetes/blob/master/AVAILABILITY.MD)
+- [OpenShift DSL availability](https://github.com/kuberig-io/kuberig-dsl-openshift/blob/master/AVAILABILITY.MD)
 
 ## Additional Information
 ### User Manual
-For more information please consult the [User Manual](https://teyckmans.github.io/kuberig/#/).
+For more information please consult the [User Manual](https://kuberig-op.github.io/kuberig/#/).
 
 ### Blog posts
 You can find blog posts about KubeRig [here](https://rigel.dev/tag/kuberig/). 
