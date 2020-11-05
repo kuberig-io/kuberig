@@ -37,7 +37,7 @@ respective availability pages.
 
 ## Additional Information
 ### User Manual
-For more information please consult the [User Manual](https://kuberig-op.github.io/kuberig/#/).
+For more information please consult the [User Manual](https://kuberig-io.github.io/kuberig/#/).
 
 ### Blog posts
 You can find blog posts about KubeRig [here](https://rigel.dev/tag/kuberig/). 
