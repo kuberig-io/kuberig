@@ -35,6 +35,14 @@ respective availability pages.
 - [Kubernetes DSL availability](https://github.com/kuberig-io/kuberig-dsl-kubernetes/blob/master/AVAILABILITY.MD)
 - [OpenShift DSL availability](https://github.com/kuberig-io/kuberig-dsl-openshift/blob/master/AVAILABILITY.MD)
 
+Our jobs detect and add new Kubernetes versions automatically. We get a Slack notification to create the JCenter inclusion request for the new version(s). 
+These requests usually get processed within the next day.
+
+The OpenShift job is not working. The API specification is no longer available in the repositories. 
+This means we need to startup an OpenShift cluster to get the OpenAPI specification. I don't have the time and funding to do this. 
+
+> If you have access to specific versions please provide the OpenAPI specification, then I can add it. Or even better open a pull request with it.
+
 ## Additional Information
 ### User Manual
 For more information please consult the [User Manual](https://docs.kuberig.io).
