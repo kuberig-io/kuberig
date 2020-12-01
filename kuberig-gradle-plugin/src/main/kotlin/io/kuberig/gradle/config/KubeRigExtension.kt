@@ -16,7 +16,7 @@ open class KubeRigExtension(private val project : Project) {
 
     var flags : KubeRigFlags = KubeRigFlags()
 
-    var targetPlatform : TargetPlatform = TargetPlatform(PlatformType.KUBERNETES, "v1.14.2")
+    var targetPlatform : TargetPlatform = TargetPlatform(PlatformType.KUBERNETES, "v1.19.4")
 
     /**
      * Allows using a custom KubeRig DSL.
