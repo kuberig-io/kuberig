@@ -6,6 +6,14 @@ plugins {
     id("com.jfrog.bintray") apply(false)
 }
 
+val projectVersion = if (project.version.toString() == "unspecified") {
+    println("Defaulting to version 0.0.0")
+    "0.0.0"
+} else {
+    project.version.toString()
+}
+project.version = projectVersion
+
 subprojects {
     apply {
         plugin("maven-publish")
@@ -18,7 +26,7 @@ subprojects {
     val subProject = this
 
     subProject.group = "io.kuberig"
-    subProject.version = project.version
+    subProject.version = projectVersion
 
     repositories {
         jcenter()

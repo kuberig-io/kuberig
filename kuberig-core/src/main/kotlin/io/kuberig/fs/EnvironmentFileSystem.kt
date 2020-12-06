@@ -16,7 +16,7 @@ class EnvironmentFileSystem(
         val rootFileSystem: RootFileSystem,
         private val encryptionSupportFactory: EncryptionSupportFactory
 ) {
-    val clusterCaCertPemFile = File(environmentDirectory, "$environmentName-cluster-ca-cert.pem")
+    private val clusterCaCertPemFile = File(environmentDirectory, "$environmentName-cluster-ca-cert.pem")
     val environmentConfigsFile = File(environmentDirectory, "$environmentName-configs.properties")
     private val encryptedAccessTokenFile = File(environmentDirectory, ".encrypted.$environmentName.access-token")
     private val plainAccessTokenFile = File(environmentDirectory, ".plain.$environmentName.access-token")
@@ -208,6 +208,22 @@ class EnvironmentFileSystem(
 
     fun removeContainerVersion(containerAlias: String) {
         return this.containerVersionsFile.removeContainerVersion(containerAlias)
+    }
+
+    fun certificateAuthorityData(): String? {
+        return if (clusterCaCertPemFile.exists()) {
+            clusterCaCertPemFile.readText()
+        } else {
+            null
+        }
+    }
+
+    fun apiServerUrl(): String {
+        return readConfig(API_SERVER_URL_CONFIG_KEY)!!
+    }
+
+    fun defaultNamespace(): String {
+        return readConfig(DEFAULT_NAMESPACE_NAME_CONFIG_KEY)!!
     }
 
     companion object {

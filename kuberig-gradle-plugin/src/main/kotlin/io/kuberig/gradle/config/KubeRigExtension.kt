@@ -1,7 +1,9 @@
 package io.kuberig.gradle.config
 
+import io.kuberig.config.ClientSideApplyFlags
 import io.kuberig.config.KubeRigEnvironment
 import io.kuberig.config.KubeRigFlags
+import io.kuberig.config.ServerSideApplyFlags
 import io.kuberig.core.deployment.control.DeployControl
 import io.kuberig.encryption.EncryptionSupportFactory
 import io.kuberig.encryption.tink.TinkEncryptionSupportFactory
@@ -136,5 +138,13 @@ open class KubeRigExtension(private val project : Project) {
         val props = Properties()
         props.load(this.javaClass.getResourceAsStream("/io.kuberig.kuberig.properties"))
         return props
+    }
+
+    fun serverSideApply(init: ServerSideApplyFlags.() -> Unit) {
+        this.flags.serverSideApply(init)
+    }
+
+    fun clientSideApply(init: ClientSideApplyFlags.() -> Unit) {
+        this.flags.clientSideApply(init)
     }
 }
