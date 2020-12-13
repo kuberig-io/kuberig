@@ -50,7 +50,7 @@ commands:
           echo "gradle.publish.secret=${GRADLE_PUBLISH_SECRET}" >> $GRADLE_PROPS
           ./gradlew -Pversion=$VERSION publishPlugins
           <</ parameters.publishPlugins >>
-      #
+      # trigger security scan
       - snyk/scan
       #
       - run:
