@@ -1,5 +1,8 @@
 version: 2.1
 
+orbs:
+  snyk: snyk/snyk@0.0.12
+
 executors:
   gradle:
     docker:
@@ -47,6 +50,8 @@ commands:
           echo "gradle.publish.secret=${GRADLE_PUBLISH_SECRET}" >> $GRADLE_PROPS
           ./gradlew -Pversion=$VERSION publishPlugins
           <</ parameters.publishPlugins >>
+      # trigger security scan
+      - snyk/scan
       #
       - run:
           command: |

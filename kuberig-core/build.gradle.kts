@@ -12,7 +12,7 @@ dependencies {
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVersion")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
 
-    implementation("org.ow2.asm:asm:7.1")
+    implementation("org.ow2.asm:asm:9.0")
 
     implementation("com.konghq:unirest-java:2.3.14")
     implementation("com.google.crypto.tink:tink:1.2.2")

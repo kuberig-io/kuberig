@@ -11,15 +11,11 @@ object MethodCallContextProcessorResourceFilter {
     fun <T: BasicResource> filteringAdd(dslType: KubernetesResourceDslType<T>, resource: T, resources: MutableList<FullResource>, userCallLocationProvider: () -> String?) {
         val resourcePackageName = dslType::class.java.packageName
 
-        val userCallLocation : String? = userCallLocationProvider()
-
-        if (resourcePackageName.startsWith("kinds.")) {
-            if (resource is FullResource ) {
-                resources.add(resource)
-            } else {
-                logger.error(resource::class.java.name + " is not a io.kuberig.dsl.model.FullResource, skipping. [${userCallLocation}]")
-            }
+        if (resourcePackageName.startsWith("kinds.") && resource is FullResource ) {
+            resources.add(resource)
         } else {
+            val userCallLocation : String? = userCallLocationProvider()
+
             logger.error(resource::class.java.name + " is not within the kinds.* package, skipping. [${userCallLocation}]")
         }
     }
