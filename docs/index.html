@@ -17,40 +17,6 @@
       repo: 'https://github.com/kuberig-io/kuberig',
       loadSidebar: true,
       plugins: [
-        function(hook, vm) {
-          hook.init(function() {
-            // Called when the script starts running, only trigger once, no arguments,
-          });
-
-          hook.beforeEach(function(content) {
-            // Invoked each time before parsing the Markdown file.
-            // ...
-            return content;
-          });
-
-          hook.afterEach(function(html, next) {
-            gtag('js', new Date());
-            gtag('config', 'G-9M5JHGWX7B', { 'anonymize_ip': true, page_path: location.hash });
-            // Invoked each time after the Markdown file is parsed.
-            // beforeEach and afterEach support asynchronous。
-            // ...
-            // call `next(html)` when task is done.
-            next(html);
-          });
-
-          hook.doneEach(function() {
-            // Invoked each time after the data is fully loaded, no arguments,
-            // ...
-          });
-
-          hook.mounted(function() {
-            // Called after initial completion. Only trigger once, no arguments.
-          });
-
-          hook.ready(function() {
-            // Called after initial completion, no arguments.
-          });
-        }
       ]
     }
   </script>
