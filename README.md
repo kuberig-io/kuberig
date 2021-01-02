@@ -1,4 +1,4 @@
-[![KubeRig Logo](https://github.com/kuberig-io/kuberig/blob/master/docs/images/website_logo_transparent_background.png)](https://kuberig.io)
+[![KubeRig Logo](https://kuberig.io/img/logo/website_logo_transparent_background.png)](https://kuberig.io)
 
 ![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/kuberig-io/kuberig.svg?label=latest%20release)
 [![kuberig-io](https://circleci.com/gh/kuberig-io/kuberig.svg?style=svg)](https://app.circleci.com/pipelines/github/kuberig-io/kuberig)
@@ -45,10 +45,10 @@ This means we need to startup an OpenShift cluster to get the OpenAPI specificat
 
 ## Additional Information
 ### User Manual
-For more information please consult the [User Manual](https://docs.kuberig.io).
+For more information please consult the [User Manual](https://kuberig.io/docs/home.html).
 
 ### Blog posts
-You can find blog posts about KubeRig [here](https://rigel.dev/tag/kuberig/). 
+You can find blog posts about KubeRig [here](https://kuberig.io/blog/). 
 
 ### Site
 [https://kuberig.io](https://kuberig.io).
