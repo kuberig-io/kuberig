@@ -1,5 +1,7 @@
 package io.kuberig.core.detection
 
+import io.kuberig.core.model.GeneratorMethod
+import io.kuberig.core.model.GeneratorMethodType
 import org.objectweb.asm.AnnotationVisitor
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
@@ -10,7 +12,7 @@ class EnvResourceClassVisitor : ClassVisitor(Opcodes.ASM7) {
     var isAbstract = true
     var className = ""
     var superClassName = ""
-    var resourceMethods = mutableListOf<String>()
+    val generatorMethods = mutableListOf<GeneratorMethod>()
 
     override fun visit(
         version: Int,
@@ -47,9 +49,9 @@ class EnvResourceClassVisitor : ClassVisitor(Opcodes.ASM7) {
         return object : MethodVisitor(Opcodes.ASM7) {
                 override fun visitAnnotation(desc: String?, visible: Boolean): AnnotationVisitor? {
                     if ("Lio/kuberig/annotations/EnvResource;" == desc) {
-                        resourceMethods.add(name)
+                        generatorMethods.add(GeneratorMethod(GeneratorMethodType.RESOURCE_RETURNING, name))
                     } else if ("Lio/kuberig/annotations/EnvResources;" == desc) {
-                        resourceMethods.add(name)
+                        generatorMethods.add(GeneratorMethod(GeneratorMethodType.RESOURCE_EMITTING, name))
                     }
                     return null
                 }

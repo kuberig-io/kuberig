@@ -1,12 +1,12 @@
 package io.kuberig.core.execution
 
-import io.kuberig.core.detection.ResourceGeneratorMethod
+import io.kuberig.core.model.GeneratorMethodAndType
 
 /**
  * Abstraction to container resource type instance creation logic.
  */
 interface MethodCallContextFactory {
 
-    fun createMethodCallContext(resourceGenerationMethod: ResourceGeneratorMethod, classLoader: ClassLoader): MethodCallContext
+    fun createMethodCallContext(generatorMethod: GeneratorMethodAndType, classLoader: ClassLoader): MethodCallContext
 
 }

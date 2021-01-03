@@ -1,11 +1,12 @@
 package io.kuberig.core.deployment
 
+import io.kuberig.annotations.ApplyAction
 import io.kuberig.config.ClientSideApplyFlags
 import io.kuberig.config.KubeRigFlags
 import io.kuberig.config.ServerSideApplyFlags
 import io.kuberig.core.deployment.control.DeployControl
-import io.kuberig.core.execution.ResourceGeneratorMethodResult
-import io.kuberig.core.execution.SuccessResult
+import io.kuberig.core.model.GeneratorMethodResult
+import io.kuberig.core.model.SuccessResult
 import io.kuberig.fs.EnvironmentFileSystem
 import org.json.JSONObject
 import org.json.JSONTokener
@@ -47,12 +48,10 @@ class ResourceDeployer(
         DeploymentListenerRegistry.registerListener(statusTrackingDeploymentListener)
     }
 
-    fun deploy(methodResults: List<ResourceGeneratorMethodResult>) {
-        val newResourceInfoList = newResourceInfoList(methodResults)
-
+    fun execute(deploymentPlan: DeploymentPlan) {
         try {
-            tickSystemControl.execute(newResourceInfoList) { newResourceInfo ->
-                deployResource(newResourceInfo)
+            tickSystemControl.execute(deploymentPlan) { deploymentTask ->
+                execute(deploymentTask)
             }
         } finally {
             apiServerIntegration.shutDown()
@@ -63,19 +62,9 @@ class ResourceDeployer(
         }
     }
 
-    private fun newResourceInfoList(methodResults: List<ResourceGeneratorMethodResult>): List<NewResourceInfo> {
-        val successResults = methodResults.filterIsInstance<SuccessResult>()
+    private fun execute(deploymentTask: DeploymentTask): Boolean {
+        val newResourceInfo = newResourceInfo(deploymentTask.resource, deploymentTask.sourceLocation)
 
-        val newResourceInfoList = mutableListOf<NewResourceInfo>()
-        for (successResult in successResults) {
-            for (resource in successResult.resources) {
-                newResourceInfoList.add(newResourceInfo(resource, successResult))
-            }
-        }
-        return newResourceInfoList.toList()
-    }
-
-    private fun deployResource(newResourceInfo: NewResourceInfo): Boolean {
         val apiResources = ApiResources(
             apiServerIntegration,
             apiServerUrl,
@@ -83,13 +72,13 @@ class ResourceDeployer(
         )
         val resourceUrlInfo = apiResources.resourceUrl(newResourceInfo)
 
-        return applyStrategy.applyResource(newResourceInfo, resourceUrlInfo)
+        return applyStrategy.applyResource(newResourceInfo, resourceUrlInfo, deploymentTask.applyAction)
     }
 
     /**
      * Serialize the resource to JSON and extract some key information from it.
      */
-    private fun newResourceInfo(resource: Any, methodResult: SuccessResult): NewResourceInfo {
+    private fun newResourceInfo(resource: Any, sourceLocation: String): NewResourceInfo {
         val newJson = JSONObject(JSONTokener(apiServerIntegration.jsonSerialize(resource)))
 
         val apiVersion = newJson.getString("apiVersion").toLowerCase()
@@ -113,7 +102,7 @@ class ResourceDeployer(
             resourceName,
             namespace,
             newJson,
-            methodResult
+            sourceLocation
         )
     }
 }
@@ -124,17 +113,17 @@ data class NewResourceInfo(
     val resourceName: String,
     val namespace: String,
     val json: JSONObject,
-    val methodResult: SuccessResult
+    val sourceLocation: String
 ) {
     constructor(source: NewResourceInfo, newJson: JSONObject)
-            : this(source.apiVersion, source.kind, source.resourceName, source.namespace, newJson, source.methodResult)
+            : this(source.apiVersion, source.kind, source.resourceName, source.namespace, newJson, source.sourceLocation)
 
     fun infoText(): String {
         return "$kind - $resourceName in $namespace namespace"
     }
 
     fun fullInfoText(): String {
-        return infoText() + " from resource generator method ${methodResult.method.fullMethod()} "
+        return infoText() + " from resource generator method $sourceLocation "
     }
 }
 
@@ -145,7 +134,7 @@ abstract class ApplyStrategy<out F>(
     val deploymentListener: DeploymentListener
 ) {
 
-    fun applyResource(newResourceInfo: NewResourceInfo, resourceUrlInfo: ResourceUrlInfo): Boolean {
+    fun applyResource(newResourceInfo: NewResourceInfo, resourceUrlInfo: ResourceUrlInfo, applyAction: ApplyAction): Boolean {
         deploymentListener.deploymentStart(newResourceInfo, resourceUrlInfo)
 
         return when (val getResourceResult = apiServerIntegration.getResource(resourceUrlInfo)) {
@@ -153,7 +142,26 @@ abstract class ApplyStrategy<out F>(
                 createResource(newResourceInfo, resourceUrlInfo)
             }
             is ExistsGetResourceResult -> {
-                updateResource(newResourceInfo, resourceUrlInfo, getResourceResult)
+                when(applyAction) {
+                    ApplyAction.CREATE_ONLY -> {
+                        deploymentListener.deploymentSuccess(newResourceInfo, getResourceResult)
+                        return true
+                    }
+                    ApplyAction.CREATE_OR_UPDATE -> {
+                        updateResource(newResourceInfo, resourceUrlInfo, getResourceResult)
+                    }
+                    ApplyAction.RECREATE -> {
+                        return when(val deleteResult = apiServerIntegration.deleteResource(resourceUrlInfo)) {
+                            is FailedDeleteResourceResult -> {
+                                deploymentListener.deploymentFailure(newResourceInfo, deleteResult)
+                                false
+                            }
+                            is SuccessDeleteResourceResult -> {
+                                createResource(newResourceInfo, resourceUrlInfo)
+                            }
+                        }
+                    }
+                }
             }
         }
     }

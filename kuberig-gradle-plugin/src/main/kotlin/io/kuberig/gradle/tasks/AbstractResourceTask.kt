@@ -1,6 +1,10 @@
 package io.kuberig.gradle.tasks
 
 import io.kuberig.core.execution.*
+import io.kuberig.core.execution.filtering.group.AlwaysResourceGroupNameMatcher
+import io.kuberig.core.execution.filtering.group.NoResourceGroupNameMatcher
+import io.kuberig.core.execution.filtering.group.RequestedResourceGroupNameMatcher
+import io.kuberig.core.execution.filtering.group.ResourceGroupNameMatcher
 import io.kuberig.gradle.tasks.encryption.AbstractEncryptionSupportTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.options.Option

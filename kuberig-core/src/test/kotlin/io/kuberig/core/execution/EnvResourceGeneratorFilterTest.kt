@@ -2,6 +2,7 @@ package io.kuberig.core.execution
 
 import io.kuberig.config.KubeRigEnvironment
 import io.kuberig.annotations.EnvFilter
+import io.kuberig.core.execution.filtering.environment.EnvResourceGeneratorFilter
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 

@@ -1,4 +1,4 @@
-package io.kuberig.core.execution
+package io.kuberig.core.execution.filtering.group
 
 class NoResourceGroupNameMatcher : ResourceGroupNameMatcher {
     override fun matchResourceGroupName(definedName: String?): Boolean {

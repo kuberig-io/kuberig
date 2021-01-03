@@ -2,6 +2,7 @@ package io.kuberig.core.deployment
 
 import io.kuberig.core.deployment.control.DeployControl
 import io.kuberig.core.deployment.control.TickGateKeeper
+import io.kuberig.core.model.ResourceApplyRequest
 
 class TickSystemControl(
     deployControl: DeployControl,
@@ -22,35 +23,33 @@ class TickSystemControl(
         tickGateKeeper = tickGateKeeperType.getConstructor().newInstance()
     }
 
-    fun execute(newResourceInfoList: List<NewResourceInfo>, action: (NewResourceInfo) -> Boolean) {
-        val newResourcesByTick = newResourceInfoList.groupBy { it.methodResult.tick }
-
-        val tickIterator = tickRange.iterator()
+    fun execute(deploymentPlan: DeploymentPlan, action: (DeploymentTask) -> Boolean) {
+        val tickIterator = deploymentPlan.ticks.iterator()
         var currentTick = 0
         var gateOpen = true
         var forceStop = false
 
         while (!forceStop && tickIterator.hasNext()) {
-            val nextTick = tickIterator.nextInt()
+            val nextTick = tickIterator.next()
 
-            gateOpen = tickGateKeeper.isGateOpen(currentTick, nextTick)
+            gateOpen = tickGateKeeper.isGateOpen(currentTick, nextTick.tickNumber)
             if (gateOpen) {
-                val tickResources = newResourcesByTick[nextTick] ?: listOf()
+                val tickDeploymentTasks = nextTick.deploymentTasks
 
-                deploymentListener.tickStart(nextTick, tickResources.size)
+                deploymentListener.tickStart(nextTick.tickNumber, tickDeploymentTasks.size)
 
-                val tickResourcesIterator = tickResources.iterator()
+                val tickDeploymentTasksIterator = tickDeploymentTasks.iterator()
 
-                while(!forceStop && tickResourcesIterator.hasNext()) {
-                    val nextTickResource = tickResourcesIterator.next()
+                while(!forceStop && tickDeploymentTasksIterator.hasNext()) {
+                    val nextTickDeploymentTask = tickDeploymentTasksIterator.next()
 
-                    forceStop = !action(nextTickResource)
+                    forceStop = !action(nextTickDeploymentTask)
                 }
 
-                currentTick = nextTick
+                currentTick = nextTick.tickNumber
 
                 if (!forceStop) {
-                    deploymentListener.tickSuccess(nextTick)
+                    deploymentListener.tickSuccess(nextTick.tickNumber)
                 }
             }
         }

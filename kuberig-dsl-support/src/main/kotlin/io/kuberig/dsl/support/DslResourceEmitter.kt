@@ -1,7 +1,9 @@
 package io.kuberig.dsl.support
 
+import io.kuberig.annotations.ApplyAction
 import io.kuberig.dsl.KubernetesResourceDslType
 import io.kuberig.dsl.model.BasicResource
+import io.kuberig.dsl.model.FullResource
 import org.slf4j.LoggerFactory
 
 /**
@@ -22,14 +24,15 @@ object DslResourceEmitter {
     /**
      * The emit function can be used to publish one or more resources.
      */
-    fun <T : BasicResource> emit(vararg dslTypes: KubernetesResourceDslType<T>) {
+    fun emit(vararg dslTypes: KubernetesResourceDslType<FullResource>,
+             applyActionOverwrite: ApplyActionOverwrite) {
         check(receivers.get().isNotEmpty()) { "\n\tDslResourceEmitter.emit() not supported in this method. \n\tMake sure you call DslResourceEmitter.emit() from within a method annotated with @EnvResources.\n\tIn @EnvResource methods you need to return the resource from the method." }
 
         receivers.get().forEach { receiver ->
             logger.info("[EMITTING] to ${receiver.getName()}")
             dslTypes.forEach {dslType ->
                 try {
-                    receiver.receive(dslType)
+                    receiver.receive(dslType, applyActionOverwrite)
                 } catch (e: Exception) {
                     logger.warn("Receiver ${receiver.getName()} failed to process dslType $dslType ")
                 }

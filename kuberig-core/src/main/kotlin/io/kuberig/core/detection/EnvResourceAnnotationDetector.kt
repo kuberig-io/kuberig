@@ -1,5 +1,6 @@
 package io.kuberig.core.detection
 
+import io.kuberig.core.model.GeneratorType
 import org.objectweb.asm.ClassReader
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -11,7 +12,7 @@ import java.util.regex.Pattern
 class EnvResourceAnnotationDetector(
     private val classesDirectories: List<File>,
     private val classpathFiles: Set<File>,
-    private val listener: EnvResourceAnnotationDetectionListener
+    private val consumer: GeneratorTypeConsumer
 ) {
 
     private val logger = LoggerFactory.getLogger(EnvResourceAnnotationDetector::class.java)
@@ -23,7 +24,7 @@ class EnvResourceAnnotationDetector(
     private var classpathPrepared = false
     private val classDirectories = mutableListOf<File>()
 
-    fun getSuperClassFile(superClassName: String): File? {
+    private fun getSuperClassFile(superClassName: String): File? {
         check(superClassName.isNotEmpty()) { "superClassName is empty!" }
 
         if ("java/lang/Object" == superClassName) {
@@ -126,9 +127,11 @@ class EnvResourceAnnotationDetector(
     
     private fun publishEnvResourceAnnotatedType(isEnvResourceAnnotatedType: Boolean, superClass: Boolean, detectionData: EnvResourceTypeDetectionData) {
         if (isEnvResourceAnnotatedType && !detectionData.isAbstract && !superClass) {
-            listener.receiveEnvResourceAnnotatedType(
-                detectionData.className.replace("/", "."),
-                detectionData.resourceMethods.toSet()
+            consumer.consume(
+                GeneratorType(
+                    detectionData.className.replace("/", "."),
+                    detectionData.resourceMethods.toList()
+                )
             )
         }
     }
@@ -144,7 +147,7 @@ class EnvResourceAnnotationDetector(
             classVisitor.isAbstract,
             classVisitor.className,
             classVisitor.superClassName,
-            classVisitor.resourceMethods.toList()
+            classVisitor.generatorMethods.toList()
         )
     }
 

@@ -1,11 +1,13 @@
-package io.kuberig.core.execution
+package io.kuberig.core.execution.filtering
 
+import io.kuberig.core.execution.filtering.ResourceGeneratorFilter
 import java.lang.reflect.Method
 
 /**
  * All filters need to agree before shouldGenerate will return true.
  */
-open class DelegatingResourceGeneratorFilter(private val delegates: List<ResourceGeneratorFilter>): ResourceGeneratorFilter {
+open class DelegatingResourceGeneratorFilter(private val delegates: List<ResourceGeneratorFilter>):
+    ResourceGeneratorFilter {
 
     override fun shouldGenerate(method: Method): Boolean {
         var generateNeeded = true

@@ -1,6 +1,6 @@
 package io.kuberig.core.execution
 
-import io.kuberig.core.execution.AlwaysResourceGroupNameMatcher
+import io.kuberig.core.execution.filtering.group.AlwaysResourceGroupNameMatcher
 import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.Assertions.*

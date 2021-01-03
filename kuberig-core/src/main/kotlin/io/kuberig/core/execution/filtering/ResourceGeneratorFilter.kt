@@ -1,4 +1,4 @@
-package io.kuberig.core.execution
+package io.kuberig.core.execution.filtering
 
 import java.lang.reflect.Method
 

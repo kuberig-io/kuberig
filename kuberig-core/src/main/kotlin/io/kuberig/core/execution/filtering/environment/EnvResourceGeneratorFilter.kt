@@ -1,7 +1,8 @@
-package io.kuberig.core.execution
+package io.kuberig.core.execution.filtering.environment
 
 import io.kuberig.config.KubeRigEnvironment
 import io.kuberig.annotations.EnvFilter
+import io.kuberig.core.execution.filtering.ResourceGeneratorFilter
 import java.lang.reflect.Method
 
 /**
