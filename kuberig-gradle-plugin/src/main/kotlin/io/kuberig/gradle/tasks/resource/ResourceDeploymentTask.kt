@@ -1,5 +1,6 @@
 package io.kuberig.gradle.tasks.resource
 
+import io.kuberig.core.deployment.DeploymentPlanGenerator
 import io.kuberig.core.deployment.ResourceDeployer
 import io.kuberig.gradle.tasks.AbstractResourceTask
 import org.gradle.api.tasks.TaskAction
@@ -17,9 +18,11 @@ open class ResourceDeploymentTask : AbstractResourceTask() {
         val resourceDeployer = ResourceDeployer(
             kubeRigExtension.flags,
             this.environmentFileSystem(),
-            kubeRigExtension.getDeployControl(),
+            kubeRigExtension.getTickInfo(),
             this.buildResourceGenerationRuntimeClasspathClassLoader())
 
-        resourceDeployer.deploy(methodResults)
+        val deploymentPlan = DeploymentPlanGenerator.generateDeploymentPlan(methodResults)
+
+        resourceDeployer.execute(deploymentPlan)
     }
 }

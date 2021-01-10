@@ -5,8 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
-import io.kuberig.core.execution.ResourceGeneratorMethodResult
-import io.kuberig.core.execution.SuccessResult
+import io.kuberig.core.model.SuccessResult
 import io.kuberig.fs.EnvironmentFileSystem
 import io.kuberig.fs.OutputFileConvention
 import org.slf4j.LoggerFactory
@@ -51,20 +50,18 @@ class YamlGenerator(
         return this.objectMapper.writeValueAsString(resource)
     }
 
-    fun generate(methodResults: List<ResourceGeneratorMethodResult>) : List<File> {
+    fun generate(methodResults: List<SuccessResult>) : List<File> {
         val generatedFiles = mutableListOf<File>()
 
         for (methodResult in methodResults) {
-            if (methodResult is SuccessResult) {
-                for (resource in methodResult.resources) {
-                    val yaml = this.generateYaml(resource)
+            for (resourceApplyRequest in methodResult.resourceApplyRequests) {
+                val yaml = this.generateYaml(resourceApplyRequest)
 
-                    val outputFile = this.outputFileConvention.outputFile(this.outputDirectory, methodResult.method, yaml)
+                val outputFile = this.outputFileConvention.outputFile(this.outputDirectory, yaml)
 
-                    outputFile.writeText(yaml)
+                outputFile.writeText(yaml)
 
-                    generatedFiles.add(outputFile)
-                }
+                generatedFiles.add(outputFile)
             }
         }
 

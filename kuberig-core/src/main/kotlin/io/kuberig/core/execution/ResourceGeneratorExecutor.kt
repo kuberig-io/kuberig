@@ -1,30 +1,44 @@
 package io.kuberig.core.execution
 
+import io.kuberig.annotations.ApplyAction
+import io.kuberig.annotations.EnvResource
+import io.kuberig.annotations.EnvResources
 import io.kuberig.config.KubeRigEnvironment
 import io.kuberig.annotations.Tick
-import io.kuberig.core.detection.EnvResourceAnnotationDetectionListener
+import io.kuberig.core.detection.GeneratorTypeConsumer
 import io.kuberig.core.detection.EnvResourceAnnotationDetector
-import io.kuberig.core.detection.ResourceGeneratorMethod
+import io.kuberig.core.execution.filtering.DelegatingResourceGeneratorFilter
+import io.kuberig.core.execution.filtering.group.GroupResourceGenerationFilter
+import io.kuberig.core.execution.filtering.environment.EnvResourceGeneratorFilter
+import io.kuberig.core.execution.filtering.group.ResourceGroupNameMatcher
+import io.kuberig.core.model.*
+import io.kuberig.dsl.KubernetesResourceDslType
+import io.kuberig.dsl.model.BasicResource
 import io.kuberig.dsl.model.FullResource
 import io.kuberig.dsl.support.DslResourceEmitter
+import io.kuberig.dsl.support.UseDefault
+import io.kuberig.dsl.support.UseOverwrite
 import io.kuberig.fs.EnvironmentFileSystem
 import org.slf4j.LoggerFactory
 import java.io.File
 
 class ResourceGeneratorExecutor(
-        private val compileOutputDirectory: File,
-        private val compileClassPath: Set<File>,
-        private val resourceGenerationRuntimeClasspathClassLoader: ClassLoader,
-        private val environment: KubeRigEnvironment,
-        private val environmentFileSystem: EnvironmentFileSystem,
-        groupNameMatcher: ResourceGroupNameMatcher
+    private val compileOutputDirectory: File,
+    private val compileClassPath: Set<File>,
+    private val resourceGenerationRuntimeClasspathClassLoader: ClassLoader,
+    private val environment: KubeRigEnvironment,
+    private val environmentFileSystem: EnvironmentFileSystem,
+    groupNameMatcher: ResourceGroupNameMatcher
 ) {
 
     private val logger = LoggerFactory.getLogger(ResourceGeneratorExecutor::class.java)
 
     private val methodCallContextProcessors = mapOf(
-        Pair(ResourceGenerationMethodType.RESOURCE_RETURNING, ResourceReturningMethodCallContextProcessor(resourceGenerationRuntimeClasspathClassLoader)),
-        Pair(ResourceGenerationMethodType.RESOURCE_EMITTING, ResourceEmittingMethodCallContextProcessor())
+        Pair(
+            GeneratorMethodType.RESOURCE_RETURNING,
+            ResourceReturningMethodCallContextProcessor(resourceGenerationRuntimeClasspathClassLoader)
+        ),
+        Pair(GeneratorMethodType.RESOURCE_EMITTING, ResourceEmittingMethodCallContextProcessor())
     )
 
     private val filterDelegate = DelegatingResourceGeneratorFilter(
@@ -36,16 +50,25 @@ class ResourceGeneratorExecutor(
 
     private val methodCallContextFactory = DefaultMethodCallContextFactory()
 
-    fun execute(): List<ResourceGeneratorMethodResult> {
-        val resourceGeneratorMethods = mutableListOf<ResourceGeneratorMethod>()
+    fun execute(): List<SuccessResult> {
+        val generatorMethodResults = mutableListOf<GeneratorMethodResult>()
 
         val detector = EnvResourceAnnotationDetector(
             listOf(compileOutputDirectory),
             compileClassPath,
-            object : EnvResourceAnnotationDetectionListener {
-                override fun receiveEnvResourceAnnotatedType(className: String, annotatedMethods: Set<String>) {
-                    annotatedMethods.forEach { annotatedMethod ->
-                        resourceGeneratorMethods.add(ResourceGeneratorMethod(className, annotatedMethod))
+            object : GeneratorTypeConsumer {
+                override fun consume(generatorType: GeneratorType) {
+                    for (generatorMethod in generatorType.generatorMethods) {
+                        val generatorMethodAndType = GeneratorMethodAndType(
+                            generatorType.typeName,
+                            generatorMethod.generatorMethodType,
+                            generatorMethod.methodName
+                        )
+
+                        val generatorMethodResult = execute(generatorMethodAndType)
+
+                        generatorMethodResults.add(generatorMethodResult)
+
                     }
                 }
             }
@@ -53,50 +76,64 @@ class ResourceGeneratorExecutor(
 
         detector.scanClassesDirectories()
 
-        val methodResults = resourceGeneratorMethods.map(this::execute)
+        reportAndFailOnErrors(generatorMethodResults)
 
-        reportAndFailOnErrors(methodResults)
-
-        return methodResults
+        return generatorMethodResults.filterIsInstance(SuccessResult::class.java)
     }
 
-    private fun execute(resourceGeneratorMethod: ResourceGeneratorMethod): ResourceGeneratorMethodResult {
+    private fun execute(generatorMethod: GeneratorMethodAndType): GeneratorMethodResult {
         ResourceGeneratorContext.fill(
-                environment,
-                environmentFileSystem.environmentDirectory,
-                environmentFileSystem.loadConfigs(),
-                environmentFileSystem.encryptionSupport(),
-                environmentFileSystem.rootFileSystem
+            environment,
+            environmentFileSystem.environmentDirectory,
+            environmentFileSystem.loadConfigs(),
+            environmentFileSystem.encryptionSupport(),
+            environmentFileSystem.rootFileSystem
         )
 
         DslResourceEmitter.init()
 
         try {
-            val methodCallContext = methodCallContextFactory.createMethodCallContext(resourceGeneratorMethod, resourceGenerationRuntimeClasspathClassLoader)
+            val methodCallContext = methodCallContextFactory.createMethodCallContext(
+                generatorMethod,
+                resourceGenerationRuntimeClasspathClassLoader
+            )
 
             if (filterDelegate.shouldGenerate(methodCallContext.method)) {
-                val resources = mutableListOf<FullResource>()
+                val resources = mutableListOf<ResourceApplyRequest>()
+
+                val tick = extractTick(methodCallContext)
+                val defaultApplyAction = extractApplyAction(methodCallContext)
 
                 try {
-                    methodCallContextProcessors.getValue(methodCallContext.methodType)
-                        .process(methodCallContext, resources)
+                    val processor = methodCallContextProcessors.getValue(methodCallContext.methodType)
+
+                    processor.process(methodCallContext) { resource, applyActionOverwrite ->
+                        val applyAction = when(applyActionOverwrite) {
+                            is UseDefault -> defaultApplyAction
+                            is UseOverwrite -> applyActionOverwrite.action
+                        }
+
+                        resources.add(
+                            ResourceApplyRequest(
+                                resource,
+                                applyAction,
+                                tick
+                            )
+                        )
+                    }
 
                 } catch (t: Throwable) {
                     logger.error("Failed to execute resource generation method", t)
-                    return ErrorResult(resourceGeneratorMethod, t.cause ?: t)
+                    return ErrorResult(generatorMethod, t.cause ?: t)
                 }
 
                 if (resources.isEmpty()) {
-                    logger.warn("${resourceGeneratorMethod.generatorType}.${resourceGeneratorMethod.methodName} did not emit any resources!")
+                    logger.warn("${generatorMethod.fullMethod()} did not emit any resources!")
                 }
 
-                return SuccessResult(
-                    resourceGeneratorMethod,
-                    resources,
-                    extractTick(methodCallContext)
-                )
+                return SuccessResult(generatorMethod, resources)
             } else {
-                return SkippedResult(resourceGeneratorMethod)
+                return SkippedResult(generatorMethod)
             }
         } finally {
             ResourceGeneratorContext.clear()
@@ -108,14 +145,25 @@ class ResourceGeneratorExecutor(
         return tickAnnotation?.tick ?: 1
     }
 
-    private fun reportAndFailOnErrors(methodResults: List<ResourceGeneratorMethodResult>) {
+    private fun extractApplyAction(methodCallContext: MethodCallContext): ApplyAction {
+        return when(methodCallContext.methodType) {
+            GeneratorMethodType.RESOURCE_EMITTING -> {
+                methodCallContext.method.getDeclaredAnnotation(EnvResources::class.java).defaultAction
+            }
+            GeneratorMethodType.RESOURCE_RETURNING -> {
+                methodCallContext.method.getDeclaredAnnotation(EnvResource::class.java).action
+            }
+        }
+    }
+
+    private fun reportAndFailOnErrors(methodResults: List<GeneratorMethodResult>) {
         val errorResults: List<ErrorResult> = methodResults
             .filter { it.javaClass == ErrorResult::class.java }
             .map { it as ErrorResult }
 
         if (errorResults.isNotEmpty()) {
             errorResults.forEach {
-                logger.error("Error during execution of ${it.method.generatorType}.${it.method.methodName}: ${it.errorMessage()}")
+                logger.error("Error during execution of ${it.fullMethodName()}:", it.rootCause)
             }
 
             throw IllegalStateException("Not all resource generation methods were executed successfully.")

@@ -1,7 +1,8 @@
-package io.kuberig.core.execution
+package io.kuberig.core.execution.filtering.group
 
 import io.kuberig.annotations.EnvResource
 import io.kuberig.annotations.EnvResources
+import io.kuberig.core.execution.filtering.ResourceGeneratorFilter
 import java.lang.reflect.Method
 
 class GroupResourceGenerationFilter(private val groupNameMatcher: ResourceGroupNameMatcher) : ResourceGeneratorFilter {

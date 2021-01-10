@@ -1,24 +1,22 @@
 package io.kuberig.core.execution
 
-import io.kuberig.annotations.EnvResource
-import io.kuberig.core.detection.ResourceGeneratorMethod
+import io.kuberig.core.model.GeneratorMethodAndType
 
 /**
  * The default resource generation method call context factory uses reflection to call the default no args-constructor.
  */
 class DefaultMethodCallContextFactory : MethodCallContextFactory {
 
-    override fun createMethodCallContext(resourceGenerationMethod: ResourceGeneratorMethod, classLoader: ClassLoader): MethodCallContext {
-        val type : Class<*> = classLoader.loadClass(resourceGenerationMethod.generatorType)
+    override fun createMethodCallContext(generatorMethod: GeneratorMethodAndType, classLoader: ClassLoader): MethodCallContext {
+        val type : Class<*> = classLoader.loadClass(generatorMethod.typeName)
         val typeInstance = type.getConstructor().newInstance()
-        val method = type.getMethod(resourceGenerationMethod.methodName)
+        val method = type.getMethod(generatorMethod.methodName)
 
-        val methodType = if (method.getDeclaredAnnotation(EnvResource::class.java) != null) {
-            ResourceGenerationMethodType.RESOURCE_RETURNING
-        } else {
-            ResourceGenerationMethodType.RESOURCE_EMITTING
-        }
-
-        return MethodCallContext(type, typeInstance, method, methodType)
+        return MethodCallContext(
+            type,
+            typeInstance,
+            method,
+            generatorMethod.methodType
+        )
     }
 }

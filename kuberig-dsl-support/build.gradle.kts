@@ -3,6 +3,8 @@ dependencies {
     
     implementation("io.kuberig:kuberig-dsl-base:${kuberigDslVersion}")
 
+    implementation(project(":kuberig-annotations"))
+
     implementation("org.slf4j:slf4j-api:1.7.26")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.3.2")

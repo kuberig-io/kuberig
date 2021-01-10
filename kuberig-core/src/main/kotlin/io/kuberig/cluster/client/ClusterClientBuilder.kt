@@ -56,7 +56,6 @@ class ClusterClientBuilder(private val flags: KubeRigFlags,
             is NoAuthDetails -> {
                 logger.warn("Connecting without authentication")
             }
-            else -> logger.error("Auth details not supported")
         }
 
         val sslContextBuilder = SSLContexts.custom()

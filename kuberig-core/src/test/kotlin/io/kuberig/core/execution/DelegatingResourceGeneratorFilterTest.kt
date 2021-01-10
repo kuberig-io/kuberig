@@ -1,6 +1,8 @@
 package io.kuberig.core.execution
 
 import com.nhaarman.mockitokotlin2.*
+import io.kuberig.core.execution.filtering.DelegatingResourceGeneratorFilter
+import io.kuberig.core.execution.filtering.ResourceGeneratorFilter
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
