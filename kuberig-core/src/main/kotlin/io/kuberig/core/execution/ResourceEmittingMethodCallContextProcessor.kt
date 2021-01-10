@@ -9,15 +9,16 @@ import io.kuberig.dsl.support.DslResourceReceiver
 
 class ResourceEmittingMethodCallContextProcessor : MethodCallContextProcessor {
 
-    override fun process(methodCallContext: MethodCallContext,
-                         processor: (dslType: KubernetesResourceDslType<FullResource>, applyActionOverwrite: ApplyActionOverwrite) -> Unit) {
+    override fun process(
+        methodCallContext: MethodCallContext,
+        processor: (resource: FullResource, applyActionOverwrite: ApplyActionOverwrite) -> Unit) {
 
         DslResourceEmitter.registerReceiver(object : DslResourceReceiver {
             override fun getName(): String {
                 return "default-receiver"
             }
 
-            override fun receive(dslType: KubernetesResourceDslType<FullResource>, applyActionOverwrite: ApplyActionOverwrite) {
+            override fun <T : BasicResource> receive(dslType: KubernetesResourceDslType<T>, applyActionOverwrite: ApplyActionOverwrite) {
                 val userCallLocationProvider = {
                     val e = IllegalStateException("")
 
@@ -35,8 +36,10 @@ class ResourceEmittingMethodCallContextProcessor : MethodCallContextProcessor {
                     userCallLocation
                 }
 
-                if (ResourceValidator.isValidResource(dslType, userCallLocationProvider)) {
-                    processor.invoke(dslType, applyActionOverwrite)
+                val resource = dslType.toValue()
+
+                if (ResourceValidator.isValidResource(dslType, resource, userCallLocationProvider)) {
+                    processor.invoke(resource as FullResource, applyActionOverwrite)
                 }
             }
         })

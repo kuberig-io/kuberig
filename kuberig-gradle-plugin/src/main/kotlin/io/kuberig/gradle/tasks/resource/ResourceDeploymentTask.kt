@@ -18,7 +18,7 @@ open class ResourceDeploymentTask : AbstractResourceTask() {
         val resourceDeployer = ResourceDeployer(
             kubeRigExtension.flags,
             this.environmentFileSystem(),
-            kubeRigExtension.getDeployControl(),
+            kubeRigExtension.getTickInfo(),
             this.buildResourceGenerationRuntimeClasspathClassLoader())
 
         val deploymentPlan = DeploymentPlanGenerator.generateDeploymentPlan(methodResults)

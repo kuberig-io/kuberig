@@ -24,8 +24,8 @@ object DslResourceEmitter {
     /**
      * The emit function can be used to publish one or more resources.
      */
-    fun emit(vararg dslTypes: KubernetesResourceDslType<FullResource>,
-             applyActionOverwrite: ApplyActionOverwrite) {
+    fun <T : BasicResource> emit(vararg dslTypes: KubernetesResourceDslType<T>,
+             applyActionOverwrite: ApplyActionOverwrite = UseDefault) {
         check(receivers.get().isNotEmpty()) { "\n\tDslResourceEmitter.emit() not supported in this method. \n\tMake sure you call DslResourceEmitter.emit() from within a method annotated with @EnvResources.\n\tIn @EnvResource methods you need to return the resource from the method." }
 
         receivers.get().forEach { receiver ->
@@ -38,6 +38,10 @@ object DslResourceEmitter {
                 }
             }
         }
+    }
+
+    private fun validateDslType() {
+
     }
 
     /**

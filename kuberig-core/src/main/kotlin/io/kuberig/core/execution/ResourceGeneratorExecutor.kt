@@ -107,9 +107,7 @@ class ResourceGeneratorExecutor(
                 try {
                     val processor = methodCallContextProcessors.getValue(methodCallContext.methodType)
 
-                    processor.process(methodCallContext) { dslType, applyActionOverwrite ->
-                        val resource = dslType.toValue()
-
+                    processor.process(methodCallContext) { resource, applyActionOverwrite ->
                         val applyAction = when(applyActionOverwrite) {
                             is UseDefault -> defaultApplyAction
                             is UseOverwrite -> applyActionOverwrite.action
@@ -156,7 +154,6 @@ class ResourceGeneratorExecutor(
                 methodCallContext.method.getDeclaredAnnotation(EnvResource::class.java).action
             }
         }
-
     }
 
     private fun reportAndFailOnErrors(methodResults: List<GeneratorMethodResult>) {

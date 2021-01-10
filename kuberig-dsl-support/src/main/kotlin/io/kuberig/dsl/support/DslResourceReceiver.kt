@@ -8,6 +8,6 @@ interface DslResourceReceiver {
 
     fun getName() : String
 
-    fun receive(dslType: KubernetesResourceDslType<FullResource>, applyActionOverwrite: ApplyActionOverwrite = UseDefault)
+    fun <T : BasicResource>  receive(dslType: KubernetesResourceDslType<T>, applyActionOverwrite: ApplyActionOverwrite = UseDefault)
 
 }

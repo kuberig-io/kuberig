@@ -4,7 +4,7 @@ import io.kuberig.config.ClientSideApplyFlags
 import io.kuberig.config.KubeRigEnvironment
 import io.kuberig.config.KubeRigFlags
 import io.kuberig.config.ServerSideApplyFlags
-import io.kuberig.core.deployment.control.DeployControl
+import io.kuberig.core.deployment.control.TickInfo
 import io.kuberig.encryption.EncryptionSupportFactory
 import io.kuberig.encryption.tink.TinkEncryptionSupportFactory
 import io.kuberig.fs.NameKindOutputFileConvention
@@ -25,14 +25,13 @@ open class KubeRigExtension(private val project : Project) {
      */
     var dslDependencyOverride: String? = null
 
-    val environments : NamedDomainObjectContainer<KubeRigEnvironment> = this.project.container(
-        KubeRigEnvironment::class.java)
+    val environments : NamedDomainObjectContainer<KubeRigEnvironment> = this.project.container(KubeRigEnvironment::class.java)
 
     var encryptionSupportFactoryType: Class<out EncryptionSupportFactory>? = TinkEncryptionSupportFactory::class.java
 
     var yamlOutputFileConvention: OutputFileConvention = NameKindOutputFileConvention()
 
-    private var deployControl = DeployControl()
+    private var tickInfo = TickInfo()
 
     private var dependencyVersions: DependencyVersions
 
@@ -71,12 +70,12 @@ open class KubeRigExtension(private val project : Project) {
     }
 
 
-    fun deployControl(init: DeployControl.() -> Unit) {
-        this.deployControl.init()
+    fun tickInfo(init: TickInfo.() -> Unit) {
+        this.tickInfo.init()
     }
 
-    fun getDeployControl(): DeployControl {
-        return this.deployControl
+    fun getTickInfo(): TickInfo {
+        return this.tickInfo
     }
 
     fun encryptionSupportFactory(): EncryptionSupportFactory {

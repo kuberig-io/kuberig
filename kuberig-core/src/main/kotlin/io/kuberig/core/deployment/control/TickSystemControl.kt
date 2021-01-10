@@ -1,11 +1,11 @@
-package io.kuberig.core.deployment
+package io.kuberig.core.deployment.control
 
-import io.kuberig.core.deployment.control.DeployControl
-import io.kuberig.core.deployment.control.TickGateKeeper
-import io.kuberig.core.model.ResourceApplyRequest
+import io.kuberig.core.deployment.DeploymentListener
+import io.kuberig.core.deployment.DeploymentPlan
+import io.kuberig.core.deployment.DeploymentTask
 
 class TickSystemControl(
-    deployControl: DeployControl,
+    deployControl: TickInfo,
     resourceGenerationRuntimeClasspathClassLoader: ClassLoader,
     private val deploymentListener: DeploymentListener
 ) {

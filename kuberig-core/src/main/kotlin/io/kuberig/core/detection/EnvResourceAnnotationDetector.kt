@@ -8,6 +8,8 @@ import java.util.regex.Pattern
 
 /**
  * Detects methods annotated with @EnvResource or @EnvResources.
+ *
+ * It will scan up in the class hierarchy and into jar files of dependencies if needed.
  */
 class EnvResourceAnnotationDetector(
     private val classesDirectories: List<File>,

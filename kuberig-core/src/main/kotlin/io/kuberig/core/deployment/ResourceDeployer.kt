@@ -4,9 +4,8 @@ import io.kuberig.annotations.ApplyAction
 import io.kuberig.config.ClientSideApplyFlags
 import io.kuberig.config.KubeRigFlags
 import io.kuberig.config.ServerSideApplyFlags
-import io.kuberig.core.deployment.control.DeployControl
-import io.kuberig.core.model.GeneratorMethodResult
-import io.kuberig.core.model.SuccessResult
+import io.kuberig.core.deployment.control.TickInfo
+import io.kuberig.core.deployment.control.TickSystemControl
 import io.kuberig.fs.EnvironmentFileSystem
 import org.json.JSONObject
 import org.json.JSONTokener
@@ -14,7 +13,7 @@ import org.json.JSONTokener
 class ResourceDeployer(
     flags: KubeRigFlags,
     environmentFileSystem: EnvironmentFileSystem,
-    deployControl: DeployControl,
+    deployControl: TickInfo,
     resourceGenerationRuntimeClasspathClassLoader: ClassLoader
 ) {
 
