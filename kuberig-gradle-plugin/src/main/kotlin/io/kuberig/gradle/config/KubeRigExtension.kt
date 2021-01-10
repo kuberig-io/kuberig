@@ -12,6 +12,7 @@ import io.kuberig.fs.OutputFileConvention
 import io.kuberig.fs.RootFileSystem
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
+import java.lang.IllegalStateException
 import java.util.*
 
 open class KubeRigExtension(private val project : Project) {
@@ -45,9 +46,9 @@ open class KubeRigExtension(private val project : Project) {
         val props = this.loadProps()
 
         this.dependencyVersions = DependencyVersions(
-                SemVersion.fromVersionText(props["kuberig.version"] as String),
-                SemVersion.fromVersionText(props["kuberig.dsl.version"] as String),
-                SemVersion.fromVersionText(props["kotlin.version"] as String)
+                props["kuberig.version"] as String,
+                props["kuberig.dsl.version"] as String,
+                props["kotlin.version"] as String
         )
     }
 
@@ -93,18 +94,34 @@ open class KubeRigExtension(private val project : Project) {
      * This method provides a way to overwrite the version of the kuberig-dsl-xxx that is used.
      */
     fun kuberigDslVersion(kuberigDslVersion: String) {
-        val parsedKuberigDslVersion = SemVersion.fromVersionText(kuberigDslVersion)
-
-        check(parsedKuberigDslVersion.isEqual(minimalKuberigDslVersion) || parsedKuberigDslVersion.isHigher(minimalKuberigDslVersion)) {
-            "KubeRig version ${this.dependencyVersions.kuberigVersion} requires the KubeRig-DSL version to be $minimalKuberigDslVersion or higher; as there is a hard dependency on\n" +
-                    " the new io.kuberig.dsl.KubernetesResourceDslType and io.kuberig.dsl.model package. "
+        val parsedKuberigDslVersion = parseSemVersion(kuberigDslVersion)
+        if (parsedKuberigDslVersion != null) {
+            check(
+                parsedKuberigDslVersion.isEqual(minimalKuberigDslVersion) || parsedKuberigDslVersion.isHigher(
+                    minimalKuberigDslVersion
+                )
+            ) {
+                "KubeRig version ${this.dependencyVersions.kuberigVersion} requires the KubeRig-DSL version to be $minimalKuberigDslVersion or higher; as there is a hard dependency on\n" +
+                        " the new io.kuberig.dsl.KubernetesResourceDslType and io.kuberig.dsl.model package. "
+            }
+        } else {
+            project.logger.warn("Provided Kuberig dsl version is not a sem version unable to determine if minimum version of $minimalKuberigDslVersion is met.")
         }
 
         this.dependencyVersions = DependencyVersions(
             this.dependencyVersions.kuberigVersion,
-            parsedKuberigDslVersion,
+            kuberigDslVersion,
             this.dependencyVersions.kotlinVersion
         )
+    }
+
+    private fun parseSemVersion(versionText: String): SemVersion? {
+        return try {
+            SemVersion.fromVersionText(versionText)
+        }
+        catch (e: IllegalStateException) {
+            null
+        }
     }
 
     /**
@@ -117,20 +134,20 @@ open class KubeRigExtension(private val project : Project) {
         this.dependencyVersions = DependencyVersions(
             this.dependencyVersions.kuberigVersion,
             this.dependencyVersions.kuberigDslVersion,
-                SemVersion.fromVersionText(kotlinVersion)
+            kotlinVersion
         )
     }
 
     fun kuberigDslVersion(): String {
-        return this.dependencyVersions.kuberigDslVersion.toString()
+        return this.dependencyVersions.kuberigDslVersion
     }
 
     fun kuberigVersion(): String {
-        return this.dependencyVersions.kuberigVersion.toString()
+        return this.dependencyVersions.kuberigVersion
     }
 
     fun kotlinVersion(): String {
-        return this.dependencyVersions.kotlinVersion.toString()
+        return this.dependencyVersions.kotlinVersion
     }
 
     private fun loadProps(): Properties {
