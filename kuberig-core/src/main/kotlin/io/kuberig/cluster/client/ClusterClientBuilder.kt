@@ -1,7 +1,7 @@
 package io.kuberig.cluster.client
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import io.kuberig.config.KubeRigFlags
+import io.kuberig.core.resource.ResourceSerializer
 import io.kuberig.kubectl.AccessTokenAuthDetail
 import io.kuberig.kubectl.AuthDetails
 import io.kuberig.kubectl.ClientCertAuthDetails
@@ -24,7 +24,6 @@ import java.security.cert.X509Certificate
 import javax.net.ssl.SSLContext
 
 class ClusterClientBuilder(private val flags: KubeRigFlags,
-                           private val objectMapper: ObjectMapper,
                            private val unirestInstance: UnirestInstance) {
 
     private val logger = LoggerFactory.getLogger(ClusterClientBuilder::class.java)
@@ -33,11 +32,11 @@ class ClusterClientBuilder(private val flags: KubeRigFlags,
 
         unirestInstance.config().objectMapper = object : kong.unirest.ObjectMapper {
             override fun writeValue(value: Any?): String {
-                return objectMapper.writeValueAsString(value)
+                return ResourceSerializer.writeValueAsString(value)
             }
 
             override fun <T : Any?> readValue(value: String?, valueType: Class<T>?): T {
-                return objectMapper.readValue(value, valueType)
+                return ResourceSerializer.readValue(value, valueType)
             }
         }
 

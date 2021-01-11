@@ -12,5 +12,10 @@ enum class GeneratorMethodType {
     /**
      * @EnvResources annotated methods emit can emit multiple resources.
      */
-    RESOURCE_EMITTING
+    RESOURCE_EMITTING,
+
+    /**
+     * @EnvYaml annotated methods read YAML file and emit multiple raw resources.
+     */
+    RAW_YAML
 }

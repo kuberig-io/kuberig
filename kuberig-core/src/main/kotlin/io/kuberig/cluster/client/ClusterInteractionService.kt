@@ -1,7 +1,5 @@
 package io.kuberig.cluster.client
 
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.databind.ObjectMapper
 import io.kuberig.config.KubeRigFlags
 import io.kuberig.core.deployment.APIResourceList
 import io.kuberig.kubectl.AuthDetails
@@ -15,15 +13,10 @@ class ClusterInteractionService(
         certificateAuthorityData: String?,
         authDetails: AuthDetails
 ) {
-    private val unirestInstance: UnirestInstance
+    private val unirestInstance: UnirestInstance = Unirest.spawnInstance()
 
     init {
-        val objectMapper = ObjectMapper()
-        objectMapper.findAndRegisterModules()
-        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT)
-
-        this.unirestInstance = Unirest.spawnInstance()
-        ClusterClientBuilder(flags, objectMapper, unirestInstance)
+        ClusterClientBuilder(flags, unirestInstance)
             .initializeClient(certificateAuthorityData, authDetails)
     }
 

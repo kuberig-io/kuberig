@@ -1,20 +1,22 @@
 package io.kuberig.core.deployment
 
+import io.kuberig.core.resource.RawResourceInfo
+
 class ProgressReportingDeploymentListener(private val applyStrategy: ApplyStrategy<Any>) : DeploymentListener {
     override fun tickStart(tickNumber: Int, amountOfResources: Int) {
         println("[TICK-SYSTEM][TICK#$tickNumber] processing $amountOfResources resource(s).")
     }
 
-    override fun deploymentStart(newResourceInfo: NewResourceInfo, resourceUrlInfo: ResourceUrlInfo) {
+    override fun deploymentStart(rawResourceInfo: RawResourceInfo, resourceUrlInfo: ResourceUrlInfo) {
         println("------")
-        println("deploying ${newResourceInfo.infoText()}...")
+        println("deploying ${rawResourceInfo.infoText()}...")
     }
 
-    override fun deploymentSuccess(newResourceInfo: NewResourceInfo, resourceResult: ResourceResult) {
+    override fun deploymentSuccess(rawResourceInfo: RawResourceInfo, resourceResult: ResourceResult) {
         resourceResult.logInfo(applyStrategy)
     }
 
-    override fun deploymentFailure(newResourceInfo: NewResourceInfo, resourceResult: ResourceResult) {
+    override fun deploymentFailure(rawResourceInfo: RawResourceInfo, resourceResult: ResourceResult) {
         resourceResult.logInfo(applyStrategy)
     }
 

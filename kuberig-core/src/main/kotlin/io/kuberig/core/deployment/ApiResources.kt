@@ -1,5 +1,7 @@
 package io.kuberig.core.deployment
 
+import io.kuberig.core.resource.RawResourceInfo
+
 class ApiResources(
     apiServerIntegration: ApiServerIntegration,
     apiServerUrl: String,
@@ -12,18 +14,18 @@ class ApiResources(
         return apiResourceList.first { it.kind == kind }
     }
 
-    fun resourceUrl(newResourceInfo: NewResourceInfo): ResourceUrlInfo {
-        val apiResource = this.apiResource(newResourceInfo.kind)
+    fun resourceUrl(rawResourceInfo: RawResourceInfo): ResourceUrlInfo {
+        val apiResource = this.apiResource(rawResourceInfo.kind)
 
         val resourceTypeUrl = ApiServerUrlSupport.resourceTypeUrl(
             apiVersionBaseUrl,
-            newResourceInfo.namespace,
+            rawResourceInfo.namespace,
             apiResource.name
         )
 
         val resourceUrl = ApiServerUrlSupport.resourceUrl(
             resourceTypeUrl,
-            newResourceInfo.resourceName
+            rawResourceInfo.resourceName
         )
 
         return ResourceUrlInfo(resourceTypeUrl, resourceUrl)

@@ -1,9 +1,8 @@
 package io.kuberig.core.deployment
 
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.databind.ObjectMapper
 import io.kuberig.cluster.client.ClusterClientBuilder
 import io.kuberig.config.KubeRigFlags
+import io.kuberig.core.resource.RawResourceInfo
 import io.kuberig.kubectl.AuthDetails
 import kong.unirest.HttpResponse
 import kong.unirest.Unirest
@@ -15,16 +14,12 @@ class ApiServerIntegration(
     authDetails: AuthDetails,
     flags: KubeRigFlags
 ) {
-    private val objectMapper = ObjectMapper()
     private val unirestInstance: UnirestInstance
 
     init {
-        objectMapper.findAndRegisterModules()
-        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT)
-
         unirestInstance = Unirest.primaryInstance()
 
-        ClusterClientBuilder(flags, objectMapper, unirestInstance)
+        ClusterClientBuilder(flags, unirestInstance)
             .initializeClient(certificateAuthorityData, authDetails)
     }
 
@@ -41,21 +36,21 @@ class ApiServerIntegration(
         }
     }
 
-    fun postResource(newResourceInfo: NewResourceInfo, resourceUrlInfo: ResourceUrlInfo): PostResourceResult {
+    fun postResource(rawResourceInfo: RawResourceInfo, resourceUrlInfo: ResourceUrlInfo): PostResourceResult {
         val postResponse = unirestInstance.post(resourceUrlInfo.resourceTypeUrl)
             .header("Content-Type", "application/json")
-            .body(newResourceInfo.json)
+            .body(rawResourceInfo.json)
             .asString()
 
         return if (postResponse.status == 201) {
-            SuccessPostResourceResult(resourceUrlInfo, newResourceInfo)
+            SuccessPostResourceResult(resourceUrlInfo, rawResourceInfo)
         } else {
-            FailedPostResourceResult(resourceUrlInfo, newResourceInfo, postResponse)
+            FailedPostResourceResult(resourceUrlInfo, rawResourceInfo, postResponse)
         }
     }
 
     fun serverSideApplyResourcePatch(
-        newResourceInfo: NewResourceInfo,
+        rawResourceInfo: RawResourceInfo,
         resourceUrlInfo: ResourceUrlInfo,
         force: Boolean
     ): ServerSideApplyPatchResourceResult {
@@ -64,17 +59,17 @@ class ApiServerIntegration(
             .accept("application/json")
             .queryString("fieldManager", "kuberig")
             .queryString("force", force)
-            .body(newResourceInfo.json)
+            .body(rawResourceInfo.json)
             .asString()
 
         return if (patchResponse.status == 200 || patchResponse.status == 201) {
-            SuccessServerSideApplyPatchResourceResult(resourceUrlInfo, newResourceInfo)
+            SuccessServerSideApplyPatchResourceResult(resourceUrlInfo, rawResourceInfo)
         } else {
-            FailedServerSideApplyPatchResourceResult(resourceUrlInfo, newResourceInfo, patchResponse)
+            FailedServerSideApplyPatchResourceResult(resourceUrlInfo, rawResourceInfo, patchResponse)
         }
     }
 
-    fun putResource(updateResourceInfo: NewResourceInfo, resourceUrlInfo: ResourceUrlInfo): PutResourceResult {
+    fun putResource(updateResourceInfo: RawResourceInfo, resourceUrlInfo: ResourceUrlInfo): PutResourceResult {
         val putResponse = unirestInstance.put(resourceUrlInfo.resourceUrl)
             .header("Content-Type", "application/json")
             .body(updateResourceInfo.json)
@@ -103,10 +98,6 @@ class ApiServerIntegration(
         } else {
             FailedDeleteResourceResult(resourceUrlInfo, deleteResponse)
         }
-    }
-
-    fun jsonSerialize(resource: Any): String {
-        return objectMapper.writeValueAsString(resource)
     }
 
     fun retrieveApiResources(apiVersionBaseUrl: String): List<APIResource> {
@@ -152,62 +143,62 @@ class UnknownGetResourceResult(urlInfo: ResourceUrlInfo) : GetResourceResult(url
     }
 }
 
-sealed class PostResourceResult(urlInfo: ResourceUrlInfo, val newResourceInfo: NewResourceInfo) :
+sealed class PostResourceResult(urlInfo: ResourceUrlInfo, val rawResourceInfo: RawResourceInfo) :
     ResourceResult(urlInfo)
 
 class FailedPostResourceResult(
     urlInfo: ResourceUrlInfo,
-    newResourceInfo: NewResourceInfo,
+    rawResourceInfo: RawResourceInfo,
     val response: HttpResponse<String>
-) : PostResourceResult(urlInfo, newResourceInfo) {
+) : PostResourceResult(urlInfo, rawResourceInfo) {
     override fun logInfo(applyStrategy: ApplyStrategy<Any>) {
         super.showResponseDetails(this.response)
-        println("Failed to post(${applyStrategy.name}) ${newResourceInfo.fullInfoText()}")
+        println("Failed to post(${applyStrategy.name}) ${rawResourceInfo.fullInfoText()}")
     }
 }
 
-class SuccessPostResourceResult(urlInfo: ResourceUrlInfo, newResourceInfo: NewResourceInfo) :
-    PostResourceResult(urlInfo, newResourceInfo) {
+class SuccessPostResourceResult(urlInfo: ResourceUrlInfo, rawResourceInfo: RawResourceInfo) :
+    PostResourceResult(urlInfo, rawResourceInfo) {
     override fun logInfo(applyStrategy: ApplyStrategy<Any>) {
-        println("post(${applyStrategy.name}) ${newResourceInfo.infoText()} - success")
+        println("post(${applyStrategy.name}) ${rawResourceInfo.infoText()} - success")
     }
 }
 
 sealed class ServerSideApplyPatchResourceResult(
     urlInfo: ResourceUrlInfo,
-    val newResourceInfo: NewResourceInfo
+    val rawResourceInfo: RawResourceInfo
 ) : ResourceResult(urlInfo)
 
 class FailedServerSideApplyPatchResourceResult(
     urlInfo: ResourceUrlInfo,
-    newResourceInfo: NewResourceInfo,
+    rawResourceInfo: RawResourceInfo,
     val response: HttpResponse<String>
-) : ServerSideApplyPatchResourceResult(urlInfo, newResourceInfo) {
+) : ServerSideApplyPatchResourceResult(urlInfo, rawResourceInfo) {
 
     override fun logInfo(applyStrategy: ApplyStrategy<Any>) {
         super.showResponseDetails(this.response)
-        println("Failed to patch(${applyStrategy.name}) ${newResourceInfo.fullInfoText()}")
+        println("Failed to patch(${applyStrategy.name}) ${rawResourceInfo.fullInfoText()}")
     }
 }
 
 class SuccessServerSideApplyPatchResourceResult(
     urlInfo: ResourceUrlInfo,
-    newResourceInfo: NewResourceInfo
-) : ServerSideApplyPatchResourceResult(urlInfo, newResourceInfo) {
+    rawResourceInfo: RawResourceInfo
+) : ServerSideApplyPatchResourceResult(urlInfo, rawResourceInfo) {
 
     override fun logInfo(applyStrategy: ApplyStrategy<Any>) {
-        println("patch(${applyStrategy.name}) ${newResourceInfo.infoText()} - success")
+        println("patch(${applyStrategy.name}) ${rawResourceInfo.infoText()} - success")
     }
 }
 
 sealed class PutResourceResult(
     urlInfo: ResourceUrlInfo,
-    val updateResourceInfo: NewResourceInfo
+    val updateResourceInfo: RawResourceInfo
 ) : ResourceResult(urlInfo)
 
 class ConflictPutResourceResult(
     urlInfo: ResourceUrlInfo,
-    updateResourceInfo: NewResourceInfo,
+    updateResourceInfo: RawResourceInfo,
     val response: HttpResponse<String>
 ) : PutResourceResult(urlInfo, updateResourceInfo) {
 
@@ -219,7 +210,7 @@ class ConflictPutResourceResult(
 
 class FailedPutResourceResult(
     urlInfo: ResourceUrlInfo,
-    updateResourceInfo: NewResourceInfo,
+    updateResourceInfo: RawResourceInfo,
     val response: HttpResponse<String>
 ) : PutResourceResult(urlInfo, updateResourceInfo) {
 
@@ -231,7 +222,7 @@ class FailedPutResourceResult(
 
 class SuccessPutResourceResult(
     urlInfo: ResourceUrlInfo,
-    updateResourceInfo: NewResourceInfo
+    updateResourceInfo: RawResourceInfo
 ) : PutResourceResult(urlInfo, updateResourceInfo) {
 
     override fun logInfo(applyStrategy: ApplyStrategy<Any>) {

@@ -3,6 +3,7 @@ package io.kuberig.core.deployment
 import com.jayway.jsonpath.JsonPath
 import com.jayway.jsonpath.PathNotFoundException
 import io.kuberig.config.ClientSideApplyFlags
+import io.kuberig.core.resource.RawResourceInfo
 import org.json.JSONObject
 
 /**
@@ -29,36 +30,36 @@ class ClientSideApplyStrategy(
     deploymentListener
 ) {
 
-    override fun createResource(newResourceInfo: NewResourceInfo, resourceUrlInfo: ResourceUrlInfo): Boolean {
-        val postResult = apiServerIntegration.postResource(newResourceInfo, resourceUrlInfo)
+    override fun createResource(rawResourceInfo: RawResourceInfo, resourceUrlInfo: ResourceUrlInfo): Boolean {
+        val postResult = apiServerIntegration.postResource(rawResourceInfo, resourceUrlInfo)
 
         return when (postResult) {
             is FailedPostResourceResult -> {
-                deploymentListener.deploymentFailure(newResourceInfo, postResult)
+                deploymentListener.deploymentFailure(rawResourceInfo, postResult)
                 false
             }
             is SuccessPostResourceResult -> {
-                deploymentListener.deploymentSuccess(newResourceInfo, postResult)
+                deploymentListener.deploymentSuccess(rawResourceInfo, postResult)
                 true
             }
         }
     }
 
     override fun updateResource(
-        newResourceInfo: NewResourceInfo,
+        rawResourceInfo: RawResourceInfo,
         resourceUrlInfo: ResourceUrlInfo,
         getResourceResult: ExistsGetResourceResult
     ): Boolean {
-        val updateJson = JSONObject(newResourceInfo.json.toString())
+        val updateJson = JSONObject(rawResourceInfo.json.toString())
         updateJson.getJSONObject("metadata")
             .put("resourceVersion", getResourceResult.resourceVersion)
 
-        val updateResourceInfo = NewResourceInfo(newResourceInfo, updateJson)
+        val updateResourceInfo = RawResourceInfo(rawResourceInfo, updateJson)
 
         return when (val putResult = apiServerIntegration.putResource(updateResourceInfo, resourceUrlInfo)) {
             is ConflictPutResourceResult -> {
                 attemptConflictResolution(
-                    newResourceInfo,
+                    rawResourceInfo,
                     updateResourceInfo,
                     resourceUrlInfo,
                     getResourceResult,
@@ -66,19 +67,19 @@ class ClientSideApplyStrategy(
                 )
             }
             is FailedPutResourceResult -> {
-                deploymentListener.deploymentFailure(newResourceInfo, putResult)
+                deploymentListener.deploymentFailure(rawResourceInfo, putResult)
                 false
             }
             is SuccessPutResourceResult -> {
-                deploymentListener.deploymentSuccess(newResourceInfo, putResult)
+                deploymentListener.deploymentSuccess(rawResourceInfo, putResult)
                 true
             }
         }
     }
 
     fun attemptConflictResolution(
-        newResourceInfo: NewResourceInfo,
-        updateResourceInfo: NewResourceInfo,
+        rawResourceInfo: RawResourceInfo,
+        updateResourceInfo: RawResourceInfo,
         resourceUrlInfo: ResourceUrlInfo,
         getResourceResult: ExistsGetResourceResult,
         putResourceResult: ConflictPutResourceResult
@@ -137,7 +138,7 @@ class ClientSideApplyStrategy(
 
         return when {
             newJsonUpdated -> {
-                val retryResourceInfo = NewResourceInfo(newResourceInfo, JSONObject(newJsonPathContext.jsonString()))
+                val retryResourceInfo = RawResourceInfo(rawResourceInfo, JSONObject(newJsonPathContext.jsonString()))
 
                 when (val retryPutResult = apiServerIntegration.putResource(retryResourceInfo, resourceUrlInfo)) {
                     is ConflictPutResourceResult -> {
@@ -160,20 +161,20 @@ class ClientSideApplyStrategy(
 
                     when (deleteResult) {
                         is FailedDeleteResourceResult -> {
-                            deploymentListener.deploymentFailure(newResourceInfo, putResourceResult)
+                            deploymentListener.deploymentFailure(rawResourceInfo, putResourceResult)
                             false
                         }
                         is SuccessDeleteResourceResult -> {
-                            this.createResource(newResourceInfo, resourceUrlInfo)
+                            this.createResource(rawResourceInfo, resourceUrlInfo)
                         }
                     }
                 } else {
-                    deploymentListener.deploymentFailure(newResourceInfo, putResourceResult)
+                    deploymentListener.deploymentFailure(rawResourceInfo, putResourceResult)
                     false
                 }
             }
             else -> {
-                deploymentListener.deploymentFailure(newResourceInfo, putResourceResult)
+                deploymentListener.deploymentFailure(rawResourceInfo, putResourceResult)
                 false
             }
         }

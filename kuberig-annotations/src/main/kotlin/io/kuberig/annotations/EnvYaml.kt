@@ -9,9 +9,7 @@ annotation class EnvYaml(
      */
     val group: String = "",
     /**
-     * Default action to use to apply the resource(s).
-     *
-     * Can be overwritten on the individual resource emit calls made in this function.
+     * Action to use to apply the resource(s).
      */
-    val defaultAction: ApplyAction = ApplyAction.CREATE_OR_UPDATE
+    val action: ApplyAction = ApplyAction.CREATE_OR_UPDATE
 )

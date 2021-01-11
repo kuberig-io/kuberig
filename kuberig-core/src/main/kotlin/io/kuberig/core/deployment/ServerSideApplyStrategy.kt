@@ -1,6 +1,7 @@
 package io.kuberig.core.deployment
 
 import io.kuberig.config.ServerSideApplyFlags
+import io.kuberig.core.resource.RawResourceInfo
 
 /**
  * Creates/updates resources using server-side-apply.
@@ -16,32 +17,32 @@ class ServerSideApplyStrategy(
     deploymentListener
 ) {
 
-    override fun createResource(newResourceInfo: NewResourceInfo, resourceUrlInfo: ResourceUrlInfo): Boolean {
-        return apply(newResourceInfo, resourceUrlInfo)
+    override fun createResource(rawResourceInfo: RawResourceInfo, resourceUrlInfo: ResourceUrlInfo): Boolean {
+        return apply(rawResourceInfo, resourceUrlInfo)
     }
 
     override fun updateResource(
-        newResourceInfo: NewResourceInfo,
+        rawResourceInfo: RawResourceInfo,
         resourceUrlInfo: ResourceUrlInfo,
         getResourceResult: ExistsGetResourceResult
     ): Boolean {
-        return apply(newResourceInfo, resourceUrlInfo)
+        return apply(rawResourceInfo, resourceUrlInfo)
     }
 
-    private fun apply(newResourceInfo: NewResourceInfo, resourceUrlInfo: ResourceUrlInfo): Boolean {
+    private fun apply(rawResourceInfo: RawResourceInfo, resourceUrlInfo: ResourceUrlInfo): Boolean {
         val patchResult = apiServerIntegration.serverSideApplyResourcePatch(
-            newResourceInfo,
+            rawResourceInfo,
             resourceUrlInfo,
             flags.force
         )
 
         return when (patchResult) {
             is FailedServerSideApplyPatchResourceResult -> {
-                deploymentListener.deploymentFailure(newResourceInfo, patchResult)
+                deploymentListener.deploymentFailure(rawResourceInfo, patchResult)
                 false
             }
             is SuccessServerSideApplyPatchResourceResult -> {
-                deploymentListener.deploymentSuccess(newResourceInfo, patchResult)
+                deploymentListener.deploymentSuccess(rawResourceInfo, patchResult)
                 true
             }
         }

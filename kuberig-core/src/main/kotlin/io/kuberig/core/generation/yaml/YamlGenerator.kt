@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
 import io.kuberig.core.model.SuccessResult
-import io.kuberig.dsl.model.FullResource
+import io.kuberig.core.resource.RawResourceInfo
 import io.kuberig.fs.EnvironmentFileSystem
 import io.kuberig.fs.OutputFileConvention
 import org.slf4j.LoggerFactory
@@ -47,8 +47,9 @@ class YamlGenerator(
         logger.info("Generating YAML resources into output directory: $outputDirectory")
     }
 
-    private fun generateYaml(resource: FullResource) : String {
-        return this.objectMapper.writeValueAsString(resource)
+    private fun generateYaml(rawResourceInfo: RawResourceInfo) : String {
+        // TODO #36 properly convert JSONObject to string and to Jackson JsonObject and write out to YAML?
+        return this.objectMapper.writeValueAsString(rawResourceInfo.json)
     }
 
     fun generate(methodResults: List<SuccessResult>) : List<File> {
@@ -56,7 +57,7 @@ class YamlGenerator(
 
         for (methodResult in methodResults) {
             for (resourceApplyRequest in methodResult.resourceApplyRequests) {
-                val yaml = this.generateYaml(resourceApplyRequest.resource)
+                val yaml = this.generateYaml(resourceApplyRequest.rawResourceInfo)
 
                 val outputFile = this.outputFileConvention.outputFile(this.outputDirectory, yaml)
 

@@ -11,7 +11,7 @@ object ResourceValidator {
     fun <T : BasicResource> isValidResource(
         dslType: KubernetesResourceDslType<T>,
         resource: T,
-        userCallLocationProvider: () -> String?
+        sourceLocation: String
     ): Boolean {
         val resourcePackageName = dslType::class.java.packageName
 
@@ -19,16 +19,12 @@ object ResourceValidator {
         val fullResource = FullResource::class.java.isAssignableFrom(resource::class.java)
 
         if (!packageCorrect) {
-            val userCallLocation: String? = userCallLocationProvider()
-
-            logger.error(dslType::class.java.name + " is not within the kinds.* package, skipping. [${userCallLocation}]")
+            logger.error(dslType::class.java.name + " is not within the kinds.* package, skipping. [${sourceLocation}]")
 
         }
 
         if (!fullResource) {
-            val userCallLocation: String? = userCallLocationProvider()
-
-            logger.error(dslType::class.java.name + " does not generate a ${FullResource::class.java}, skipping [${userCallLocation}]")
+            logger.error(dslType::class.java.name + " does not generate a ${FullResource::class.java}, skipping [${sourceLocation}]")
         }
 
         return packageCorrect && fullResource

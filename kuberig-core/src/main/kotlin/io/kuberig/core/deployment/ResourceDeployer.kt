@@ -6,9 +6,8 @@ import io.kuberig.config.KubeRigFlags
 import io.kuberig.config.ServerSideApplyFlags
 import io.kuberig.core.deployment.control.TickInfo
 import io.kuberig.core.deployment.control.TickSystemControl
+import io.kuberig.core.resource.RawResourceInfo
 import io.kuberig.fs.EnvironmentFileSystem
-import org.json.JSONObject
-import org.json.JSONTokener
 
 class ResourceDeployer(
     flags: KubeRigFlags,
@@ -62,68 +61,18 @@ class ResourceDeployer(
     }
 
     private fun execute(deploymentTask: DeploymentTask): Boolean {
-        val newResourceInfo = newResourceInfo(deploymentTask.resource, deploymentTask.sourceLocation)
+        val rawResourceInfo = deploymentTask.rawResourceInfo
 
         val apiResources = ApiResources(
             apiServerIntegration,
             apiServerUrl,
-            newResourceInfo.apiVersion
+            rawResourceInfo.apiVersion
         )
-        val resourceUrlInfo = apiResources.resourceUrl(newResourceInfo)
+        val resourceUrlInfo = apiResources.resourceUrl(rawResourceInfo)
 
-        return applyStrategy.applyResource(newResourceInfo, resourceUrlInfo, deploymentTask.applyAction)
+        return applyStrategy.applyResource(rawResourceInfo, resourceUrlInfo, deploymentTask.applyAction)
     }
 
-    /**
-     * Serialize the resource to JSON and extract some key information from it.
-     */
-    private fun newResourceInfo(resource: Any, sourceLocation: String): NewResourceInfo {
-        val newJson = JSONObject(JSONTokener(apiServerIntegration.jsonSerialize(resource)))
-
-        val apiVersion = newJson.getString("apiVersion").toLowerCase()
-        val kind = newJson.getString("kind")
-        val metadataJson: JSONObject = newJson.getJSONObject("metadata")
-        val resourceName = metadataJson.getString("name")
-
-        val namespace = if (metadataJson.has("namespace")) {
-            metadataJson.getString("namespace")
-        } else {
-            this.defaultNamespace
-        }
-
-        if (!metadataJson.has("namespace")) {
-            metadataJson.put("namespace", namespace)
-        }
-
-        return NewResourceInfo(
-            apiVersion,
-            kind,
-            resourceName,
-            namespace,
-            newJson,
-            sourceLocation
-        )
-    }
-}
-
-data class NewResourceInfo(
-    val apiVersion: String,
-    val kind: String,
-    val resourceName: String,
-    val namespace: String,
-    val json: JSONObject,
-    val sourceLocation: String
-) {
-    constructor(source: NewResourceInfo, newJson: JSONObject)
-            : this(source.apiVersion, source.kind, source.resourceName, source.namespace, newJson, source.sourceLocation)
-
-    fun infoText(): String {
-        return "$kind - $resourceName in $namespace namespace"
-    }
-
-    fun fullInfoText(): String {
-        return infoText() + " from resource generator method $sourceLocation "
-    }
 }
 
 abstract class ApplyStrategy<out F>(
@@ -133,30 +82,30 @@ abstract class ApplyStrategy<out F>(
     val deploymentListener: DeploymentListener
 ) {
 
-    fun applyResource(newResourceInfo: NewResourceInfo, resourceUrlInfo: ResourceUrlInfo, applyAction: ApplyAction): Boolean {
-        deploymentListener.deploymentStart(newResourceInfo, resourceUrlInfo)
+    fun applyResource(rawResourceInfo: RawResourceInfo, resourceUrlInfo: ResourceUrlInfo, applyAction: ApplyAction): Boolean {
+        deploymentListener.deploymentStart(rawResourceInfo, resourceUrlInfo)
 
         return when (val getResourceResult = apiServerIntegration.getResource(resourceUrlInfo)) {
             is UnknownGetResourceResult -> {
-                createResource(newResourceInfo, resourceUrlInfo)
+                createResource(rawResourceInfo, resourceUrlInfo)
             }
             is ExistsGetResourceResult -> {
                 when(applyAction) {
                     ApplyAction.CREATE_ONLY -> {
-                        deploymentListener.deploymentSuccess(newResourceInfo, getResourceResult)
+                        deploymentListener.deploymentSuccess(rawResourceInfo, getResourceResult)
                         return true
                     }
                     ApplyAction.CREATE_OR_UPDATE -> {
-                        updateResource(newResourceInfo, resourceUrlInfo, getResourceResult)
+                        updateResource(rawResourceInfo, resourceUrlInfo, getResourceResult)
                     }
                     ApplyAction.RECREATE -> {
                         return when(val deleteResult = apiServerIntegration.deleteResource(resourceUrlInfo)) {
                             is FailedDeleteResourceResult -> {
-                                deploymentListener.deploymentFailure(newResourceInfo, deleteResult)
+                                deploymentListener.deploymentFailure(rawResourceInfo, deleteResult)
                                 false
                             }
                             is SuccessDeleteResourceResult -> {
-                                createResource(newResourceInfo, resourceUrlInfo)
+                                createResource(rawResourceInfo, resourceUrlInfo)
                             }
                         }
                     }
@@ -165,10 +114,10 @@ abstract class ApplyStrategy<out F>(
         }
     }
 
-    protected abstract fun createResource(newResourceInfo: NewResourceInfo, resourceUrlInfo: ResourceUrlInfo): Boolean
+    protected abstract fun createResource(rawResourceInfo: RawResourceInfo, resourceUrlInfo: ResourceUrlInfo): Boolean
 
     protected abstract fun updateResource(
-        newResourceInfo: NewResourceInfo,
+        rawResourceInfo: RawResourceInfo,
         resourceUrlInfo: ResourceUrlInfo,
         getResourceResult: ExistsGetResourceResult
     ): Boolean

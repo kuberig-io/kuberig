@@ -1,5 +1,7 @@
 package io.kuberig.core.execution
 
+import io.kuberig.core.resource.RawResourceFactory
+import io.kuberig.core.resource.RawResourceInfo
 import io.kuberig.dsl.KubernetesResourceDslType
 import io.kuberig.dsl.model.BasicResource
 import io.kuberig.dsl.model.FullResource
@@ -8,11 +10,15 @@ import io.kuberig.dsl.support.UseDefault
 import javassist.ClassPool
 import javassist.LoaderClassPath
 
-class ResourceReturningMethodCallContextProcessor(val classLoader: ClassLoader) : MethodCallContextProcessor {
+class ResourceReturningMethodCallContextProcessor(
+    private val rawResourceFactory: RawResourceFactory,
+    private val classLoader: ClassLoader
+) : MethodCallContextProcessor {
 
     override fun process(
         methodCallContext: MethodCallContext,
-        processor: (resource: FullResource, applyActionOverwrite: ApplyActionOverwrite) -> Unit) {
+        processor: (rawResourceInfo: RawResourceInfo, applyActionOverwrite: ApplyActionOverwrite) -> Unit
+    ) {
         val requiredReturnType = KubernetesResourceDslType::class.java
         val actualReturnType = methodCallContext.method.returnType
 
@@ -24,17 +30,20 @@ class ResourceReturningMethodCallContextProcessor(val classLoader: ClassLoader) 
         val dslType = rawResult as KubernetesResourceDslType<BasicResource>
         val resource = dslType.toValue()
 
-        val userCallLocationProvider = {
-            val pool = ClassPool.getDefault()
-            pool.insertClassPath(LoaderClassPath(classLoader))
-            val cc = pool.get(methodCallContext.type.name)
-            val methodCc = cc.getDeclaredMethod(methodCallContext.method.name, emptyArray())
+        val pool = ClassPool.getDefault()
+        pool.insertClassPath(LoaderClassPath(classLoader))
+        val cc = pool.get(methodCallContext.type.name)
+        val methodCc = cc.getDeclaredMethod(methodCallContext.method.name, emptyArray())
 
-            methodCallContext.type.name + "." + methodCallContext.method.name + "(" + methodCallContext.type.simpleName + ".kt:" + methodCc.methodInfo.getLineNumber(0) + ")"
-        }
+        val sourceLocation =
+            methodCallContext.type.name + "." + methodCallContext.method.name + "(" + methodCallContext.type.simpleName + ".kt:" + methodCc.methodInfo.getLineNumber(
+                0
+            ) + ")"
 
-        if (ResourceValidator.isValidResource(dslType, resource, userCallLocationProvider)) {
-            processor.invoke(resource as FullResource, UseDefault)
+        if (ResourceValidator.isValidResource(dslType, resource, sourceLocation)) {
+            val rawResourceInfo = rawResourceFactory.rawResourceInfo(resource as FullResource, sourceLocation)
+
+            processor.invoke(rawResourceInfo, UseDefault)
         }
     }
 }

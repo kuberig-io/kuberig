@@ -2,7 +2,7 @@ package io.kuberig.core.deployment
 
 import io.kuberig.core.model.SuccessResult
 
-object DeploymentPlanGenerator {
+class DeploymentPlanGenerator {
 
     fun generateDeploymentPlan(generatorResults: List<SuccessResult>): DeploymentPlan {
         val tasksByTick = mutableMapOf<Int, MutableList<DeploymentTask>>()
@@ -15,7 +15,7 @@ object DeploymentPlanGenerator {
 
                 val tickTasks = tasksByTick.getOrDefault(tickNumber, mutableListOf())
 
-                tickTasks.add(DeploymentTask(sourceMethod, resourceApplyRequest.resource, resourceApplyRequest.applyAction))
+                tickTasks.add(DeploymentTask(sourceMethod, resourceApplyRequest.rawResourceInfo, resourceApplyRequest.applyAction))
 
                 tasksByTick[tickNumber] = tickTasks
             }

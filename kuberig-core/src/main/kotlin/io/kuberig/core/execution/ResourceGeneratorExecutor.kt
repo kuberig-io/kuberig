@@ -1,20 +1,16 @@
 package io.kuberig.core.execution
 
-import io.kuberig.annotations.ApplyAction
-import io.kuberig.annotations.EnvResource
-import io.kuberig.annotations.EnvResources
+import io.kuberig.annotations.*
 import io.kuberig.config.KubeRigEnvironment
-import io.kuberig.annotations.Tick
-import io.kuberig.core.detection.GeneratorTypeConsumer
 import io.kuberig.core.detection.EnvResourceAnnotationDetector
+import io.kuberig.core.detection.GeneratorTypeConsumer
 import io.kuberig.core.execution.filtering.DelegatingResourceGeneratorFilter
-import io.kuberig.core.execution.filtering.group.GroupResourceGenerationFilter
 import io.kuberig.core.execution.filtering.environment.EnvResourceGeneratorFilter
+import io.kuberig.core.execution.filtering.group.GroupResourceGenerationFilter
 import io.kuberig.core.execution.filtering.group.ResourceGroupNameMatcher
 import io.kuberig.core.model.*
-import io.kuberig.dsl.KubernetesResourceDslType
-import io.kuberig.dsl.model.BasicResource
-import io.kuberig.dsl.model.FullResource
+import io.kuberig.core.resource.EnvYamlSourceService
+import io.kuberig.core.resource.RawResourceFactory
 import io.kuberig.dsl.support.DslResourceEmitter
 import io.kuberig.dsl.support.UseDefault
 import io.kuberig.dsl.support.UseOverwrite
@@ -28,7 +24,9 @@ class ResourceGeneratorExecutor(
     private val resourceGenerationRuntimeClasspathClassLoader: ClassLoader,
     private val environment: KubeRigEnvironment,
     private val environmentFileSystem: EnvironmentFileSystem,
-    groupNameMatcher: ResourceGroupNameMatcher
+    groupNameMatcher: ResourceGroupNameMatcher,
+    rawResourceFactory: RawResourceFactory,
+    envYamlSourceService: EnvYamlSourceService
 ) {
 
     private val logger = LoggerFactory.getLogger(ResourceGeneratorExecutor::class.java)
@@ -36,9 +34,10 @@ class ResourceGeneratorExecutor(
     private val methodCallContextProcessors = mapOf(
         Pair(
             GeneratorMethodType.RESOURCE_RETURNING,
-            ResourceReturningMethodCallContextProcessor(resourceGenerationRuntimeClasspathClassLoader)
+            ResourceReturningMethodCallContextProcessor(rawResourceFactory, resourceGenerationRuntimeClasspathClassLoader)
         ),
-        Pair(GeneratorMethodType.RESOURCE_EMITTING, ResourceEmittingMethodCallContextProcessor())
+        Pair(GeneratorMethodType.RESOURCE_EMITTING, ResourceEmittingMethodCallContextProcessor(rawResourceFactory)),
+        Pair(GeneratorMethodType.RAW_YAML, RawYamlMethodCallContextProcessor(envYamlSourceService))
     )
 
     private val filterDelegate = DelegatingResourceGeneratorFilter(
@@ -107,7 +106,7 @@ class ResourceGeneratorExecutor(
                 try {
                     val processor = methodCallContextProcessors.getValue(methodCallContext.methodType)
 
-                    processor.process(methodCallContext) { resource, applyActionOverwrite ->
+                    processor.process(methodCallContext) { rawResourceInfo, applyActionOverwrite ->
                         val applyAction = when(applyActionOverwrite) {
                             is UseDefault -> defaultApplyAction
                             is UseOverwrite -> applyActionOverwrite.action
@@ -115,7 +114,7 @@ class ResourceGeneratorExecutor(
 
                         resources.add(
                             ResourceApplyRequest(
-                                resource,
+                                rawResourceInfo,
                                 applyAction,
                                 tick
                             )
@@ -152,6 +151,9 @@ class ResourceGeneratorExecutor(
             }
             GeneratorMethodType.RESOURCE_RETURNING -> {
                 methodCallContext.method.getDeclaredAnnotation(EnvResource::class.java).action
+            }
+            GeneratorMethodType.RAW_YAML -> {
+                methodCallContext.method.getDeclaredAnnotation(EnvYaml::class.java).action
             }
         }
     }

@@ -1,7 +1,7 @@
 package io.kuberig.core.model
 
 import io.kuberig.annotations.ApplyAction
-import io.kuberig.dsl.model.FullResource
+import io.kuberig.core.resource.RawResourceInfo
 
 /**
  * Executing annotated methods results in resource apply requests.
@@ -11,7 +11,7 @@ import io.kuberig.dsl.model.FullResource
  * The tick the resource needs to be applied in.
  */
 data class ResourceApplyRequest(
-    val resource: FullResource,
+    val rawResourceInfo: RawResourceInfo,
     val applyAction: ApplyAction,
     val tick: Int
 )

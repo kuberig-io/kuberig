@@ -1,9 +1,8 @@
 package io.kuberig.dsl.support
 
-import io.kuberig.annotations.ApplyAction
 import io.kuberig.dsl.KubernetesResourceDslType
 import io.kuberig.dsl.model.BasicResource
-import io.kuberig.dsl.model.FullResource
+import io.kuberig.dsl.support.yaml.EnvYamlSourceDsl
 import org.slf4j.LoggerFactory
 
 /**
@@ -40,8 +39,19 @@ object DslResourceEmitter {
         }
     }
 
-    private fun validateDslType() {
+    private fun emit(vararg envYamlSourceDsls: EnvYamlSourceDsl, applyActionOverwrite: ApplyActionOverwrite = UseDefault) {
+        check(receivers.get().isNotEmpty()) { "\n\tDslResourceEmitter.emit() not supported in this method. \n\tMake sure you call DslResourceEmitter.emit() from within a method annotated with @EnvResources.\n\tIn @EnvResource methods you need to return the resource from the method." }
 
+        receivers.get().forEach { receiver ->
+            logger.info("[EMITTING] to ${receiver.getName()}")
+            envYamlSourceDsls.forEach {envYamlSourceDsl ->
+                try {
+                    receiver.receive(envYamlSourceDsl.toSource(), applyActionOverwrite)
+                } catch (e: Exception) {
+                    logger.warn("Receiver ${receiver.getName()} failed to process envYamlSourceDsl $envYamlSourceDsl ")
+                }
+            }
+        }
     }
 
     /**
