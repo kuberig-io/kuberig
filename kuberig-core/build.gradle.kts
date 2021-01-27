@@ -20,7 +20,7 @@ dependencies {
     implementation("org.bouncycastle:bcprov-jdk15on:1.62")
     implementation("org.bouncycastle:bcpkix-jdk15on:1.62")
 
-    implementation("com.jayway.jsonpath:json-path:2.4.0")
+    implementation("com.jayway.jsonpath:json-path:2.5.0")
 
     implementation("org.javassist:javassist:3.27.0-GA")
 

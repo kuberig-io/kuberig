@@ -34,16 +34,13 @@ class TickSystemControl(
 
             gateOpen = tickGateKeeper.isGateOpen(currentTick, nextTick.tickNumber)
             if (gateOpen) {
-                val tickDeploymentTasks = nextTick.deploymentTasks
+                val amountOfTasks = nextTick.crdDefinitionDeploymentTasks.size + nextTick.otherDeploymentTasks.size
 
-                deploymentListener.tickStart(nextTick.tickNumber, tickDeploymentTasks.size)
+                deploymentListener.tickStart(nextTick.tickNumber, amountOfTasks)
 
-                val tickDeploymentTasksIterator = tickDeploymentTasks.iterator()
-
-                while(!forceStop && tickDeploymentTasksIterator.hasNext()) {
-                    val nextTickDeploymentTask = tickDeploymentTasksIterator.next()
-
-                    forceStop = !action(nextTickDeploymentTask)
+                forceStop = executeTasks(nextTick.crdDefinitionDeploymentTasks, action)
+                if (!forceStop) {
+                    forceStop = executeTasks(nextTick.otherDeploymentTasks, action)
                 }
 
                 currentTick = nextTick.tickNumber
@@ -57,5 +54,21 @@ class TickSystemControl(
         if (!gateOpen) {
             deploymentListener.tickFailure(currentTick)
         }
+    }
+
+    private fun executeTasks(tasks: List<DeploymentTask>, action: (DeploymentTask) -> Boolean): Boolean {
+        var forceStop = false
+
+        if (tasks.isNotEmpty()) {
+            val tasksIterator = tasks.iterator()
+
+            while (!forceStop && tasksIterator.hasNext()) {
+                val nextTask = tasksIterator.next()
+
+                forceStop = !action(nextTask)
+            }
+        }
+
+        return forceStop
     }
 }

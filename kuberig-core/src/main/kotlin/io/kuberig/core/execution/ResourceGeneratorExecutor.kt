@@ -9,8 +9,8 @@ import io.kuberig.core.execution.filtering.environment.EnvResourceGeneratorFilte
 import io.kuberig.core.execution.filtering.group.GroupResourceGenerationFilter
 import io.kuberig.core.execution.filtering.group.ResourceGroupNameMatcher
 import io.kuberig.core.model.*
+import io.kuberig.core.preparation.InitialResourceInfoFactory
 import io.kuberig.core.resource.EnvYamlSourceService
-import io.kuberig.core.resource.RawResourceFactory
 import io.kuberig.dsl.support.DslResourceEmitter
 import io.kuberig.dsl.support.UseDefault
 import io.kuberig.dsl.support.UseOverwrite
@@ -25,7 +25,7 @@ class ResourceGeneratorExecutor(
     private val environment: KubeRigEnvironment,
     private val environmentFileSystem: EnvironmentFileSystem,
     groupNameMatcher: ResourceGroupNameMatcher,
-    rawResourceFactory: RawResourceFactory,
+    initialResourceInfoFactory: InitialResourceInfoFactory,
     envYamlSourceService: EnvYamlSourceService
 ) {
 
@@ -34,10 +34,10 @@ class ResourceGeneratorExecutor(
     private val methodCallContextProcessors = mapOf(
         Pair(
             GeneratorMethodType.RESOURCE_RETURNING,
-            ResourceReturningMethodCallContextProcessor(rawResourceFactory, resourceGenerationRuntimeClasspathClassLoader)
+            ResourceReturningMethodCallContextProcessor(initialResourceInfoFactory, resourceGenerationRuntimeClasspathClassLoader)
         ),
-        Pair(GeneratorMethodType.RESOURCE_EMITTING, ResourceEmittingMethodCallContextProcessor(rawResourceFactory)),
-        Pair(GeneratorMethodType.RAW_YAML, RawYamlMethodCallContextProcessor(envYamlSourceService))
+        Pair(GeneratorMethodType.RESOURCE_EMITTING, ResourceEmittingMethodCallContextProcessor(initialResourceInfoFactory, envYamlSourceService)),
+        Pair(GeneratorMethodType.RAW_YAML, RawYamlMethodCallContextProcessor(envYamlSourceService, resourceGenerationRuntimeClasspathClassLoader))
     )
 
     private val filterDelegate = DelegatingResourceGeneratorFilter(
@@ -106,7 +106,7 @@ class ResourceGeneratorExecutor(
                 try {
                     val processor = methodCallContextProcessors.getValue(methodCallContext.methodType)
 
-                    processor.process(methodCallContext) { rawResourceInfo, applyActionOverwrite ->
+                    processor.process(methodCallContext) { initialResourceInfo, applyActionOverwrite ->
                         val applyAction = when(applyActionOverwrite) {
                             is UseDefault -> defaultApplyAction
                             is UseOverwrite -> applyActionOverwrite.action
@@ -114,7 +114,7 @@ class ResourceGeneratorExecutor(
 
                         resources.add(
                             ResourceApplyRequest(
-                                rawResourceInfo,
+                                initialResourceInfo,
                                 applyAction,
                                 tick
                             )

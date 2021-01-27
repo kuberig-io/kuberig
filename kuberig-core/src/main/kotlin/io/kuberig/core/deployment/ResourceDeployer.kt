@@ -6,7 +6,8 @@ import io.kuberig.config.KubeRigFlags
 import io.kuberig.config.ServerSideApplyFlags
 import io.kuberig.core.deployment.control.TickInfo
 import io.kuberig.core.deployment.control.TickSystemControl
-import io.kuberig.core.resource.RawResourceInfo
+import io.kuberig.core.preparation.ResourceUrlInfo
+import io.kuberig.core.resource.RawJsonResourceInfo
 import io.kuberig.fs.EnvironmentFileSystem
 
 class ResourceDeployer(
@@ -16,14 +17,12 @@ class ResourceDeployer(
     resourceGenerationRuntimeClasspathClassLoader: ClassLoader
 ) {
 
-    private val apiServerUrl: String = environmentFileSystem.apiServerUrl()
-    private val defaultNamespace: String = environmentFileSystem.defaultNamespace()
-
     private val apiServerIntegration: ApiServerIntegration = ApiServerIntegration(
         environmentFileSystem.certificateAuthorityData(),
         environmentFileSystem.readAuthDetails(),
         flags
     )
+
     private val applyStrategy: ApplyStrategy<Any> = when (val applyStrategyFlags = flags.applyStrategyFlags) {
         is ServerSideApplyFlags -> {
             ServerSideApplyStrategy(apiServerIntegration, applyStrategyFlags, DeploymentListenerRegistry)
@@ -48,9 +47,7 @@ class ResourceDeployer(
 
     fun execute(deploymentPlan: DeploymentPlan) {
         try {
-            tickSystemControl.execute(deploymentPlan) { deploymentTask ->
-                execute(deploymentTask)
-            }
+            tickSystemControl.execute(deploymentPlan, this::execute)
         } finally {
             apiServerIntegration.shutDown()
         }
@@ -61,16 +58,13 @@ class ResourceDeployer(
     }
 
     private fun execute(deploymentTask: DeploymentTask): Boolean {
-        val rawResourceInfo = deploymentTask.rawResourceInfo
+        val rawResourceInfo = deploymentTask.rawJsonResourceInfo
 
-        val apiResources = ApiResources(
-            apiServerIntegration,
-            apiServerUrl,
-            rawResourceInfo.apiVersion
+        return applyStrategy.applyResource(
+            rawResourceInfo,
+            rawResourceInfo.resourceUrlInfo,
+            deploymentTask.applyAction
         )
-        val resourceUrlInfo = apiResources.resourceUrl(rawResourceInfo)
-
-        return applyStrategy.applyResource(rawResourceInfo, resourceUrlInfo, deploymentTask.applyAction)
     }
 
 }
@@ -82,30 +76,30 @@ abstract class ApplyStrategy<out F>(
     val deploymentListener: DeploymentListener
 ) {
 
-    fun applyResource(rawResourceInfo: RawResourceInfo, resourceUrlInfo: ResourceUrlInfo, applyAction: ApplyAction): Boolean {
-        deploymentListener.deploymentStart(rawResourceInfo, resourceUrlInfo)
+    fun applyResource(rawJsonResourceInfo: RawJsonResourceInfo, resourceUrlInfo: ResourceUrlInfo, applyAction: ApplyAction): Boolean {
+        deploymentListener.deploymentStart(rawJsonResourceInfo, resourceUrlInfo)
 
         return when (val getResourceResult = apiServerIntegration.getResource(resourceUrlInfo)) {
             is UnknownGetResourceResult -> {
-                createResource(rawResourceInfo, resourceUrlInfo)
+                createResource(rawJsonResourceInfo, resourceUrlInfo)
             }
             is ExistsGetResourceResult -> {
                 when(applyAction) {
                     ApplyAction.CREATE_ONLY -> {
-                        deploymentListener.deploymentSuccess(rawResourceInfo, getResourceResult)
+                        deploymentListener.deploymentSuccess(rawJsonResourceInfo, getResourceResult)
                         return true
                     }
                     ApplyAction.CREATE_OR_UPDATE -> {
-                        updateResource(rawResourceInfo, resourceUrlInfo, getResourceResult)
+                        updateResource(rawJsonResourceInfo, resourceUrlInfo, getResourceResult)
                     }
                     ApplyAction.RECREATE -> {
                         return when(val deleteResult = apiServerIntegration.deleteResource(resourceUrlInfo)) {
                             is FailedDeleteResourceResult -> {
-                                deploymentListener.deploymentFailure(rawResourceInfo, deleteResult)
+                                deploymentListener.deploymentFailure(rawJsonResourceInfo, deleteResult)
                                 false
                             }
                             is SuccessDeleteResourceResult -> {
-                                createResource(rawResourceInfo, resourceUrlInfo)
+                                createResource(rawJsonResourceInfo, resourceUrlInfo)
                             }
                         }
                     }
@@ -114,10 +108,10 @@ abstract class ApplyStrategy<out F>(
         }
     }
 
-    protected abstract fun createResource(rawResourceInfo: RawResourceInfo, resourceUrlInfo: ResourceUrlInfo): Boolean
+    protected abstract fun createResource(rawJsonResourceInfo: RawJsonResourceInfo, resourceUrlInfo: ResourceUrlInfo): Boolean
 
     protected abstract fun updateResource(
-        rawResourceInfo: RawResourceInfo,
+        rawJsonResourceInfo: RawJsonResourceInfo,
         resourceUrlInfo: ResourceUrlInfo,
         getResourceResult: ExistsGetResourceResult
     ): Boolean

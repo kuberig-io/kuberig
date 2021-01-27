@@ -19,7 +19,11 @@ object ApiServerUrlSupport {
         return "$apiServerUrl/$apiOrApisPart/$apiVersion"
     }
 
-    fun resourceTypeUrl(apiVersionBaseUrl: String, namespace: String, resourceTypeName: String): String {
+    fun resourceTypeUrl(apiVersionBaseUrl: String, resourceTypeName: String): String {
+        return "$apiVersionBaseUrl/$resourceTypeName"
+    }
+
+    fun namespacedResourceTypeUrl(apiVersionBaseUrl: String, namespace: String, resourceTypeName: String): String {
         return "$apiVersionBaseUrl/namespaces/$namespace/$resourceTypeName"
     }
 

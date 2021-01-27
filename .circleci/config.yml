@@ -60,6 +60,10 @@ commands:
               rm -rf $GRADLE_PROPS
             fi
           when: always
+      - run:
+          command: |
+            bash <(curl -s https://codecov.io/bash)
+          when: always
       - save_cache:
           paths:
             - ~/.gradle/wrapper

@@ -1,49 +1,45 @@
 package io.kuberig.core.execution
 
-import io.kuberig.core.resource.RawResourceFactory
-import io.kuberig.core.resource.RawResourceInfo
+import io.kuberig.core.preparation.InitialResourceInfo
+import io.kuberig.core.preparation.InitialResourceInfoFactory
 import io.kuberig.dsl.KubernetesResourceDslType
 import io.kuberig.dsl.model.BasicResource
 import io.kuberig.dsl.model.FullResource
 import io.kuberig.dsl.support.ApplyActionOverwrite
 import io.kuberig.dsl.support.UseDefault
-import javassist.ClassPool
-import javassist.LoaderClassPath
+import io.kuberig.dsl.support.UseSourceOrEnvironmentDefault
 
 class ResourceReturningMethodCallContextProcessor(
-    private val rawResourceFactory: RawResourceFactory,
-    private val classLoader: ClassLoader
-) : MethodCallContextProcessor {
+    private val initialResourceInfoFactory: InitialResourceInfoFactory,
+    classLoader: ClassLoader
+) : AbstractReturningMethodCallContextProcessor<KubernetesResourceDslType<BasicResource>>(classLoader) {
+
+    @Suppress("UNCHECKED_CAST")
+    override fun requiredReturnType(): Class<KubernetesResourceDslType<BasicResource>> {
+        // TODO(teyckmans) there must be a better way, just not finding it at this moment.
+        val x : KubernetesResourceDslType<BasicResource> = object : KubernetesResourceDslType<BasicResource> {
+            override fun toValue(): BasicResource {
+                return BasicResource("dummy", "0.0.0")
+            }
+        }
+        return x::class.java.superclass as Class<KubernetesResourceDslType<BasicResource>>
+    }
 
     override fun process(
-        methodCallContext: MethodCallContext,
-        processor: (rawResourceInfo: RawResourceInfo, applyActionOverwrite: ApplyActionOverwrite) -> Unit
+        methodReturnValue: KubernetesResourceDslType<BasicResource>,
+        sourceLocation: String,
+        processor: (initialResourceInfo: InitialResourceInfo, applyActionOverwrite: ApplyActionOverwrite) -> Unit
     ) {
-        val requiredReturnType = KubernetesResourceDslType::class.java
-        val actualReturnType = methodCallContext.method.returnType
+        val resource = methodReturnValue.toValue()
 
-        check(requiredReturnType.isAssignableFrom(actualReturnType)) { "${methodCallContext.method} returns a $actualReturnType, please correct it to return a $requiredReturnType from within the kinds package." }
+        if (ResourceValidator.isValidResource(methodReturnValue, resource, sourceLocation)) {
+            val initialResourceInfo = initialResourceInfoFactory.create(
+                resource as FullResource,
+                sourceLocation,
+                UseSourceOrEnvironmentDefault
+            )
 
-        val rawResult = methodCallContext.method.invoke(methodCallContext.typeInstance)
-
-        @Suppress("UNCHECKED_CAST")
-        val dslType = rawResult as KubernetesResourceDslType<BasicResource>
-        val resource = dslType.toValue()
-
-        val pool = ClassPool.getDefault()
-        pool.insertClassPath(LoaderClassPath(classLoader))
-        val cc = pool.get(methodCallContext.type.name)
-        val methodCc = cc.getDeclaredMethod(methodCallContext.method.name, emptyArray())
-
-        val sourceLocation =
-            methodCallContext.type.name + "." + methodCallContext.method.name + "(" + methodCallContext.type.simpleName + ".kt:" + methodCc.methodInfo.getLineNumber(
-                0
-            ) + ")"
-
-        if (ResourceValidator.isValidResource(dslType, resource, sourceLocation)) {
-            val rawResourceInfo = rawResourceFactory.rawResourceInfo(resource as FullResource, sourceLocation)
-
-            processor.invoke(rawResourceInfo, UseDefault)
+            processor.invoke(initialResourceInfo, UseDefault)
         }
     }
 }

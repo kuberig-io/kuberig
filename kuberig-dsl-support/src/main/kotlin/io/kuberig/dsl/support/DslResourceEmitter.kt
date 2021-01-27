@@ -23,15 +23,20 @@ object DslResourceEmitter {
     /**
      * The emit function can be used to publish one or more resources.
      */
-    fun <T : BasicResource> emit(vararg dslTypes: KubernetesResourceDslType<T>,
-             applyActionOverwrite: ApplyActionOverwrite = UseDefault) {
-        check(receivers.get().isNotEmpty()) { "\n\tDslResourceEmitter.emit() not supported in this method. \n\tMake sure you call DslResourceEmitter.emit() from within a method annotated with @EnvResources.\n\tIn @EnvResource methods you need to return the resource from the method." }
+    fun <T : BasicResource> emit(
+        vararg dslTypes: KubernetesResourceDslType<T>,
+        applyActionOverwrite: ApplyActionOverwrite = UseDefault,
+        targetNamespace: TargetNamespace = UseEnvironmentDefault
+    ) {
+        check(
+            receivers.get().isNotEmpty()
+        ) { "\n\tDslResourceEmitter.emit() not supported in this method. \n\tMake sure you call DslResourceEmitter.emit() from within a method annotated with @EnvResources.\n\tIn @EnvResource methods you need to return the resource from the method." }
 
         receivers.get().forEach { receiver ->
             logger.info("[EMITTING] to ${receiver.getName()}")
-            dslTypes.forEach {dslType ->
+            dslTypes.forEach { dslType ->
                 try {
-                    receiver.receive(dslType, applyActionOverwrite)
+                    receiver.receive(dslType, applyActionOverwrite, targetNamespace)
                 } catch (e: Exception) {
                     logger.warn("Receiver ${receiver.getName()} failed to process dslType $dslType ")
                 }
@@ -39,14 +44,20 @@ object DslResourceEmitter {
         }
     }
 
-    private fun emit(vararg envYamlSourceDsls: EnvYamlSourceDsl, applyActionOverwrite: ApplyActionOverwrite = UseDefault) {
-        check(receivers.get().isNotEmpty()) { "\n\tDslResourceEmitter.emit() not supported in this method. \n\tMake sure you call DslResourceEmitter.emit() from within a method annotated with @EnvResources.\n\tIn @EnvResource methods you need to return the resource from the method." }
+    private fun emit(
+        vararg envYamlSourceDsls: EnvYamlSourceDsl,
+        applyActionOverwrite: ApplyActionOverwrite = UseDefault,
+        targetNamespace: TargetNamespace = UseEnvironmentDefault
+    ) {
+        check(
+            receivers.get().isNotEmpty()
+        ) { "\n\tDslResourceEmitter.emit() not supported in this method. \n\tMake sure you call DslResourceEmitter.emit() from within a method annotated with @EnvResources.\n\tIn @EnvResource methods you need to return the resource from the method." }
 
         receivers.get().forEach { receiver ->
             logger.info("[EMITTING] to ${receiver.getName()}")
-            envYamlSourceDsls.forEach {envYamlSourceDsl ->
+            envYamlSourceDsls.forEach { envYamlSourceDsl ->
                 try {
-                    receiver.receive(envYamlSourceDsl.toSource(), applyActionOverwrite)
+                    receiver.receive(envYamlSourceDsl.toValue(), applyActionOverwrite)
                 } catch (e: Exception) {
                     logger.warn("Receiver ${receiver.getName()} failed to process envYamlSourceDsl $envYamlSourceDsl ")
                 }

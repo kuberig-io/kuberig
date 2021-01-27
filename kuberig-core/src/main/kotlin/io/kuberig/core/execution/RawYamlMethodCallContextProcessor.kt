@@ -1,17 +1,29 @@
 package io.kuberig.core.execution
 
+import io.kuberig.core.preparation.InitialResourceInfo
 import io.kuberig.core.resource.EnvYamlSourceService
-import io.kuberig.core.resource.RawResourceInfo
 import io.kuberig.dsl.support.ApplyActionOverwrite
+import io.kuberig.dsl.support.UseDefault
+import io.kuberig.dsl.support.yaml.EnvYamlSourceDsl
 
-class RawYamlMethodCallContextProcessor(val envYamlSourceService: EnvYamlSourceService) : MethodCallContextProcessor {
+class RawYamlMethodCallContextProcessor(
+    private val envYamlSourceService: EnvYamlSourceService,
+    classLoader: ClassLoader
+) : AbstractReturningMethodCallContextProcessor<EnvYamlSourceDsl>(classLoader) {
+
+    override fun requiredReturnType(): Class<EnvYamlSourceDsl> {
+        return EnvYamlSourceDsl::class.java
+    }
 
     override fun process(
-        methodCallContext: MethodCallContext,
-        processor: (rawResourceInfo: RawResourceInfo, applyActionOverwrite: ApplyActionOverwrite) -> Unit
+        methodReturnValue: EnvYamlSourceDsl,
+        sourceLocation: String,
+        processor: (initialResourceInfo: InitialResourceInfo, applyActionOverwrite: ApplyActionOverwrite) -> Unit
     ) {
-        // TODO convert a single yaml source into processor.invoke calls.
+        val envYamlSource = methodReturnValue.toValue()
 
-
+        envYamlSourceService.importEnvYamlSource(envYamlSource).forEach {
+            processor.invoke(it, UseDefault)
+        }
     }
 }

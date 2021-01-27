@@ -1,6 +1,7 @@
 package io.kuberig.core.deployment
 
-import io.kuberig.core.resource.RawResourceInfo
+import io.kuberig.core.preparation.ResourceUrlInfo
+import io.kuberig.core.resource.RawJsonResourceInfo
 
 class StatusTrackingDeploymentListener : DeploymentListener {
 
@@ -11,17 +12,17 @@ class StatusTrackingDeploymentListener : DeploymentListener {
         // not needed
     }
 
-    override fun deploymentStart(rawResourceInfo: RawResourceInfo, resourceUrlInfo: ResourceUrlInfo) {
+    override fun deploymentStart(rawJsonResourceInfo: RawJsonResourceInfo, resourceUrlInfo: ResourceUrlInfo) {
         // not needed
     }
 
-    override fun deploymentSuccess(rawResourceInfo: RawResourceInfo, resourceResult: ResourceResult) {
+    override fun deploymentSuccess(rawJsonResourceInfo: RawJsonResourceInfo, resourceResult: ResourceResult) {
         // not needed
     }
 
-    override fun deploymentFailure(rawResourceInfo: RawResourceInfo, resourceResult: ResourceResult) {
+    override fun deploymentFailure(rawJsonResourceInfo: RawJsonResourceInfo, resourceResult: ResourceResult) {
         success = false
-        failureMessage = "Failed to deploy ${rawResourceInfo.fullInfoText()}"
+        failureMessage = "Failed to deploy ${rawJsonResourceInfo.fullInfoText()}"
     }
 
     override fun tickSuccess(tickNumber: Int) {

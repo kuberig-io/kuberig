@@ -1,6 +1,7 @@
 package io.kuberig.core.deployment
 
-import io.kuberig.core.resource.RawResourceInfo
+import io.kuberig.core.preparation.ResourceUrlInfo
+import io.kuberig.core.resource.RawJsonResourceInfo
 import java.lang.Exception
 
 object DeploymentListenerRegistry : DeploymentListener {
@@ -17,21 +18,21 @@ object DeploymentListenerRegistry : DeploymentListener {
         }
     }
 
-    override fun deploymentStart(rawResourceInfo: RawResourceInfo, resourceUrlInfo: ResourceUrlInfo) {
+    override fun deploymentStart(rawJsonResourceInfo: RawJsonResourceInfo, resourceUrlInfo: ResourceUrlInfo) {
         notifyListeners {
-            deploymentStart(rawResourceInfo, resourceUrlInfo)
+            deploymentStart(rawJsonResourceInfo, resourceUrlInfo)
         }
     }
 
-    override fun deploymentSuccess(rawResourceInfo: RawResourceInfo, resourceResult: ResourceResult) {
+    override fun deploymentSuccess(rawJsonResourceInfo: RawJsonResourceInfo, resourceResult: ResourceResult) {
         notifyListeners {
-            deploymentSuccess(rawResourceInfo, resourceResult)
+            deploymentSuccess(rawJsonResourceInfo, resourceResult)
         }
     }
 
-    override fun deploymentFailure(rawResourceInfo: RawResourceInfo, resourceResult: ResourceResult) {
+    override fun deploymentFailure(rawJsonResourceInfo: RawJsonResourceInfo, resourceResult: ResourceResult) {
         notifyListeners {
-            deploymentFailure(rawResourceInfo, resourceResult)
+            deploymentFailure(rawJsonResourceInfo, resourceResult)
         }
     }
 

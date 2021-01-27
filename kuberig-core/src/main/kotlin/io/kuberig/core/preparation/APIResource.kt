@@ -1,4 +1,4 @@
-package io.kuberig.core.deployment
+package io.kuberig.core.preparation
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 

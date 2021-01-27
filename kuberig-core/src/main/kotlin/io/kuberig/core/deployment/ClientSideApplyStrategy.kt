@@ -3,7 +3,8 @@ package io.kuberig.core.deployment
 import com.jayway.jsonpath.JsonPath
 import com.jayway.jsonpath.PathNotFoundException
 import io.kuberig.config.ClientSideApplyFlags
-import io.kuberig.core.resource.RawResourceInfo
+import io.kuberig.core.preparation.ResourceUrlInfo
+import io.kuberig.core.resource.RawJsonResourceInfo
 import org.json.JSONObject
 
 /**
@@ -30,36 +31,36 @@ class ClientSideApplyStrategy(
     deploymentListener
 ) {
 
-    override fun createResource(rawResourceInfo: RawResourceInfo, resourceUrlInfo: ResourceUrlInfo): Boolean {
-        val postResult = apiServerIntegration.postResource(rawResourceInfo, resourceUrlInfo)
+    override fun createResource(rawJsonResourceInfo: RawJsonResourceInfo, resourceUrlInfo: ResourceUrlInfo): Boolean {
+        val postResult = apiServerIntegration.postResource(rawJsonResourceInfo, resourceUrlInfo)
 
         return when (postResult) {
             is FailedPostResourceResult -> {
-                deploymentListener.deploymentFailure(rawResourceInfo, postResult)
+                deploymentListener.deploymentFailure(rawJsonResourceInfo, postResult)
                 false
             }
             is SuccessPostResourceResult -> {
-                deploymentListener.deploymentSuccess(rawResourceInfo, postResult)
+                deploymentListener.deploymentSuccess(rawJsonResourceInfo, postResult)
                 true
             }
         }
     }
 
     override fun updateResource(
-        rawResourceInfo: RawResourceInfo,
+        rawJsonResourceInfo: RawJsonResourceInfo,
         resourceUrlInfo: ResourceUrlInfo,
         getResourceResult: ExistsGetResourceResult
     ): Boolean {
-        val updateJson = JSONObject(rawResourceInfo.json.toString())
+        val updateJson = JSONObject(rawJsonResourceInfo.json.toString())
         updateJson.getJSONObject("metadata")
             .put("resourceVersion", getResourceResult.resourceVersion)
 
-        val updateResourceInfo = RawResourceInfo(rawResourceInfo, updateJson)
+        val updateResourceInfo = RawJsonResourceInfo(rawJsonResourceInfo, updateJson)
 
         return when (val putResult = apiServerIntegration.putResource(updateResourceInfo, resourceUrlInfo)) {
             is ConflictPutResourceResult -> {
                 attemptConflictResolution(
-                    rawResourceInfo,
+                    rawJsonResourceInfo,
                     updateResourceInfo,
                     resourceUrlInfo,
                     getResourceResult,
@@ -67,25 +68,25 @@ class ClientSideApplyStrategy(
                 )
             }
             is FailedPutResourceResult -> {
-                deploymentListener.deploymentFailure(rawResourceInfo, putResult)
+                deploymentListener.deploymentFailure(rawJsonResourceInfo, putResult)
                 false
             }
             is SuccessPutResourceResult -> {
-                deploymentListener.deploymentSuccess(rawResourceInfo, putResult)
+                deploymentListener.deploymentSuccess(rawJsonResourceInfo, putResult)
                 true
             }
         }
     }
 
     fun attemptConflictResolution(
-        rawResourceInfo: RawResourceInfo,
-        updateResourceInfo: RawResourceInfo,
+        rawJsonResourceInfo: RawJsonResourceInfo,
+        updateJsonResourceInfo: RawJsonResourceInfo,
         resourceUrlInfo: ResourceUrlInfo,
         getResourceResult: ExistsGetResourceResult,
         putResourceResult: ConflictPutResourceResult
     ): Boolean {
         val currentJsonPathContext = JsonPath.parse(getResourceResult.json.toString())
-        val newJsonPathContext = JsonPath.parse(updateResourceInfo.json.toString())
+        val newJsonPathContext = JsonPath.parse(updateJsonResourceInfo.json.toString())
 
         val statusObject = JSONObject(putResourceResult.response.body)
         val statusReason = statusObject.getString("reason")
@@ -138,7 +139,7 @@ class ClientSideApplyStrategy(
 
         return when {
             newJsonUpdated -> {
-                val retryResourceInfo = RawResourceInfo(rawResourceInfo, JSONObject(newJsonPathContext.jsonString()))
+                val retryResourceInfo = RawJsonResourceInfo(rawJsonResourceInfo, JSONObject(newJsonPathContext.jsonString()))
 
                 when (val retryPutResult = apiServerIntegration.putResource(retryResourceInfo, resourceUrlInfo)) {
                     is ConflictPutResourceResult -> {
@@ -161,20 +162,20 @@ class ClientSideApplyStrategy(
 
                     when (deleteResult) {
                         is FailedDeleteResourceResult -> {
-                            deploymentListener.deploymentFailure(rawResourceInfo, putResourceResult)
+                            deploymentListener.deploymentFailure(rawJsonResourceInfo, putResourceResult)
                             false
                         }
                         is SuccessDeleteResourceResult -> {
-                            this.createResource(rawResourceInfo, resourceUrlInfo)
+                            this.createResource(rawJsonResourceInfo, resourceUrlInfo)
                         }
                     }
                 } else {
-                    deploymentListener.deploymentFailure(rawResourceInfo, putResourceResult)
+                    deploymentListener.deploymentFailure(rawJsonResourceInfo, putResourceResult)
                     false
                 }
             }
             else -> {
-                deploymentListener.deploymentFailure(rawResourceInfo, putResourceResult)
+                deploymentListener.deploymentFailure(rawJsonResourceInfo, putResourceResult)
                 false
             }
         }

@@ -4,8 +4,9 @@ import io.kuberig.core.deployment.DeploymentPlanGenerator
 import io.kuberig.core.deployment.ResourceDeployer
 import io.kuberig.core.deployment.control.TickInfo
 import io.kuberig.core.execution.ResourceGeneratorExecutor
+import io.kuberig.core.preparation.InitialResourceInfoFactory
+import io.kuberig.core.preparation.ResourcePreparation
 import io.kuberig.core.resource.EnvYamlSourceService
-import io.kuberig.core.resource.RawResourceFactory
 
 class Deploy : HighLevelResourceAction<Deploy>() {
 
@@ -20,7 +21,7 @@ class Deploy : HighLevelResourceAction<Deploy>() {
     override fun execute() {
         val environmentFileSystem = rootFileSystem.environment(environment.name)
 
-        val rawResourceFactory = RawResourceFactory(environmentFileSystem.defaultNamespace())
+        val initialResourceInfoFactory = InitialResourceInfoFactory()
 
         val resourceGeneratorExecutor = ResourceGeneratorExecutor(
             compileOutputDirectory,
@@ -29,14 +30,15 @@ class Deploy : HighLevelResourceAction<Deploy>() {
             environment,
             environmentFileSystem,
             groupNameMatcher,
-            rawResourceFactory,
-            EnvYamlSourceService(rawResourceFactory, rootFileSystem)
+            initialResourceInfoFactory,
+            EnvYamlSourceService(initialResourceInfoFactory, rootFileSystem.repoRootDir)
         )
 
         val methodResults = resourceGeneratorExecutor.execute()
 
+        val resourcePreparation = ResourcePreparation(environmentFileSystem, flags, methodResults)
 
-        val deploymentPlanGenerator = DeploymentPlanGenerator()
+        val deploymentPlanGenerator = DeploymentPlanGenerator(resourcePreparation)
 
         val deploymentPlan = deploymentPlanGenerator.generateDeploymentPlan(methodResults)
 

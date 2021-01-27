@@ -1,22 +1,25 @@
 package io.kuberig.core.execution
 
-import io.kuberig.core.resource.RawResourceFactory
-import io.kuberig.core.resource.RawResourceInfo
+import io.kuberig.core.preparation.InitialResourceInfo
+import io.kuberig.core.preparation.InitialResourceInfoFactory
+import io.kuberig.core.resource.EnvYamlSourceService
 import io.kuberig.dsl.KubernetesResourceDslType
 import io.kuberig.dsl.model.BasicResource
 import io.kuberig.dsl.model.FullResource
 import io.kuberig.dsl.support.ApplyActionOverwrite
 import io.kuberig.dsl.support.DslResourceEmitter
 import io.kuberig.dsl.support.DslResourceReceiver
+import io.kuberig.dsl.support.TargetNamespace
 import io.kuberig.dsl.support.yaml.EnvYamlSource
 
 class ResourceEmittingMethodCallContextProcessor(
-    private val rawResourceFactory: RawResourceFactory
+    private val initialResourceInfoFactory: InitialResourceInfoFactory,
+    private val envYamlSourceService: EnvYamlSourceService
 ) : MethodCallContextProcessor {
 
     override fun process(
         methodCallContext: MethodCallContext,
-        processor: (rawResourceInfo: RawResourceInfo, applyActionOverwrite: ApplyActionOverwrite) -> Unit
+        processor: (initialResourceInfo: InitialResourceInfo, applyActionOverwrite: ApplyActionOverwrite) -> Unit
     ) {
 
         DslResourceEmitter.registerReceiver(object : DslResourceReceiver {
@@ -26,7 +29,8 @@ class ResourceEmittingMethodCallContextProcessor(
 
             override fun <T : BasicResource> receive(
                 dslType: KubernetesResourceDslType<T>,
-                applyActionOverwrite: ApplyActionOverwrite
+                applyActionOverwrite: ApplyActionOverwrite,
+                targetNamespace: TargetNamespace
             ) {
                 val e = IllegalStateException("")
 
@@ -46,14 +50,23 @@ class ResourceEmittingMethodCallContextProcessor(
                 val resource = dslType.toValue()
 
                 if (ResourceValidator.isValidResource(dslType, resource, sourceLocation)) {
-                    val rawResourceInfo = rawResourceFactory.rawResourceInfo(resource as FullResource, sourceLocation)
+                    val initialResourceInfo = initialResourceInfoFactory.create(
+                        resource as FullResource,
+                        sourceLocation,
+                        targetNamespace
+                    )
 
-                    processor.invoke(rawResourceInfo, applyActionOverwrite)
+                    processor.invoke(initialResourceInfo, applyActionOverwrite)
                 }
             }
 
-            override fun receive(envYamlSource: EnvYamlSource, applyActionOverwrite: ApplyActionOverwrite) {
-                // TODO #36 transfer yaml resources to processor.invoke ( yaml to RawResourceInfo(...) )
+            override fun receive(
+                envYamlSource: EnvYamlSource,
+                applyActionOverwrite: ApplyActionOverwrite
+            ) {
+                envYamlSourceService.importEnvYamlSource(envYamlSource).forEach {
+                    processor.invoke(it, applyActionOverwrite)
+                }
             }
         })
 

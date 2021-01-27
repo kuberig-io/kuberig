@@ -21,6 +21,7 @@ subprojects {
         plugin("idea")
         plugin("org.jetbrains.kotlin.jvm")
         plugin("com.jfrog.bintray")
+        plugin("jacoco")
     }
 
     val subProject = this
@@ -50,6 +51,19 @@ subprojects {
     tasks.withType<KotlinCompile> {
         kotlinOptions.jvmTarget = "1.8"
     }
+
+    tasks.named<Test>("test") {
+        finalizedBy(tasks.getByName("jacocoTestReport")) // report is always generated after tests run
+    }
+    tasks.named<JacocoReport>("jacocoTestReport") {
+        dependsOn(tasks.getByName("test")) // tests are required to run before generating the report
+        reports {
+            xml.isEnabled = true
+            csv.isEnabled = false
+        }
+    }
+
+    tasks.getByName("check").dependsOn(tasks.getByName("jacocoTestReport"))
 
     tasks.named<Test>("test") {
         useJUnitPlatform()

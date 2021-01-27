@@ -1,7 +1,7 @@
 package io.kuberig.cluster.client
 
 import io.kuberig.config.KubeRigFlags
-import io.kuberig.core.deployment.APIResourceList
+import io.kuberig.core.preparation.APIResourceList
 import io.kuberig.kubectl.AuthDetails
 import kong.unirest.Unirest
 import kong.unirest.UnirestInstance

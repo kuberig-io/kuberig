@@ -1,8 +1,9 @@
 package io.kuberig.core.deployment
 
 import io.kuberig.core.model.SuccessResult
+import io.kuberig.core.preparation.ResourcePreparation
 
-class DeploymentPlanGenerator {
+class DeploymentPlanGenerator(private val resourcePreparation: ResourcePreparation) {
 
     fun generateDeploymentPlan(generatorResults: List<SuccessResult>): DeploymentPlan {
         val tasksByTick = mutableMapOf<Int, MutableList<DeploymentTask>>()
@@ -15,7 +16,9 @@ class DeploymentPlanGenerator {
 
                 val tickTasks = tasksByTick.getOrDefault(tickNumber, mutableListOf())
 
-                tickTasks.add(DeploymentTask(sourceMethod, resourceApplyRequest.rawResourceInfo, resourceApplyRequest.applyAction))
+                val rawJsonResourceInfo = resourcePreparation.prepare(resourceApplyRequest.initialResourceInfo)
+
+                tickTasks.add(DeploymentTask(sourceMethod, rawJsonResourceInfo, resourceApplyRequest.applyAction))
 
                 tasksByTick[tickNumber] = tickTasks
             }
@@ -24,7 +27,14 @@ class DeploymentPlanGenerator {
         val ticks = mutableListOf<DeploymentTick>()
 
         for (tickTasks in tasksByTick) {
-            ticks.add(DeploymentTick(tickTasks.key, tickTasks.value.toList()))
+            val tasks = tickTasks.value
+
+            val customResourceDeploymentTasks = tasks.filter { it.rawJsonResourceInfo.kind.toLowerCase() == "customresourcedefinition" }
+            val deploymentTasks = tasks.filter { it.rawJsonResourceInfo.kind.toLowerCase() != "customresourcedefinition" }
+
+            val deploymentTick = DeploymentTick(tickTasks.key, customResourceDeploymentTasks, deploymentTasks)
+
+            ticks.add(deploymentTick)
         }
 
         return DeploymentPlan(ticks)

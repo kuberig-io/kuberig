@@ -20,7 +20,6 @@ object ResourceValidator {
 
         if (!packageCorrect) {
             logger.error(dslType::class.java.name + " is not within the kinds.* package, skipping. [${sourceLocation}]")
-
         }
 
         if (!fullResource) {

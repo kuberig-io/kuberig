@@ -1,7 +1,8 @@
 package io.kuberig.core.deployment
 
 import io.kuberig.config.ServerSideApplyFlags
-import io.kuberig.core.resource.RawResourceInfo
+import io.kuberig.core.preparation.ResourceUrlInfo
+import io.kuberig.core.resource.RawJsonResourceInfo
 
 /**
  * Creates/updates resources using server-side-apply.
@@ -17,32 +18,32 @@ class ServerSideApplyStrategy(
     deploymentListener
 ) {
 
-    override fun createResource(rawResourceInfo: RawResourceInfo, resourceUrlInfo: ResourceUrlInfo): Boolean {
-        return apply(rawResourceInfo, resourceUrlInfo)
+    override fun createResource(rawJsonResourceInfo: RawJsonResourceInfo, resourceUrlInfo: ResourceUrlInfo): Boolean {
+        return apply(rawJsonResourceInfo, resourceUrlInfo)
     }
 
     override fun updateResource(
-        rawResourceInfo: RawResourceInfo,
+        rawJsonResourceInfo: RawJsonResourceInfo,
         resourceUrlInfo: ResourceUrlInfo,
         getResourceResult: ExistsGetResourceResult
     ): Boolean {
-        return apply(rawResourceInfo, resourceUrlInfo)
+        return apply(rawJsonResourceInfo, resourceUrlInfo)
     }
 
-    private fun apply(rawResourceInfo: RawResourceInfo, resourceUrlInfo: ResourceUrlInfo): Boolean {
+    private fun apply(rawJsonResourceInfo: RawJsonResourceInfo, resourceUrlInfo: ResourceUrlInfo): Boolean {
         val patchResult = apiServerIntegration.serverSideApplyResourcePatch(
-            rawResourceInfo,
+            rawJsonResourceInfo,
             resourceUrlInfo,
             flags.force
         )
 
         return when (patchResult) {
             is FailedServerSideApplyPatchResourceResult -> {
-                deploymentListener.deploymentFailure(rawResourceInfo, patchResult)
+                deploymentListener.deploymentFailure(rawJsonResourceInfo, patchResult)
                 false
             }
             is SuccessServerSideApplyPatchResourceResult -> {
-                deploymentListener.deploymentSuccess(rawResourceInfo, patchResult)
+                deploymentListener.deploymentSuccess(rawJsonResourceInfo, patchResult)
                 true
             }
         }
