@@ -59,7 +59,7 @@ class KubectlConfigReader {
         objectMapper.registerModule(byteArrayModule)
         objectMapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT)
 
-        val configFileLocation = System.getenv("KUBECONFIG") ?: "${System.getenv("HOME")}/.kube/config"
+        val configFileLocation = System.getenv("KUBECONFIG") ?: "${System.getProperty("user.home")}/.kube/config"
 
         val configFile = File(configFileLocation)
 
